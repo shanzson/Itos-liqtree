@@ -34,6 +34,7 @@ struct LiqNode {
 
 library LiqTreeImpl {
     using LKeyImpl for LKey;
+    using LiqTreeIntLib for int24;
 
     /**************************
      ** Wide Range Functions **
@@ -79,14 +80,12 @@ library LiqTreeImpl {
 
     /// Add maker liquidity to a range.
     function addMLiq(LiqTree storage self, int24 low, int24 high, uint128 liq) internal {
-        LKey peak = LiqTreeLib.lowestCommonAncestor(low, high);
-        LiqNode storage node;
-
+        LKey peak = LiqTreeIntLib.lowestCommonAncestor(low, high);
         // A low key and high key will be equal to the peak if one leg is not present.
 
         // Start with the left side of all right nodes.
-        LKey current = LiqTreeLib.lowKey(low);
-        if (current != peak) {
+        LKey current = low.lowKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 // First add the liquidity
@@ -96,16 +95,16 @@ library LiqTreeImpl {
                     (current, node) = rightPropogateM(self, current, node);
                 }
                 // We are on the left, our rightSib is the next node, but we need to check if the parent is the peak.
-                (LKey up, LKey right) = leftUp();
-                if(up == peak) {
+                (LKey up, LKey right) = current.leftUp();
+                if(up.isEq(peak)) {
                     break;
                 }
                 current = right;
             }
         }
         // Handle the right side of all left nodes.
-        current = LiqTreeLib.highKey(high);
-        if (current != peak) {
+        current = high.highKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 node.mLiq += liq;
@@ -114,8 +113,8 @@ library LiqTreeImpl {
                     (current, node) = leftPropogateM(self, current, node);
                 }
                 // On the right now, if the parent is peak we're done.
-                (LKey up, LKey left) = rightUp();
-                if (up == peak) {
+                (LKey up, LKey left) = current.rightUp();
+                if (up.isEq(peak)) {
                     break;
                 }
                 current = left;
@@ -128,14 +127,12 @@ library LiqTreeImpl {
 
     /// Subtract maker liquidity from a range.
     function subMLiq(LiqTree storage self, int24 low, int24 high, uint128 liq) internal {
-        LKey peak = LiqTreeLib.lowestCommonAncestor(low, high);
-        LiqNode storage node;
-
+        LKey peak = LiqTreeIntLib.lowestCommonAncestor(low, high);
         // A low key and high key will be equal to the peak if one leg is not present.
 
         // Start with the left side of all right nodes.
-        LKey current = LiqTreeLib.lowKey(low);
-        if (current != peak) {
+        LKey current = low.lowKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 // First sub the liquidity
@@ -145,16 +142,16 @@ library LiqTreeImpl {
                     (current, node) = rightPropogateM(self, current, node);
                 }
                 // We are on the left, our rightSib is the next node, but we need to check if the parent is the peak.
-                (LKey up, LKey right) = leftUp();
-                if(up == peak) {
+                (LKey up, LKey right) = current.leftUp();
+                if(up.isEq(peak)) {
                     break;
                 }
                 current = right;
             }
         }
         // Handle the right side of all left nodes.
-        current = LiqTreeLib.highKey(high);
-        if (current != peak) {
+        current = high.highKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 node.mLiq -= liq;
@@ -163,8 +160,8 @@ library LiqTreeImpl {
                     (current, node) = leftPropogateM(self, current, node);
                 }
                 // On the right now, if the parent is peak we're done.
-                (LKey up, LKey left) = rightUp();
-                if (up == peak) {
+                (LKey up, LKey left) = current.rightUp();
+                if (up.isEq(peak)) {
                     break;
                 }
                 current = left;
@@ -177,14 +174,12 @@ library LiqTreeImpl {
 
     /// Add taker liquidity to a range.
     function addTLiq(LiqTree storage self, int24 low, int24 high, uint128 liq) internal {
-        LKey peak = LiqTreeLib.lowestCommonAncestor(low, high);
-        LiqNode storage node;
-
+        LKey peak = LiqTreeIntLib.lowestCommonAncestor(low, high);
         // A low key and high key will be equal to the peak if one leg is not present.
 
         // Start with the left side of all right nodes.
-        LKey current = LiqTreeLib.lowKey(low);
-        if (current != peak) {
+        LKey current = low.lowKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 // First add the liquidity
@@ -194,16 +189,16 @@ library LiqTreeImpl {
                     (current, node) = rightPropogateT(self, current, node);
                 }
                 // We are on the left, our rightSib is the next node, but we need to check if the parent is the peak.
-                (LKey up, LKey right) = leftUp();
-                if(up == peak) {
+                (LKey up, LKey right) = current.leftUp();
+                if(up.isEq(peak)) {
                     break;
                 }
                 current = right;
             }
         }
         // Handle the right side of all left nodes.
-        current = LiqTreeLib.highKey(high);
-        if (current != peak) {
+        current = high.highKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 node.tLiq += liq;
@@ -212,8 +207,8 @@ library LiqTreeImpl {
                     (current, node) = leftPropogateT(self, current, node);
                 }
                 // On the right now, if the parent is peak we're done.
-                (LKey up, LKey left) = rightUp();
-                if (up == peak) {
+                (LKey up, LKey left) = current.rightUp();
+                if (up.isEq(peak)) {
                     break;
                 }
                 current = left;
@@ -226,14 +221,12 @@ library LiqTreeImpl {
 
     /// Subtract taker liquidity from a range.
     function subTLiq(LiqTree storage self, int24 low, int24 high, uint128 liq) internal {
-        LKey peak = LiqTreeLib.lowestCommonAncestor(low, high);
-        LiqNode storage node;
-
+        LKey peak = LiqTreeIntLib.lowestCommonAncestor(low, high);
         // A low key and high key will be equal to the peak if one leg is not present.
 
         // Start with the left side of all right nodes.
-        LKey current = LiqTreeLib.lowKey(low);
-        if (current != peak) {
+        LKey current = low.lowKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 // First sub the liquidity
@@ -243,16 +236,16 @@ library LiqTreeImpl {
                     (current, node) = rightPropogateT(self, current, node);
                 }
                 // We are on the left, our rightSib is the next node, but we need to check if the parent is the peak.
-                (LKey up, LKey right) = leftUp();
-                if(up == peak) {
+                (LKey up, LKey right) = current.leftUp();
+                if(up.isEq(peak)) {
                     break;
                 }
                 current = right;
             }
         }
         // Handle the right side of all left nodes.
-        current = LiqTreeLib.highKey(high);
-        if (current != peak) {
+        current = high.highKey();
+        if (current.isNeq(peak)) {
             while (true) {
                 LiqNode storage node = self.nodes[current];
                 node.tLiq -= liq;
@@ -261,8 +254,8 @@ library LiqTreeImpl {
                     (current, node) = leftPropogateT(self, current, node);
                 }
                 // On the right now, if the parent is peak we're done.
-                (LKey up, LKey left) = rightUp();
-                if (up == peak) {
+                (LKey up, LKey left) = current.rightUp();
+                if (up.isEq(peak)) {
                     break;
                 }
                 current = left;
@@ -279,8 +272,8 @@ library LiqTreeImpl {
 
     /// Query the minimum Maker liquidity available and max Taker liquidity over all ticks in this range.
     function queryMTBounds(LiqTree storage self, int24 low, int24 high) internal view returns (uint128 minMaker, uint128 maxTaker) {
-        LKey peak = LiqTreeLib.lowestCommonAncestor(low, high);
-        (int24 peakBase, int24 peakRange) = peak.explode();
+        LKey peak = LiqTreeIntLib.lowestCommonAncestor(low, high);
+        (, int24 peakRange) = peak.explode();
         int24 stopRange = peakRange >> 1;
 
         LKey current;
@@ -290,24 +283,27 @@ library LiqTreeImpl {
         // We use raw numbers to be gas optimal, so we need to be really careful here.
 
         // First handle the left side.
-        int24 lowRange = lsb(low);
+        int24 lowRange = low.lsb();
         while (lowRange < stopRange) {
-            current = LKey.makeKey(low, lowRange)
+            current = LKeyImpl.makeKey(low, lowRange);
             minMaker = min(minMaker, self.nodes[current].subtreeMinM);
             maxTaker = max(maxTaker, self.nodes[current].subtreeMaxT);
+            // WARNING
+            // We don't try to handle the base part overflowing into the range portion because we should not be taking up the full range.
+            // But it's important to add a test for this. Beware this is a potential source of error.
             low += lowRange;
-            lowRange = lsb(low);
+            lowRange = low.lsb();
         }
 
         // Handle the right side.
-        int24 highRange = lsb(high);
+        int24 highRange = high.lsb();
         high = high ^ highRange;
         while (highRange < stopRange) {
-            current = LKey.makeKey(high, highRange);
+            current = LKeyImpl.makeKey(high, highRange);
             minMaker = min(minMaker, self.nodes[current].subtreeMinM);
             maxTaker = max(maxTaker, self.nodes[current].subtreeMaxT);
             // The order here is super important. We look ahead to find the next one bit tell us our next range.
-            highRange = lsb(high);
+            highRange = high.lsb();
             // Subtract and AND to get the parent node of our next high and that'll be the same base as the 0 child which is our next high.
             high = high ^ highRange;
         }
@@ -340,14 +336,14 @@ library LiqTreeImpl {
 
     /// Propogate the new mLiq value of the current node, who is a left node, up.
     function leftPropogateM(LiqTree storage self, LKey current, LiqNode storage node) internal returns (LKey, LiqNode storage) {
-        (LKey up, LKey left) = current.rightUp();
+        (LKey up, LKey left) = current.leftUp();
         LiqNode storage parent = self.nodes[up];
         parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
         return (up, parent);
     }
     /// Propogate the new tLiq value of the current node, who is a left node, up.
     function leftPropogateT(LiqTree storage self, LKey current, LiqNode storage node) internal returns (LKey, LiqNode storage) {
-        (LKey up, LKey left) = current.rightUp();
+        (LKey up, LKey left) = current.leftUp();
         LiqNode storage parent = self.nodes[up];
         parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
         return (up, parent);
@@ -358,7 +354,7 @@ library LiqTreeImpl {
         (LKey left, LKey right) = current.children();
         node.subtreeMinM = min(self.nodes[left].subtreeMinM, self.nodes[right].subtreeMinM) + node.mLiq;
 
-        while(current != self.root) {
+        while(current.isNeq(self.root)) {
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMinM = min(self.nodes[other].subtreeMinM, node.subtreeMinM) + parent.mLiq;
@@ -371,7 +367,7 @@ library LiqTreeImpl {
         (LKey left, LKey right) = current.children();
         node.subtreeMaxT = max(self.nodes[left].subtreeMaxT, self.nodes[right].subtreeMaxT) + node.tLiq;
 
-        while(current != self.root) {
+        while(current.isNeq(self.root)) {
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
@@ -388,10 +384,15 @@ library LiqTreeImpl {
     function min(uint128 a, uint128 b) private pure returns(uint128) {
         return (a <= b) ? a : b;
     }
+
+    /// Convenience function for maximum of uint128s
+    function max(uint128 a, uint128 b) private pure returns(uint128) {
+        return (a >= b) ? a : b;
+    }
 }
 
 
-library LiqTreeLib {
+library LiqTreeIntLib {
 
     /// @notice Get the keys to the nodes we'll need for a given range.
     /// @dev This is actually just used for comparison with the low, high, and peak keys.
@@ -410,6 +411,9 @@ library LiqTreeLib {
             range = lsb(current);
             // When climbing up, we attempt to add powers of two to get to our high.
             up[idx++] = LKeyImpl.makeKey(current, range);
+            // WARNING
+            // We don't try to handle the base part overflowing into the range portion because we should not be taking up the full range.
+            // But it's important to add a test for this. Beware this is a potential source of error.
             current = current + range;
         }
         // Sometimes we can end the climb at there.
@@ -445,11 +449,11 @@ library LiqTreeLib {
 
     /// Get the node that is the lowest common ancestor of both the low and high nodes.
     /// This is the peak of our range breakdown which does not modify its liq.
-    function lowestCommonAncestor(int24 low, int24 high) internal pure return (LKey) {
+    function lowestCommonAncestor(int24 low, int24 high) internal pure returns (LKey) {
         // Find the bitwise common prefix by finding the bits not in a common prefix.
         // This way uses less gas than directly finding the common prefix.
         int32 diff_mask = 0x00FFFFFF;
-        int24 diff_bits = low ^ high;
+        int diff_bits = int(low ^ high);
 
         if (diff_bits & 0xFFF000 == 0) {
             diff_mask >> 12;
@@ -471,7 +475,7 @@ library LiqTreeLib {
             diff_bits << 2;
         }
 
-        if (common_mask & 0x800000 == 0) {
+        if (diff_bits & 0x800000 == 0) {
             diff_mask >> 1;
             // we don't need diff_bits anymore
         }
@@ -483,7 +487,7 @@ library LiqTreeLib {
     }
 
     /// @dev this returns 0 for
-    function lsb(int24 x) private pure returns(int24) {
+    function lsb(int24 x) internal pure returns(int24) {
         return x & -x;
     }
 }
@@ -502,6 +506,10 @@ library LKeyImpl {
 
     function isEq(LKey self, LKey other) internal pure returns(bool) {
         return LKey.unwrap(self) == LKey.unwrap(other);
+    }
+
+    function isNeq(LKey self, LKey other) internal pure returns(bool) {
+        return !isEq(self, other);
     }
 
     /// Go up to the parent from the right child.
@@ -558,9 +566,9 @@ library LKeyImpl {
     function children(LKey self) internal pure returns(LKey left, LKey right) {
         int48 pair = LKey.unwrap(self);
         int48 childRange = pair >> 25;
-        rawLeft = pair - (childRange << 24);
-        rawRight = rawLeft + childRange;
-        return (LKey.wrap(rawLeft), LKey.wrap(rawRight))
+        int48 rawLeft = pair - (childRange << 24);
+        int48 rawRight = rawLeft + childRange;
+        return (LKey.wrap(rawLeft), LKey.wrap(rawRight));
     }
 
     // Un-used, un-tested version of going up.
@@ -569,18 +577,4 @@ library LKeyImpl {
     //     int48 topRange = pair & int48(uint48(0xFFFFFF000000)); // Solidity won't allow direct cast to int48
     //     return LKey.wrap((pair & ~(topRange >> 24)) + topRange);
     // }
-
-    // Functions for adjacency based traversal.
-
-    function nextRightAdjacent(LKey self) internal pure returns(LKey) {
-        int48 pair = LKey.unwrap(self);
-        int48 range = pair >> 24;
-        // WARNING
-        // We don't try to handle the base part overflowing into the range portion because we should not be taking up the full range.
-        // But it's important to add a test for this. Beware this is a potential source of error.
-        pair += range;
-
-        // No we need to clear the old range bit, but let's fetch the new bit first.
-    }
-
 }
