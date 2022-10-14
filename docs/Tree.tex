@@ -1,0 +1,336 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+\newtheorem{definition}{Definition}[section]
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+
+
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+\setlength{\parskip}{4\smallskipamount}
+
+\title{Ranged-Op Tree}
+\author{Terence An}
+\date{\today}
+
+\begin{document}
+\maketitle % creates title using information in preamble (title, author, date)
+
+\begin{abstract}
+  The paper gives theoretical and implementation details for a data structure
+  that allows cheap queries of ranged sums (or other associative binary
+  operation) and cheap insertion and deletion of
+  new range values. Given a set $S$ of pairs $(l, r)$ where $l$ is a member of the
+  monoid being summed and $r$ is itself a pair indicating a one-dimensional
+  integer range, this tree is able to quickly query
+  $min_{t \in R} [\sum_{s \in S : t \in s.r} s.l]$ for any given integer range
+  $R$. The intention for designing such a data structure is to cheaply track AMM
+  liquidity at every tick to provide the minimum liquidity available in a
+  range. The implementation details will include portions specific to smart contract development.
+\end{abstract}
+
+\section{High Level}
+
+Consider a sequence $a_i$$ that represents the amount of a resource available at a
+given index $i$, we will interchangeably refer to this resource as
+liquidity. Now we construct a binary tree such that each leaf node is indexed by
+a unique $i$ and each node in the binary tree stores a numeric value. In order
+to compute $a_i$ we have to sum the values in all the nodes on the path from the
+$i$th leaf node to the root. This lets us query $a_i$ in logarithmic time, but
+that is not the purpose of the tree. The purpose of the tree is to also answer range
+based queries in logarithmic time. For example, users can query the total amount
+of liquidity in a range, or the minimum, or the average, etc.
+
+This tree can only compute functions that are additive. What I mean by this is that $f$ is
+additive if it is composed of functions $g$ where $g$ follows the
+property that
+$\exists h$ s.t. $g(x_0 + k, x_1 + k, ..., x_n +k) = h(g(x_0, x_1, ..., x_n), k)$.
+This property allows the value of $f$ to be computed by storing the values of
+$g$ at each node for its subtree
+and if any node modifies its value we can propogate the new values of $f$ up to
+the root.
+
+For example we can compute the minimum liquidity available in any range.
+This is accomplished by storing two values at every node, the amount of
+resources available for precisely the range represented by the node and the
+subtree minimum. The subtree minimum answers the query if the query's
+range exactly matches the node's range. If the ranges do not exactly match, the
+queried range is broken up into partitions that do exactly match individual
+nodes' ranges in the tree. Then we take the minimum over those nodes' subtree
+minimums to answer the query.
+
+In order to update the tree with resources for a given range, the range is once
+again broken up into the smallest number of node ranges whose union matches the
+given range, and that resource value is added to the sum in those nodes. Then
+starting from each node, we walk up the tree propogating the new subtree
+minimum.
+
+Certain interesting properties make the walk cheap to accomplish. In fact
+insertions, removals, and queries all take $O(log(n))$ where $n$ is the size of
+the entire range covered by the tree.
+
+\section{Theoretical Design}
+
+The design starts similarly to an augmented tree where each node stores a value
+$L$ and the minimum subtree value $M$, both of which are members of the monoid
+being summed. Each node represents a range and has two children each
+represeting half their range except for the leaf nodes which have no
+children. Leaf nodes are those representing a single integer ranage.
+The top node represents the full range. Note that not all ranges
+are in the tree. We constrain ourselves to finite integer ranges and WLOG we
+assume the finite rate is centered around 0 with a total range width that is a
+power of two. Then the splits always divide the ranges in half which trivially makes all
+ranges start with a power of two and have a width that is a power of two.
+
+In order to query the tree with an range $R$ that is contained within our total
+finite range, we decompose $R$ into $N_R = {R_0,R_1,...}$
+where $N_R$ is a set of ranges possessed by exactly one node in the tree. These
+ranges do not overlap, and $\bigcup N_R = R$. We will show the properties that
+$N_R$ must follow. From now on, we assume $N_R$ is the smallest of such sets.
+
+But first, we'll define left-adjacent and right-adjacent.
+\begin{definition}[Left-adjacent Right-adjacent]
+A node $p$ is
+left-adjacent from $q$ if the path from either node's parent to the other node follows one left
+branch first and then one or more right branches and the node closer to the root
+is a right child. I.e. $lr+$ in regex notation
+where $l$ is a taken left branch and $r$ is a taken right branch. Likewise, right-adjacent is
+defined by a path with one right branch and then any number of left
+branches where the lower depth node is a left child.
+\end{definition}
+
+\begin{definition}[Consecutive nodes]
+We also define two nodes to be consecutive if the union of their ranges is
+continguous, i.e. for all $a, b$ in the union of their ranges, any $c$ such that
+$a < c < b$ must also be in the union.
+\end{definition}
+
+The main property will be building up to is this:
+
+\begin{theorem}
+  The nodes in $N_R$ follow a trapezoidal shape. Starting from the left-most
+  node, there is a (possibly empty) consecutive series of left adjacent nodes of
+  strict-monotonically lower depth
+  (lower distance from the root), and starting from the right-most node there is
+  another (possibly empty) consecutive series of right adjacent nodes of
+  strict-monotonically lower depth. This left partition of nodes and right
+  partition of nodes comprises the whole of $N_R$.
+\end{theorem}
+
+\begin{lemma}
+  There is a unique $N_R$ that is minimal.
+\end{lemma}
+Assume there are two such $N_R$'s, $A$ and $B$. WLOG there exists a range $a$ in
+$A$ that is not in $B$. We know ranges don't overlap and the unions are
+identical thus there exists a set of ranges whose union overlaps with $a$
+identically. Replacing them with $a$ in $B$ produces a smaller $N_R$.
+
+\begin{lemma}
+  If one node's range is a subset of another node, then that node is a
+  descendent of the other node.
+\end{lemma}
+This follows trivially from the construction of the tree.
+
+\begin{lemma}
+  There cannot be two nodes of the same depth that overlap in range.
+\end{lemma}
+By construction nodes of the same depth have the same range width and their
+starting indices are all multiples of that width. If two node ranges overlapped
+the start index of one of them cannot be a multiple of the width.
+
+\begin{lemma}
+  $N_R$ nodes do not overlap in range.
+\end{lemma}
+Node ranges start with a power of two. If a node starts within the range of
+another node, then that node's range is entirely contain within the other node's
+range or there is a subsequent section that isn't. In the
+former case, it means the node is not necessary and $N_R$ is not minimal. In the
+latter case these two nodes cannot be of the same depth by the previous
+lemma. But the deeper of the two nodes must have a parent at the same depth at
+the other node which is not the other node (or else it'd be fully contained) and
+that parent's range must also overlap which cannot be true by the previous lemma.
+
+\begin{corollary}
+  There is a well ordering of $N_R$ nodes by ranges where every end index of one
+  range precedes the next smallest starting index whose corresponding end index is
+  the next smallest end index.
+\end{corollary}
+
+\begin{lemma}
+  When $N_R$ are well-ordered, all nodes are consecutive with their neighbors in the ordering.
+\end{lemma}
+If they were not, then $\bigcup N_R \neq R$ since $R$ is continuous.
+
+\begin{definition}[Far-adjacent]
+  Let $p$ be lowest common ancestor of two nodes. These two nodes are
+  far-adjacent if the right child of $p$ is
+  left-adjacent to one node and the left child of
+  $p$ is right-adjacent to the other.
+\end{definition}
+
+\begin{theorem}
+  Two nodes are consecutive if and only if they are either siblings,
+  left-adjacent, right-adjacent, or far-adjacent.
+\end{theorem}
+
+\begin{lemma}
+  If $a, b, c$ are consecutive nodes and $a$ and $b$ are left-adjacent, then $b$
+  and $c$ are either left-adjacent or far-adjacent.
+\end{lemma}
+
+\begin{lemma}
+  If $a, b, c$ are consecutive nodes and $b$ and $c$ are right-adjacent, then
+  $a$ and $b$ are either right-adjacent or far-adjacent.
+\end{lemma}
+
+\begin{lemma}
+  The left-most node is a right child and the right-most node is a left child.
+\end{lemma}
+
+\begin{theorem}
+  $N_R$ when well ordered, is a sequence of left-adjacent nodes, a pair of
+  far-adjacent nodes, and then a sequence of right-adjacent nodes.
+\end{theorem}
+
+\begin{lemma}
+  Left-adjacent nodes cannot be of the same depth. Likewise for right-adjacent nodes.
+\end{lemma}
+
+Show they decrease in depth.
+
+We will call the lowest depth node of a set (the node closest to root) the
+tallest node.
+
+The tallest nodes of the two sides are far-adjacent.
+
+Theorem proved.
+
+This provides us with the first property of the tree, the range partition.
+
+Then we use the range partition to add liquidity to and walk up the tree.
+
+Prove this update to minimim will also give the subtree minimum value for any
+contained index.
+
+This naturally holds for removing liquidity.
+
+Also holds for tracking maximums.
+
+\begin{definition}
+  The peak of our breakdown is the highest node in the smallest subtree
+  containing our breakdown trapezoid.
+\end{definition}
+
+\begin{theorem}
+  The longest common prefix of the bit representations of the two range bounds is the
+  bit representation of the peak's base, and the least significant bit of the
+  base is the peak's range.
+\end{theorem}
+
+\begin{proof}
+  First, this procedure produces a parent of both the low and high bounds. The
+  produced key's range spans both the low and high since it spans all possible
+  values in that range, which includes those two since a bit sequence is
+  equivalent to a series of traversals in the tree. Since
+  all nodes at a single tier have mutually exclusive ranges this is the only
+  possible parent at that tier.
+
+  Second, the bit below the lsb is a 0 in the low's bit representation and a 1
+  in the high's representation or else the xor would have produced that below or
+  lower as its lsb. Thus no range smaller than the one we've found is sufficient
+  to cover the whole range. Therefore lowest common ancestor must be at this
+  tier.
+
+  Thus this procedure produces the lowest common ancestor.
+\end{proof}
+
+
+\section{Implementation}
+
+\subsection{Node Key Semantics}
+
+A node is keyed by a int48 which is the external product of the range and the
+base in that order. The top 24 bits is the range and the bottom is the base.
+The base is literally the start of the range that node ``covers'' and the range
+is the size of its ``covering''. In other words, any value stored at the node
+with base $B$ and range $R$ applies that value to all ticks in $[B, B+R)$.
+
+\subsection{Range Semantics}
+
+A range is specified by a low and a high. The range of integer values it
+represents is $[low, high)$. From our theorems above, we know that low will
+always represent a right node. High will also represent a right node in this
+case because it is exclusive. This makes the high point to the sibling of the
+right base of our range trapezoid, which is a left node.
+
+The reason high is exclusive is because right nodes' least significant
+bit is the bit representation of that node's range. By xoring that range with
+high we recover the base value for the left base node of our range trapezoid.
+Combining this base with the range we have gives the proper Node Key for the
+left base.
+
+However, so far we have only described scenarios where we have a right base and
+a left base for our trapezoid. That won't always be the case depending on the
+range chosen. The leftmost node of our trapezoid could be a left node in which
+case we don't have a left base. And likewise for right nodes and the right base.
+When we have a single base node, the proper range to supply would then be the
+lowest ancestor of all nodes in our range breakdown. This works conveniently
+with our peak calculation. Recall that the peak is calculated by finding the
+lowest common ancestor of our base nodes. Calculating peak between a node and
+its ancestor will always return the ancestor thus letting us avoid calculating
+one side of the trapezoid by checking if the respective range bound is equal to
+peak.
+
+\subsection{Value Propogation}
+
+When we update the values held in any node, we need to propogate it up. How we
+propogate is documented in the theorems, but here we'll discuss how we can do so
+cheaply in our implementation. To walk up a left branch, we simply shift the
+range one to the left and the parent node has the same base. To walk up a right
+branch we xor the range with our base to get the parent's base and shift the
+range one to the left. An xor of the range with our key will always give the
+correct key for our sibling. In this way, given a node, we can easily find its parent and
+update their values with the values of the given node and its sibling.
+
+\subsection{Range Breakdown Traversal}
+
+When we query over a range, we need to walk over all nodes of our range
+breakdown. We can follow the procedure from value propogation to visit all these
+nodes, but there is a cheaper method. In value propogation we must visit
+intermediary nodes between our breakdown to update their values, but here we
+have no need.
+
+When starting at a right node, we know the next node in our breakdown is left
+adjacent meaning we want to find the sibling of the first left node in the path
+of our ancestors starting from ourselves. The series of edges in finding the
+first ancestral left node is all right edges before one final left edge. This
+means that the bits in our representation starting at the bit in our range bit's
+index will be a series of 1 until 0 when read to the left. Thus we simply add 1
+to turn all of those into a 0 and the final 0 into a 1. This gives us the exact
+node we were looking for. Just clearing all the zeroes gets us to the first
+ancestral left node, and the addition of a 1 gives us that node's sibling at the
+correct range.
+
+When starting at a left node the situation is the opposite. We have a series of
+0 bits and then a 1 bit which we'll want to convert to a 0 bit to give us the
+next left node in our breakdown. To do this we simply start with finding the
+least significant bit of our base to get the next range we'll want, and then by
+xoring that range with our base we can get the base of the next breakdown node.
+
+To know when to stop traversing, we first calculate the peak and break when our
+next node crosses the peak. Conceptually this makes sense, but in practice
+recall that the peak's base is actually the start of the range which covers our
+own trapezoid so we can't determine if we've cross the peak just by comparing
+base values. Instead, we notice that the left adjacent node of our final left
+side node will be the right child of our peak and the right adjacent node of our
+final right side node will be the left child of our peak. Thus stopping iteration
+when we visit a node who's range is one below our peak's range achieves what we
+want.
+
+\end{document}
