@@ -9,6 +9,10 @@ import { LKey, LKeyImpl } from "src/Tree.sol";
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
 contract LiqTreeTest is PRBTest {
+    using LiqTreeImpl for LiqTree;
+
+    LiqTree public t;
+
     function setUp() public {
         // solhint-disable-previous-line no-empty-blocks
     }
@@ -27,7 +31,7 @@ contract LiqTreeIntTest is PRBTest {
     }
 
     function assertLCA(uint24 a, uint24 b, uint24 common, uint24 commonRange) public {
-        LKey key = LiqTreeIntLib.lowestCommonAncestor(a, b);
+        (LKey key, ) = LiqTreeIntLib.lowestCommonAncestor(a, b);
         (uint24 base, uint24 range) = key.explode();
         assertEq(base, common);
         assertEq(range, commonRange);
