@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.18;
 
 import { console } from "forge-std/console.sol";
 import { PRBTest } from "@prb/test/PRBTest.sol";
