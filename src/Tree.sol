@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BSL-1.1
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.18;
 
 /// I would totally rewrite this differently.
 /// Querying is not just using the break down.
