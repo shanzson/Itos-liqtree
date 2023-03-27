@@ -1,6 +1,30 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
+
+/**
+ *  Liquidity Tree
+ *
+ *  Consider a tree with a depth of 4
+ *
+ *                                                              root
+ *                                                      ____----    ----____
+ *                                  __________----------                    ----------__________
+ *                                 L                                                            R
+ *                            __--  --__                                                    __--  --__
+ *                       __---          ---__                                          __---          ---__
+ *                     /                       \                                     /                       \
+ *                  LL                           LR                               RL                           RR
+ *                /   \                         /   \                           /   \                         /   \
+ *              /       \                     /       \                       /       \                     /       \
+ *            /           \                 /           \                   /           \                 /           \
+ *          LLL            LLR            LRL            LRR              RLL            RLR            RRL            RRR
+ *         /   \          /   \          /   \          /   \            /   \          /   \          /   \          /   \
+ *        /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
+ *     LLLL    LLLR    LLRL    LLRR   LRLL    LRLR   LRRL    LRRR      RLLL   RLLR   RLRL    RLRR   RRLL    RRLR   RRRL    RRRR
+ *
+ */
+
 /// I would totally rewrite this differently.
 /// Querying is not just using the break down.
 /// Traversals are always done so I would have prioritize cheapening those.
