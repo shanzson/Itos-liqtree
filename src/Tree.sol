@@ -17,6 +17,11 @@ uint8 constant MAX_TREE_DEPTH = 21; // We zero index depth, so this is 22 levels
 // the lkey is one-hot.
 LKey constant LKeyNIL = LKey.wrap(0xFFFFFFFFFFFF);
 
+struct LiqRange {
+    uint128 low;
+    uint128 high;
+}
+
 /*
  * @notice A struct for querying the liquidity available in a given range. It's similar to a combination of a
  * segment tree and an augmented tree.
