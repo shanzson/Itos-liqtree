@@ -98,6 +98,42 @@ library LiqTreeImpl {
     }
 
     /***********************************
+     * Updated Interface Methods (comment to be deleted after refactor)  *
+     ***********************************/
+
+    function addMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+        // TODO (urlaubaitos)
+    }
+
+    function addBlanketMLiq(LiqTree storage self, uint128 liq) external {
+        // TODO (urlaubaitos)
+    }
+
+    function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+        // TODO (urlaubaitos)
+    }
+
+    function removeBlanketMLiq(LiqTree storage self, uint128 liq) external {
+        // TODO (urlaubaitos)
+    }
+
+    function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+        // TODO (urlaubaitos)
+    }
+
+    function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+        // TODO (urlaubaitos)
+    }
+
+    function borrow(LiqTree storage self, LiqRange memory range, uint128 liq, uint128 amountX, uint128 amountY) internal  {
+        // TODO (urlaubaitos)
+    }
+
+    function repay(LiqTree storage self, LiqRange memory range, uint128 liq, uint128 amountX, uint128 amountY) internal {
+        // TODO (urlaubaitos)
+    }
+
+    /***********************************
      * Raw int range to LKey functions *
      ***********************************/
 
