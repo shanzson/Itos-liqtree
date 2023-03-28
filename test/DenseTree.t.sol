@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import { Test } from "forge-std/Test.sol";
 
-import { LiqTree } from "src/Tree.sol";
+import { LiqTree, LiqTreeImpl } from "src/Tree.sol";
 
 /**
  * In practice, the LiqTree will have many nodes. So many, that testing at that scale is intractable.
@@ -11,6 +11,7 @@ import { LiqTree } from "src/Tree.sol";
  */ 
 contract DenseTreeTest is Test {
     LiqTree public liqTree;
+    using LiqTreeImpl for LiqTree;
     
     function setUp() public {
         // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]). 
