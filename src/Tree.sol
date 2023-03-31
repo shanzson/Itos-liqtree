@@ -190,15 +190,7 @@ library LiqTreeImpl {
         peakPropogateM(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
     }
 
-    function addBlanketMLiq(LiqTree storage self, uint128 liq) external {
-        // TODO (urlaubaitos)
-    }
-
     function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
-        // TODO (urlaubaitos)
-    }
-
-    function removeBlanketMLiq(LiqTree storage self, uint128 liq) external {
         // TODO (urlaubaitos)
     }
 
@@ -250,6 +242,34 @@ library LiqTreeImpl {
 
     function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
         // TODO (urlaubaitos)
+    }
+
+    function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
+        // TODO (urlaubaitos) adjust for fee accounting
+        LiqNode storage rootNode = self.nodes[self.root];
+        rootNode.mLiq += liq;
+        rootNode.subtreeMinM += liq;
+    }
+
+    function removeInfRangeMLiq(LiqTree storage self, uint128 liq) external {
+        // TODO (urlaubaitos) adjust for fee accounting
+        LiqNode storage rootNode = self.nodes[self.root];
+        rootNode.mLiq -= liq;
+        rootNode.subtreeMinM -= liq;
+    }
+
+    function addInfRangeTLiq(LiqTree storage self, uint128 liq) external {
+        // TODO (urlaubaitos) adjust for fee accounting
+        LiqNode storage rootNode = self.nodes[self.root];
+        rootNode.tLiq += liq;
+        rootNode.subtreeMaxT += liq;
+    }
+
+    function removeInfRangeTLiq(LiqTree storage self, uint128 liq) external {
+        // TODO (urlaubaitos) adjust for fee accounting
+        LiqNode storage rootNode = self.nodes[self.root];
+        rootNode.tLiq -= liq;
+        rootNode.subtreeMaxT -= liq;
     }
 
     function borrow(LiqTree storage self, LiqRange memory range, uint128 liq, uint128 amountX, uint128 amountY) internal  {
