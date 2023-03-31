@@ -31,7 +31,9 @@ pragma solidity ^0.8.18;
 /// But the change should not be insanely difficult.
 
 
+
 import { console } from "forge-std/console.sol";
+
 
 type LKey is uint48;
 // Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks.
@@ -56,6 +58,7 @@ struct LiqTree {
     mapping(LKey => LiqNode) nodes;
     LKey root; // maxRange << 24 + maxRange;
     uint24 offset; // This is also the maximum range allowed in this tree.
+    uint8 depth; // will is be cheaper gas to store this? Or calculate?
 }
 
 struct LiqNode {
@@ -134,6 +137,7 @@ library LiqTreeImpl {
 
         self.root = LKeyImpl.makeKey(maxRange, maxRange);
         self.offset = maxRange;
+        self.depth = maxDepth;
     }
 
     /***********************************
@@ -256,19 +260,40 @@ library LiqTreeImpl {
         // TODO (urlaubaitos)
     }
 
+    // determine better way to keep private + support testing
+    function walkToRootForMLiq(LiqTree storage self, LKey nodeKey) public view returns (uint128[] memory mLiqs) {
+        mLiqs = new uint128[](self.depth);
+
+        (uint24 rb, uint24 rr) = LKeyImpl.explode(self.root);
+        console.log("root");
+        console.log("root rb", rb, rr);
+
+        uint8 index = 0;
+        while (nodeKey.isNeq(self.root)) {
+            console.log("next key");
+            (uint24 r, uint24 b) = LKeyImpl.explode(nodeKey);
+            console.log(r, b);
+            LiqNode storage node = self.nodes[nodeKey];
+            mLiqs[index] = node.mLiq;
+            (nodeKey, ) = nodeKey.genericUp();
+            ++index;
+        }
+    }
+
     /***********************************
      * Raw int range to LKey functions *
      ***********************************/
 
     /// A thin wrapper around LiqTreeIntLib that handles base value offsets.
+    // Determine way to support testing + make private
     function getKeys(
         LiqTree storage self, uint24 rangeLow, uint24 rangeHigh
-    ) private view returns (LKey low, LKey high, LKey peak, LKey stopRange) {
+    ) public view returns (LKey low, LKey high, LKey peak, LKey stopRange) {
         require(rangeLow <= rangeHigh, "RLH");
         require(rangeHigh < self.offset, "RHO");
         // No one should be able to specifc the whole range. We rely on not having peak be equal to root
         // when we traverse the tree because stoprange can sometimes be one above the peak.
-        require((rangeLow != 0) || (rangeHigh != (self.offset - 1)));
+        require((rangeLow != 0) || (rangeHigh != (self.offset - 1)), "WR");
         rangeLow += self.offset;
         rangeHigh += self.offset;
         return LiqTreeIntLib.getRangeBounds(rangeLow, rangeHigh);
