@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
+import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
+
 
 /**
  *  Liquidity Tree
@@ -61,65 +63,6 @@ struct LiqTree {
     uint8 depth; // will is be cheaper gas to store this? Or calculate?
 }
 
-struct LiqNode {
-    // The first four are for liquidity constraints
-    uint128 mLiq;
-    uint128 tLiq; // This is also used for fees.
-    uint128 subtreeMinM;
-    uint128 subtreeMaxT;
-
-    uint128 subtreeMLiq;
-    
-    uint128 borrowedX;
-    uint128 borrowedY;
-
-    uint128 subtreeBorrowedX;
-    uint128 subtreeBorrowedY;
-
-    // snapshot
-
-    uint128 cummulativeXEarnedPerMLiq;
-    uint128 cummulativeYEarnedPerMLiq;
-
-    // DEPRECATED
-    uint128 subtreeMaxM;
-}
-
-
-
-/// Encapsulation of the details nodes store in a LiqTree.
-library LiqNodeImpl {
-
-    function addMLiq(LiqNode storage self, int128 liq) internal {
-        if (liq >= 0) {
-            uint128 uliq = uint128(liq);
-            self.mLiq += uliq;
-            self.subtreeMinM += uliq;
-            self.subtreeMaxM += uliq;
-        } else {
-            // We should never be removing liquidity we don't have in a node so it's okay
-            // to do the subtraction here. We'll leave it checked for now though.
-            uint128 uliq = uint128(-liq);
-            self.mLiq -= uliq;
-            self.subtreeMinM -= uliq;
-            self.subtreeMaxM -= uliq;
-        }
-    }
-
-    function addTLiq(LiqNode storage self, int128 liq) internal {
-        if (liq >= 0) {
-            uint128 uliq = uint128(liq);
-            self.tLiq += uliq;
-            self.subtreeMaxT += uliq;
-        } else {
-            // We should never be removing liquidity we don't have in a node so it's okay
-            // to do the subtraction here. We'll leave it checked for now though.
-            uint128 uliq = uint128(-liq);
-            self.tLiq -= uliq;
-            self.subtreeMaxT -= uliq;
-        }
-    }
-}
 
 library LiqTreeImpl {
     using LKeyImpl for LKey;
@@ -153,14 +96,14 @@ library LiqTreeImpl {
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
-            node.addMLiq(int128(liq));
+            node.addMLiq(liq);
             (current, node) = rightPropogateM(self, current, node);
 
             while (current.isLess(stopRange)) {
                 if (current.isLeft()) {
                     current = current.rightSib();
                     node = self.nodes[current];
-                    node.addMLiq(int128(liq));
+                    node.addMLiq(liq);
                 }
                 (current, node) = rightPropogateM(self, current, node);
             }
@@ -169,14 +112,14 @@ library LiqTreeImpl {
         if (high.isLess(stopRange)) {
             current = high;
             node = self.nodes[current];
-            node.addMLiq(int128(liq));
+            node.addMLiq(liq);
             (current, node) = leftPropogateM(self, current, node);
 
             while(current.isLess(stopRange)) {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
-                    node.addMLiq(int128(liq));
+                    node.addMLiq(liq);
                 }
                 (current, node) = leftPropogateM(self, current, node);
             }
@@ -191,7 +134,49 @@ library LiqTreeImpl {
     }
 
     function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
-        // TODO (urlaubaitos)
+        (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
+
+        LKey current;
+        LiqNode storage node;
+
+        if (low.isLess(stopRange)) {
+            current = low;
+            node = self.nodes[current];
+            node.removeMLiq(liq);
+            (current, node) = rightPropogateM(self, current, node);
+
+            while (current.isLess(stopRange)) {
+                if (current.isLeft()) {
+                    current = current.rightSib();
+                    node = self.nodes[current];
+                    node.removeMLiq(liq);
+                }
+                (current, node) = rightPropogateM(self, current, node);
+            }
+        }
+
+        if (high.isLess(stopRange)) {
+            current = high;
+            node = self.nodes[current];
+            node.removeMLiq(liq);
+            (current, node) = leftPropogateM(self, current, node);
+
+            while(current.isLess(stopRange)) {
+                if (current.isRight()) {
+                    current = current.leftSib();
+                    node = self.nodes[current];
+                    node.removeMLiq(liq);
+                }
+                (current, node) = leftPropogateM(self, current, node);
+            }
+        }
+
+        // Both legs are handled. Touch up everything above where we left off.
+        // Current must have already been propogated to.
+        // Note. Peak propogating from peak could waste one propogation because sometimes
+        // high or low is equal to peak, and we always propogate following an update.
+        // So this is just a slight gas saving of one propogate.
+        peakPropogateM(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
     }
 
     function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
@@ -204,7 +189,7 @@ library LiqTreeImpl {
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
-            node.addTLiq(int128(liq));
+            node.addTLiq(liq);
             (current, node) = rightPropogateT(self, current, node);
 
             while (current.isLess(stopRange)) {
@@ -212,7 +197,7 @@ library LiqTreeImpl {
                 if (current.isLeft()) {
                     current = current.rightSib();
                     node = self.nodes[current];
-                    node.addTLiq(int128(liq));
+                    node.addTLiq(liq);
                 }
                 (current, node) = rightPropogateT(self, current, node);
             }
@@ -221,7 +206,7 @@ library LiqTreeImpl {
         if (high.isLess(stopRange)) {
             current = high;
             node = self.nodes[current];
-            node.addTLiq(int128(liq));
+            node.addTLiq(liq);
             (current, node) = leftPropogateT(self, current, node);
 
             while(current.isLess(stopRange)) {
@@ -229,7 +214,7 @@ library LiqTreeImpl {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
-                    node.addTLiq(int128(liq));
+                    node.addTLiq(liq);
                 }
                 (current, node) = leftPropogateT(self, current, node);
             }
@@ -241,7 +226,49 @@ library LiqTreeImpl {
     }
 
     function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
-        // TODO (urlaubaitos)
+        (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
+
+        LKey current;
+        LiqNode storage node;
+
+        // Start with the left side of all right nodes.
+        if (low.isLess(stopRange)) {
+            current = low;
+            node = self.nodes[current];
+            node.removeTLiq(liq);
+            (current, node) = rightPropogateT(self, current, node);
+
+            while (current.isLess(stopRange)) {
+                // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
+                if (current.isLeft()) {
+                    current = current.rightSib();
+                    node = self.nodes[current];
+                    node.removeTLiq(liq);
+                }
+                (current, node) = rightPropogateT(self, current, node);
+            }
+        }
+
+        if (high.isLess(stopRange)) {
+            current = high;
+            node = self.nodes[current];
+            node.removeTLiq(liq);
+            (current, node) = leftPropogateT(self, current, node);
+
+            while(current.isLess(stopRange)) {
+                // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
+                if (current.isRight()) {
+                    current = current.leftSib();
+                    node = self.nodes[current];
+                    node.removeTLiq(liq);
+                }
+                (current, node) = leftPropogateT(self, current, node);
+            }
+        }
+
+        // Both legs are handled. Touch up everything above.
+        // Current has already been propogated to.
+        peakPropogateT(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
     }
 
     function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
@@ -361,131 +388,6 @@ library LiqTreeImpl {
     function queryWideMTBounds(LiqTree storage self) internal view returns (uint128 minMaker, uint128 maxTaker) {
         LiqNode storage node = self.nodes[self.root];
         return (node.subtreeMinM, node.subtreeMaxT);
-    }
-
-    /******************************
-     ** Range specific functions **
-     ******************************/
-
-    /// Add or subtract maker liquidity to a range.
-    /// @dev When subtracting liquidity, we are specifically subtracting from liquidity that already exists
-    /// at a particular node. This is meant for removing existing positions, not add new negative ones.
-    function addMLiq(
-        LiqTree storage self,
-        uint24 rawLow,
-        uint24 rawHigh,
-        int128 liq
-    ) internal {
-        (LKey low, LKey high, , LKey stopRange) = getKeys(self, rawLow, rawHigh);
-
-        LKey current;
-        LiqNode storage node;
-
-        // console.log("add low", LKey.unwrap(low));
-        // console.log("add high", LKey.unwrap(high));
-        // console.log("add stop", LKey.unwrap(stopRange));
-
-        // Start with the left side of all right nodes.
-        // Only do this first add if we're actually a valid breakdown node!
-        if (low.isLess(stopRange)) {
-            current = low;
-            node = self.nodes[current];
-            // console.log("adding low", LKey.unwrap(low), liq);
-            node.addMLiq(liq);
-            (current, node) = rightPropogateM(self, current, node);
-
-            while (current.isLess(stopRange)) {
-                // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
-                if (current.isLeft()) {
-                    current = current.rightSib();
-                    // console.log("current add", LKey.unwrap(current));
-                    node = self.nodes[current];
-                    node.addMLiq(liq);
-                }
-                (current, node) = rightPropogateM(self, current, node);
-            }
-        }
-
-        if (high.isLess(stopRange)) {
-            current = high;
-            node = self.nodes[current];
-            // console.log("adding high", LKey.unwrap(high), liq);
-            // // console.log("existing", node.subtreeMinM);
-            node.addMLiq(liq);
-            // console.log("after", node.subtreeMinM);
-            (current, node) = leftPropogateM(self, current, node);
-            // console.log("after2", self.nodes[high].subtreeMinM);
-
-            while(current.isLess(stopRange)) {
-                // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
-                if (current.isRight()) {
-                    current = current.leftSib();
-                    // console.log("current add", LKey.unwrap(current));
-                    node = self.nodes[current];
-                    node.addMLiq(liq);
-                }
-                (current, node) = leftPropogateM(self, current, node);
-            }
-        }
-
-        // Both legs are handled. Touch up everything above where we left off.
-        // Current must have already been propogated to.
-        // Note. Peak propogating from peak could waste one propogation because sometimes
-        // high or low is equal to peak, and we always propogate following an update.
-        // So this is just a slight gas saving of one propogate.
-        peakPropogateM(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
-    }
-
-    /// Add maker liquidity to a range.
-    function addTLiq(
-        LiqTree storage self,
-        uint24 rawLow,
-        uint24 rawHigh,
-        int128 liq
-    ) internal {
-        (LKey low, LKey high, , LKey stopRange) = getKeys(self, rawLow, rawHigh);
-
-        LKey current;
-        LiqNode storage node;
-
-        // Start with the left side of all right nodes.
-        if (low.isLess(stopRange)) {
-            current = low;
-            node = self.nodes[current];
-            node.addTLiq(liq);
-            (current, node) = rightPropogateT(self, current, node);
-
-            while (current.isLess(stopRange)) {
-                // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
-                if (current.isLeft()) {
-                    current = current.rightSib();
-                    node = self.nodes[current];
-                    node.addTLiq(liq);
-                }
-                (current, node) = rightPropogateT(self, current, node);
-            }
-        }
-
-        if (high.isLess(stopRange)) {
-            current = high;
-            node = self.nodes[current];
-            node.addTLiq(liq);
-            (current, node) = leftPropogateT(self, current, node);
-
-            while(current.isLess(stopRange)) {
-                // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
-                if (current.isRight()) {
-                    current = current.leftSib();
-                    node = self.nodes[current];
-                    node.addTLiq(liq);
-                }
-                (current, node) = leftPropogateT(self, current, node);
-            }
-        }
-
-        // Both legs are handled. Touch up everything above.
-        // Current has already been propogated to.
-        peakPropogateT(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
     }
 
     /*******************
