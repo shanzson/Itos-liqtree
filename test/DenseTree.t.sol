@@ -36,6 +36,67 @@ contract DenseTreeTest is Test {
         assertEq(mLiqs[3], 140);
     }
 
+    function testExample2Fees() public {
+        // Keys
+
+        uint256 t0 = block.timestamp;
+
+        LKey root = liqTree.root;
+        LKey L = _nodeKey(1, 0, 16);
+        LKey LL = _nodeKey(2, 0, 16);
+        LKey LLL = _nodeKey(3, 0, 16);
+        LKey LLR = _nodeKey(3, 1, 16);
+        LKey LLLR = _nodeKey(4, 1, 16);
+        LKey LLRL = _nodeKey(4, 2, 16);
+
+        // _printKey(root);
+        // _printKey(L);
+        // _printKey(LL);
+        // _printKey(LLL);
+        // _printKey(LLR);
+        // _printKey(LLLR);
+        // _printKey(LLRL);
+
+        // Step 1) add maker liq
+        vm.warp(t0);
+
+        liqTree.addMLiq(LiqRange(0, 3), 2);  // LL
+        liqTree.addMLiq(LiqRange(0, 2), 7);  // LLL, LLRL
+        liqTree.addMLiq(LiqRange(0, 7), 20); // L
+
+        assertEq(liqTree.nodes[root].mLiq, 0);
+        assertEq(liqTree.nodes[L].mLiq, 20);
+        assertEq(liqTree.nodes[LL].mLiq, 2);
+        assertEq(liqTree.nodes[LLL].mLiq, 7);
+        assertEq(liqTree.nodes[LLR].mLiq, 0);
+        assertEq(liqTree.nodes[LLRL].mLiq, 7);
+
+        // Step 2) add taker liq
+        vm.warp(t0 + 5);
+
+        liqTree.addTLiq(LiqRange(0, 1), 5);
+        liqTree.addTLiq(LiqRange(0, 7), 9);
+
+        return;
+
+        // Step 3) add new position that effects previous nodes, calculate fees
+        liqTree.addMLiq(LiqRange(1, 3), 13); // LLLR, LLR
+
+        // Step 4) verify
+
+        // LLLR
+        // 0, 0
+        
+        // LLL
+        // 0, 0.00000000164
+
+        // LL
+        // 0.0000000010013052, 0
+
+        // L
+        // 
+    }
+
     function _printTree() public {
 
     }

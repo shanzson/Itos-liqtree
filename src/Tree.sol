@@ -49,6 +49,7 @@ struct LiqRange {
     uint24 low;
     uint24 high;
 }
+ 
 
 /*
  * @notice A struct for querying the liquidity available in a given range. It's similar to a combination of a
@@ -572,7 +573,7 @@ library LiqTreeImpl {
         LKey current,
         LiqNode storage node
     ) internal {
-        // Is less works on root since root has the smallest possible base.
+        // Is less works on root since root has the largest possible base.
         while (current.isLess(self.root)) {
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
