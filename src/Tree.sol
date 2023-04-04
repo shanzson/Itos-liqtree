@@ -499,38 +499,6 @@ library LiqTreeImpl {
     }
 
     /**************************
-     ** Wide Range Functions **
-     **************************/
-
-    /// Add whole range maker liquidity to the tree.
-    function addWideMLiq(LiqTree storage self, uint128 liq) internal {
-        LiqNode storage node = self.nodes[self.root];
-        node.mLiq += liq;
-        node.subtreeMinM += liq;
-    }
-
-    /// Subtract whole range maker liquidity from the tree.
-    function subWideMLiq(LiqTree storage self, uint128 liq) internal {
-        LiqNode storage node = self.nodes[self.root];
-        node.mLiq -= liq;
-        node.subtreeMinM -= liq;
-    }
-
-    /// Add whole range taker liquidity to the tree.
-    function addWideTLiq(LiqTree storage self, uint128 liq) internal {
-        LiqNode storage node = self.nodes[self.root];
-        node.tLiq += liq;
-        node.subtreeMaxT += liq;
-    }
-
-    /// Subtract whole range taker liquidity from the tree.
-    function subWideTLiq(LiqTree storage self, uint128 liq) internal {
-        LiqNode storage node = self.nodes[self.root];
-        node.tLiq -= liq;
-        node.subtreeMaxT -= liq;
-    }
-
-    /**************************
      ** Wide Query Functions **
      **************************/
 
