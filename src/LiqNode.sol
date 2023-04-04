@@ -2,19 +2,24 @@
 pragma solidity ^0.8.18;
 
 struct LiqNode {
-    // The first four are for liquidity constraints
     uint128 mLiq;
-    uint128 tLiq; // This is also used for fees.
+    uint128 tLiq;
+
+    uint256 borrowedX;
+    uint256 borrowedY;
+
+    uint256 subtreeBorrowedX;
+    uint256 subtreeBorrowedY;
+
+    // --- above this line is used 100%
+
+    // The first four are for liquidity constraints
+    //uint128 mLiq;
+    //uint128 tLiq; // This is also used for fees.
     uint128 subtreeMinM;
     uint128 subtreeMaxT;
 
     uint128 subtreeMLiq;
-    
-    uint128 borrowedX;
-    uint128 borrowedY;
-
-    uint128 subtreeBorrowedX;
-    uint128 subtreeBorrowedY;
 
     // snapshot
 
@@ -47,6 +52,20 @@ library LiqNodeImpl {
     function removeTLiq(LiqNode storage self, uint128 liq) external {
         self.tLiq -= liq;
         self.subtreeMaxT -= liq;
+    }
+
+    function borrow(LiqNode storage self, uint256 amountX, uint256 amountY) external {
+        self.borrowedX += amountX;
+        self.borrowedY += amountY;
+        self.subtreeBorrowedX += amountX;
+        self.subtreeBorrowedY += amountY;
+    }
+
+    function repay(LiqNode storage self, uint256 amountX, uint256 amountY) external {
+        self.borrowedX -= amountX;
+        self.borrowedY -= amountY;
+        self.subtreeBorrowedX -= amountX;
+        self.subtreeBorrowedY -= amountY;
     }
 
 }

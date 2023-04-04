@@ -48,4 +48,26 @@ contract LiqNodeTest is Test {
         node.removeTLiq(100);
     }
 
+    function testBorrow() public {
+        node.borrow(220, 550);
+        assertEq(node.borrowedX, 220);
+        assertEq(node.subtreeBorrowedX, 220);
+        assertEq(node.borrowedY, 550);
+        assertEq(node.subtreeBorrowedY, 550);
+    }
+
+    function testRepay() public {
+        node.borrow(220, 550);
+        node.repay(100, 200);
+        assertEq(node.borrowedX, 120);
+        assertEq(node.subtreeBorrowedX, 120);
+        assertEq(node.borrowedY, 350);
+        assertEq(node.subtreeBorrowedY, 350);
+    }
+
+    function testRevertRepayingMoreThanBorrowed() public {
+        vm.expectRevert(stdError.arithmeticError);
+        node.repay(100, 200);
+    }
+
 }
