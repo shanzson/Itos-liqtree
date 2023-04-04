@@ -622,15 +622,6 @@ library LiqTreeImpl {
         // console.log("PostPeak", minMaker, maxTaker);
     }
 
-    /// Query the total amount of Taker liquidity over the entire range and the maximum maker liquidity.
-    function queryMLiqMaxFeeTokenSum(
-        LiqTree storage self,
-        uint24 low,
-        uint24 high
-    ) internal view returns (uint128 maxMaker, uint128 sumTaker) {
-        // TODO
-    }
-
     /**********
      ** MISC **
      **********/
