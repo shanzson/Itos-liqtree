@@ -74,13 +74,16 @@ contract DenseTreeTest is Test {
         // Step 2) add taker liq
         vm.warp(t0 + 5);
 
-        liqTree.addTLiq(LiqRange(0, 1), 5);
-        liqTree.addTLiq(LiqRange(0, 7), 9);
+        liqTree.addTLiq(LiqRange(0, 1), 5, 12, 22);
+        liqTree.addTLiq(LiqRange(0, 7), 9, 3, 4);
+
+
 
         return;
 
         // Step 3) add new position that effects previous nodes, calculate fees
         vm.warp(t0 + 10);
+
         liqTree.addMLiq(LiqRange(1, 3), 13); // LLLR, LLR
 
         // Step 4) verify

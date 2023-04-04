@@ -97,12 +97,20 @@ library LiqTreeImpl {
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
+
+            uint24 rangeWidth = (range.high - range.low);
+
+            // calculate fees
+            // uint256 rateDiffX = self.feeRateSnapshotTokenX.diff(node.)
+
             node.addMLiq(liq);
 
             // Right Propogate M
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            parent.subtreeMLiq += liq;
+
             (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
@@ -258,7 +266,7 @@ library LiqTreeImpl {
         }
     }
 
-    function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) public {
+    function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) public {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -268,12 +276,23 @@ library LiqTreeImpl {
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
+
+            // calculate fees 
+
             node.addTLiq(liq);
+
+            node.borrowedX += amountX;
+            node.borrowedY += amountY;
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            parent.subtreeBorrowedX += amountX;
+            parent.subtreeBorrowedY += amountY;
+
+            // do fees need to be calculated here?
+
             (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
@@ -281,13 +300,22 @@ library LiqTreeImpl {
                 if (current.isLeft()) {
                     current = current.rightSib();
                     node = self.nodes[current];
+
+                    // calculate fees 
+
                     node.addTLiq(liq);
+
+                    node.borrowedX += amountX;
+                    node.borrowedY += amountY;
                 }
 
                 // Right Propogate T
                 (up, left) = current.rightUp();
                 parent = self.nodes[up];
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                parent.subtreeBorrowedX += amountX;
+                parent.subtreeBorrowedY += amountY;
+
                 (current, node) = (up, parent);
             }
         }
@@ -295,12 +323,21 @@ library LiqTreeImpl {
         if (high.isLess(stopRange)) {
             current = high;
             node = self.nodes[current];
+
+            // calculate fees 
+
             node.addTLiq(liq);
+
+            node.borrowedX += amountX;
+            node.borrowedY += amountY;
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            parent.subtreeBorrowedX += amountX;
+            parent.subtreeBorrowedY += amountY;
+
             (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
@@ -308,13 +345,22 @@ library LiqTreeImpl {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
+
+                    // calculate fees 
+
                     node.addTLiq(liq);
+
+                    node.borrowedX += amountX;
+                    node.borrowedY += amountY;
                 }
 
                 // Left Propogate T
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                parent.subtreeBorrowedX += amountX;
+                parent.subtreeBorrowedY += amountY;
+
                 (current, node) = (up, parent);
             }
         }
@@ -331,15 +377,19 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
             uint128 oldMax = parent.subtreeMaxT;
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            parent.subtreeBorrowedX += amountX;
+            parent.subtreeBorrowedY += amountY;
+
             if (node.subtreeMaxT == oldMax) {
-                return;
+            // Don't think we can early return anymore
+            //    return;
             }
             current = up;
             node = parent;
         }
     }
 
-    function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+    function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) external {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;

@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 struct LiqNode {
     uint128 mLiq;
     uint128 tLiq;
+    uint128 subtreeMLiq;
 
     uint256 borrowedX;
     uint256 borrowedY;
@@ -19,7 +20,7 @@ struct LiqNode {
     uint128 subtreeMinM;
     uint128 subtreeMaxT;
 
-    uint128 subtreeMLiq;
+    // uint128 subtreeMLiq;
 
     // snapshot
 

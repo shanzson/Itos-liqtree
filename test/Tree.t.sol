@@ -48,7 +48,7 @@ contract LiqTreeTest is PRBTest {
         assertWideMT(10, 0);
 
         // Adding tliq anywhere though, will raise the max wide tliq.
-        t.addTLiq(LiqRange(300, 400), 10);
+        t.addTLiq(LiqRange(300, 400), 10, 0, 0);
         assertWideMT(10, 10);
     }
 
@@ -127,7 +127,7 @@ contract LiqTreeTest is PRBTest {
     }
 
     function testTLiq() public {
-        t.addTLiq(LiqRange(6, 6), 10);
+        t.addTLiq(LiqRange(6, 6), 10, 0, 0);
         assertMT(6, 6, 0, 10);
         assertWideMT(0, 10);
         assertMT(6, 7, 0, 10);
@@ -135,7 +135,7 @@ contract LiqTreeTest is PRBTest {
         assertMT(7, 10, 0, 0);
 
         // Test consecutive nodes
-        t.addTLiq(LiqRange(7, 7), 5);
+        t.addTLiq(LiqRange(7, 7), 5, 0, 0);
         assertMT(6, 7, 0, 10);
         assertMT(7, 7, 0, 5);
         assertMT(6, 6, 0, 10);
@@ -144,7 +144,7 @@ contract LiqTreeTest is PRBTest {
         assertWideMT(0, 10);
 
         // Test larger ranges
-        t.addTLiq(LiqRange(5, 100), 50);
+        t.addTLiq(LiqRange(5, 100), 50, 0, 0);
         assertWideMT(0, 60);
         assertMT(0, 4, 0, 0);
         assertMT(0, 5, 0, 50);
