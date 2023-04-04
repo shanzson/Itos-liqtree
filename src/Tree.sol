@@ -98,7 +98,12 @@ library LiqTreeImpl {
             current = low;
             node = self.nodes[current];
             node.addMLiq(liq);
-            (current, node) = rightPropogateM(self, current, node);
+
+            // Right Propogate M
+            (LKey up, LKey left) = current.rightUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
                 if (current.isLeft()) {
@@ -106,7 +111,12 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.addMLiq(liq);
                 }
-                (current, node) = rightPropogateM(self, current, node);
+
+                // Right Propogate M
+                (up, left) = current.rightUp();
+                parent = self.nodes[up];
+                parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+                (current, node) = (up, parent);
             }
         }
 
@@ -114,7 +124,12 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
             node.addMLiq(liq);
-            (current, node) = leftPropogateM(self, current, node);
+
+            // Left Propogate M
+            (LKey up, LKey left) = current.leftUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
                 if (current.isRight()) {
@@ -122,7 +137,12 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.addMLiq(liq);
                 }
-                (current, node) = leftPropogateM(self, current, node);
+
+                // Left Propogate M
+                (up, left) = current.leftUp();
+                parent = self.nodes[up];
+                parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+                (current, node) = (up, parent);
             }
         }
 
@@ -131,7 +151,26 @@ library LiqTreeImpl {
         // Note. Peak propogating from peak could waste one propogation because sometimes
         // high or low is equal to peak, and we always propogate following an update.
         // So this is just a slight gas saving of one propogate.
-        peakPropogateM(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
+
+        // Peak Propogate M
+
+        node = self.nodes[current];
+
+        // Is less works on root since root has the largest possible base.
+        while (current.isLess(self.root)) {
+            (LKey up, LKey other) = current.genericUp();
+            LiqNode storage parent = self.nodes[up];
+            uint128 oldMin = parent.subtreeMinM;
+
+            // We're just propogating the min, if our value doesn't change none of the parents need to.
+            parent.subtreeMinM = min(self.nodes[other].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            if (parent.subtreeMinM == oldMin) {
+                return;
+            }
+
+            current = up;
+            node = parent; // Store this to save one lookup..
+        }
     }
 
     function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
@@ -144,7 +183,12 @@ library LiqTreeImpl {
             current = low;
             node = self.nodes[current];
             node.removeMLiq(liq);
-            (current, node) = rightPropogateM(self, current, node);
+
+            // Right Propogate M
+            (LKey up, LKey left) = current.rightUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
                 if (current.isLeft()) {
@@ -152,7 +196,12 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.removeMLiq(liq);
                 }
-                (current, node) = rightPropogateM(self, current, node);
+
+                // Right Propogate M
+                (up, left) = current.rightUp();
+                parent = self.nodes[up];
+                parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+                (current, node) = (up, parent);
             }
         }
 
@@ -160,7 +209,12 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
             node.removeMLiq(liq);
-            (current, node) = leftPropogateM(self, current, node);
+
+            // Left Propogate M
+            (LKey up, LKey left) = current.leftUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
                 if (current.isRight()) {
@@ -168,7 +222,12 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.removeMLiq(liq);
                 }
-                (current, node) = leftPropogateM(self, current, node);
+
+                // Left Propogate M
+                (up, left) = current.leftUp();
+                parent = self.nodes[up];
+                parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+                (current, node) = (up, parent);
             }
         }
 
@@ -177,7 +236,26 @@ library LiqTreeImpl {
         // Note. Peak propogating from peak could waste one propogation because sometimes
         // high or low is equal to peak, and we always propogate following an update.
         // So this is just a slight gas saving of one propogate.
-        peakPropogateM(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
+
+        // Peak Propogate M
+
+        node = self.nodes[current];
+
+        // Is less works on root since root has the largest possible base.
+        while (current.isLess(self.root)) {
+            (LKey up, LKey other) = current.genericUp();
+            LiqNode storage parent = self.nodes[up];
+            uint128 oldMin = parent.subtreeMinM;
+
+            // We're just propogating the min, if our value doesn't change none of the parents need to.
+            parent.subtreeMinM = min(self.nodes[other].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            if (parent.subtreeMinM == oldMin) {
+                return;
+            }
+
+            current = up;
+            node = parent; // Store this to save one lookup..
+        }
     }
 
     function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) public {
@@ -191,7 +269,12 @@ library LiqTreeImpl {
             current = low;
             node = self.nodes[current];
             node.addTLiq(liq);
-            (current, node) = rightPropogateT(self, current, node);
+
+            // Right Propogate T
+            (LKey up, LKey left) = current.rightUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
                 // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
@@ -200,7 +283,12 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.addTLiq(liq);
                 }
-                (current, node) = rightPropogateT(self, current, node);
+
+                // Right Propogate T
+                (up, left) = current.rightUp();
+                parent = self.nodes[up];
+                parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                (current, node) = (up, parent);
             }
         }
 
@@ -208,7 +296,12 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
             node.addTLiq(liq);
-            (current, node) = leftPropogateT(self, current, node);
+
+            // Left Propogate T
+            (LKey up, LKey left) = current.leftUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
@@ -217,13 +310,33 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.addTLiq(liq);
                 }
-                (current, node) = leftPropogateT(self, current, node);
+
+                // Left Propogate T
+                (up, left) = current.leftUp();
+                parent = self.nodes[up];
+                parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                (current, node) = (up, parent);
             }
         }
 
         // Both legs are handled. Touch up everything above.
         // Current has already been propogated to.
-        peakPropogateT(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
+
+        // Peak Propogate T
+
+        node = self.nodes[current];
+
+        while (current.isNeq(self.root)) {
+            (LKey up, LKey other) = current.genericUp();
+            LiqNode storage parent = self.nodes[up];
+            uint128 oldMax = parent.subtreeMaxT;
+            parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            if (node.subtreeMaxT == oldMax) {
+                return;
+            }
+            current = up;
+            node = parent;
+        }
     }
 
     function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
@@ -237,7 +350,12 @@ library LiqTreeImpl {
             current = low;
             node = self.nodes[current];
             node.removeTLiq(liq);
-            (current, node) = rightPropogateT(self, current, node);
+
+            // Right Propogate T
+            (LKey up, LKey left) = current.rightUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
                 // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
@@ -246,7 +364,12 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.removeTLiq(liq);
                 }
-                (current, node) = rightPropogateT(self, current, node);
+
+                // Right Propogate T
+                (up, left) = current.rightUp();
+                parent = self.nodes[up];
+                parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                (current, node) = (up, parent);
             }
         }
 
@@ -254,7 +377,12 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
             node.removeTLiq(liq);
-            (current, node) = leftPropogateT(self, current, node);
+
+            // Left Propogate T
+            (LKey up, LKey left) = current.leftUp();
+            LiqNode storage parent = self.nodes[up];
+            parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
@@ -263,13 +391,33 @@ library LiqTreeImpl {
                     node = self.nodes[current];
                     node.removeTLiq(liq);
                 }
-                (current, node) = leftPropogateT(self, current, node);
+
+                // Left Propogate T
+                (up, left) = current.leftUp();
+                parent = self.nodes[up];
+                parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                (current, node) = (up, parent);
             }
         }
 
         // Both legs are handled. Touch up everything above.
         // Current has already been propogated to.
-        peakPropogateT(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
+
+        // Peak Propogate T
+
+        node = self.nodes[current];
+
+        while (current.isNeq(self.root)) {
+            (LKey up, LKey other) = current.genericUp();
+            LiqNode storage parent = self.nodes[up];
+            uint128 oldMax = parent.subtreeMaxT;
+            parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            if (node.subtreeMaxT == oldMax) {
+                return;
+            }
+            current = up;
+            node = parent;
+        }
     }
 
     function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
@@ -300,7 +448,7 @@ library LiqTreeImpl {
         rootNode.subtreeMaxT -= liq;
     }
 
-    function borrow(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal  {
+    function borrow(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal {
         // TODO (urlaubaitos)
     }
 
