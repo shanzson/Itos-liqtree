@@ -49,13 +49,15 @@ contract DenseTreeTest is Test {
         LKey LLLR = _nodeKey(4, 1, 16);
         LKey LLRL = _nodeKey(4, 2, 16);
 
-        // _printKey(root);
-        // _printKey(L);
-        // _printKey(LL);
-        // _printKey(LLL);
-        // _printKey(LLR);
-        // _printKey(LLLR);
-        // _printKey(LLRL);
+        _printKey(root);
+        _printKey(L);
+        _printKey(LL);
+        _printKey(LLL);
+        _printKey(LLR);
+        _printKey(LLLR);
+        _printKey(LLRL);
+
+        return;
 
         // Step 1) add maker liq
         vm.warp(t0);
@@ -76,6 +78,8 @@ contract DenseTreeTest is Test {
 
         liqTree.addTLiq(LiqRange(0, 1), 5, 12, 22);
         liqTree.addTLiq(LiqRange(0, 7), 9, 3, 4);
+
+
 
 
 

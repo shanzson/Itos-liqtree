@@ -98,12 +98,12 @@ library LiqTreeImpl {
             current = low;
             node = self.nodes[current];
 
-            uint24 rangeWidth = (range.high - range.low);
-
             // calculate fees
             // uint256 rateDiffX = self.feeRateSnapshotTokenX.diff(node.)
 
+            (uint24 rangeWidth,) = current.explode();
             node.addMLiq(liq);
+            node.subtreeMLiq += rangeWidth * liq;
 
             // Right Propogate M
             (LKey up, LKey left) = current.rightUp();
@@ -117,13 +117,18 @@ library LiqTreeImpl {
                 if (current.isLeft()) {
                     current = current.rightSib();
                     node = self.nodes[current];
+
+                    (rangeWidth,) = current.explode();
                     node.addMLiq(liq);
+                    node.subtreeMLiq += rangeWidth * liq;
                 }
 
                 // Right Propogate M
                 (up, left) = current.rightUp();
                 parent = self.nodes[up];
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+                parent.subtreeMLiq += liq;
+
                 (current, node) = (up, parent);
             }
         }
@@ -131,25 +136,37 @@ library LiqTreeImpl {
         if (high.isLess(stopRange)) {
             current = high;
             node = self.nodes[current];
+
+            // calculate fees
+
+            (uint24 rangeWidth,) = current.explode();
             node.addMLiq(liq);
+            node.subtreeMLiq += rangeWidth * liq;
 
             // Left Propogate M
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            parent.subtreeMLiq += liq;
+
             (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
+
+                    (rangeWidth,) = current.explode();
                     node.addMLiq(liq);
+                    node.subtreeMLiq += rangeWidth * liq;
                 }
 
                 // Left Propogate M
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+                parent.subtreeMLiq += liq;
+
                 (current, node) = (up, parent);
             }
         }
@@ -172,8 +189,10 @@ library LiqTreeImpl {
 
             // We're just propogating the min, if our value doesn't change none of the parents need to.
             parent.subtreeMinM = min(self.nodes[other].subtreeMinM, node.subtreeMinM) + parent.mLiq;
+            parent.subtreeMLiq += liq;
+
             if (parent.subtreeMinM == oldMin) {
-                return;
+                // return;
             }
 
             current = up;
