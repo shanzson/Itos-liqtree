@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
-
+import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 
 /**
  *  Liquidity Tree
@@ -61,7 +61,8 @@ struct LiqTree {
     mapping(LKey => LiqNode) nodes;
     LKey root; // maxRange << 24 + maxRange;
     uint24 offset; // This is also the maximum range allowed in this tree.
-    uint8 depth; // will is be cheaper gas to store this? Or calculate?
+    FeeRateSnapshot feeRateSnapshotTokenX;
+    FeeRateSnapshot feeRateSnapshotTokenY;
 }
 
 
@@ -81,7 +82,6 @@ library LiqTreeImpl {
 
         self.root = LKeyImpl.makeKey(maxRange, maxRange);
         self.offset = maxRange;
-        self.depth = maxDepth;
     }
 
     /***********************************
@@ -180,7 +180,7 @@ library LiqTreeImpl {
         peakPropogateM(self, current, self.nodes[current]); // Is node, but compiler thinks might be unassigned.
     }
 
-    function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+    function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq) public {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -300,11 +300,11 @@ library LiqTreeImpl {
         rootNode.subtreeMaxT -= liq;
     }
 
-    function borrow(LiqTree storage self, LiqRange memory range, uint128 liq, uint128 amountX, uint128 amountY) internal  {
+    function borrow(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal  {
         // TODO (urlaubaitos)
     }
 
-    function repay(LiqTree storage self, LiqRange memory range, uint128 liq, uint128 amountX, uint128 amountY) internal {
+    function repay(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal {
         // TODO (urlaubaitos)
     }
 

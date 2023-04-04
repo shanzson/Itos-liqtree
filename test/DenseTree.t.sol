@@ -80,6 +80,7 @@ contract DenseTreeTest is Test {
         return;
 
         // Step 3) add new position that effects previous nodes, calculate fees
+        vm.warp(t0 + 10);
         liqTree.addMLiq(LiqRange(1, 3), 13); // LLLR, LLR
 
         // Step 4) verify
