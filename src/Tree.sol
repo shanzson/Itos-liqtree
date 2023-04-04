@@ -871,11 +871,4 @@ library LKeyImpl {
         }
     }
 
-
-    // Un-used, un-tested version of going up.
-    // function up(LKey self) internal pure returns (LKey) {
-    //     uint48 pair = LKey.unwrap(self);
-    //     uint48 topRange = pair & uint48(0xFFFFFF000000); // Solidity won't allow direct cast to int48
-    //     return LKey.wrap((pair & ~(topRange >> 24)) + topRange);
-    // }
 }
