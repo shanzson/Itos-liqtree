@@ -57,13 +57,41 @@ contract DenseTreeTest is Test {
         _printKey(LLLR);
         _printKey(LLRL);
 
-        return;
-
-        // Step 1) add maker liq
+        // Step 1) add maker liq ---------------------------------------------------
         vm.warp(t0);
 
+        // 1.a) Add mLiq to LL ---------------------------------------------------
         liqTree.addMLiq(LiqRange(0, 3), 2);  // LL
+
+        assertEq(liqTree.nodes[root].mLiq, 0);
+        assertEq(liqTree.nodes[L].mLiq, 0);
+        assertEq(liqTree.nodes[LL].mLiq, 2);
+
+        assertEq(liqTree.nodes[root].subtreeMLiq, 8);
+        assertEq(liqTree.nodes[L].subtreeMLiq, 8);
+        assertEq(liqTree.nodes[LL].subtreeMLiq, 8);
+
+        return;
+
+        // 1.b) Add mLiq to LL ---------------------------------------------------
         liqTree.addMLiq(LiqRange(0, 2), 7);  // LLL, LLRL
+
+        assertEq(liqTree.nodes[root].mLiq, 0);
+        assertEq(liqTree.nodes[L].mLiq, 0);
+        assertEq(liqTree.nodes[LL].mLiq, 2);
+        assertEq(liqTree.nodes[LLL].mLiq, 7);
+        assertEq(liqTree.nodes[LLR].mLiq, 0);
+        assertEq(liqTree.nodes[LLRL].mLiq, 7);
+
+        assertEq(liqTree.nodes[root].subtreeMLiq, 0 + 0 + 8 + 14 + 0 + 7); // 29
+        assertEq(liqTree.nodes[L].subtreeMLiq, 0 + 8 + 14 + 0 + 7); // 29
+        assertEq(liqTree.nodes[LL].subtreeMLiq, 8 + 14 + 0 + 7); // 29
+        assertEq(liqTree.nodes[LLL].subtreeMLiq, 14);
+        assertEq(liqTree.nodes[LLR].subtreeMLiq, 0);
+        assertEq(liqTree.nodes[LLRL].subtreeMLiq, 7);
+
+
+        // 1.c) Add mliq to L ---------------------------------------------------
         liqTree.addMLiq(LiqRange(0, 7), 20); // L
 
         assertEq(liqTree.nodes[root].mLiq, 0);
@@ -72,6 +100,15 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLL].mLiq, 7);
         assertEq(liqTree.nodes[LLR].mLiq, 0);
         assertEq(liqTree.nodes[LLRL].mLiq, 7);
+
+        assertEq(liqTree.nodes[root].subtreeMLiq, 0 + 160 + 8 + 14 + 0 + 7); // 189
+        assertEq(liqTree.nodes[L].subtreeMLiq, 160 + 8 + 14 + 0 + 7); // 189
+        assertEq(liqTree.nodes[LL].subtreeMLiq, 8 + 14 + 0 + 7); // 29
+        assertEq(liqTree.nodes[LLL].subtreeMLiq, 14);
+        assertEq(liqTree.nodes[LLR].subtreeMLiq, 0 + 7);
+        assertEq(liqTree.nodes[LLRL].subtreeMLiq, 7);
+
+        return;
 
         // Step 2) add taker liq
         vm.warp(t0 + 5);
