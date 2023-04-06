@@ -49,14 +49,6 @@ contract DenseTreeTest is Test {
         LKey LLLR = _nodeKey(4, 1, 16);
         LKey LLRL = _nodeKey(4, 2, 16);
 
-        _printKey(root);
-        _printKey(L);
-        _printKey(LL);
-        _printKey(LLL);
-        _printKey(LLR);
-        _printKey(LLLR);
-        _printKey(LLRL);
-
         // Step 1) add maker liq ---------------------------------------------------
         vm.warp(t0);
 
@@ -70,8 +62,6 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[root].subtreeMLiq, 8);
         assertEq(liqTree.nodes[L].subtreeMLiq, 8);
         assertEq(liqTree.nodes[LL].subtreeMLiq, 8);
-
-        return;
 
         // 1.b) Add mLiq to LL ---------------------------------------------------
         liqTree.addMLiq(LiqRange(0, 2), 7);  // LLL, LLRL
@@ -87,9 +77,8 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[L].subtreeMLiq, 0 + 8 + 14 + 0 + 7); // 29
         assertEq(liqTree.nodes[LL].subtreeMLiq, 8 + 14 + 0 + 7); // 29
         assertEq(liqTree.nodes[LLL].subtreeMLiq, 14);
-        assertEq(liqTree.nodes[LLR].subtreeMLiq, 0);
+        assertEq(liqTree.nodes[LLR].subtreeMLiq, 0 + 7);
         assertEq(liqTree.nodes[LLRL].subtreeMLiq, 7);
-
 
         // 1.c) Add mliq to L ---------------------------------------------------
         liqTree.addMLiq(LiqRange(0, 7), 20); // L
@@ -107,6 +96,8 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLL].subtreeMLiq, 14);
         assertEq(liqTree.nodes[LLR].subtreeMLiq, 0 + 7);
         assertEq(liqTree.nodes[LLRL].subtreeMLiq, 7);
+
+        return;
 
         // Step 2) add taker liq
         vm.warp(t0 + 5);
