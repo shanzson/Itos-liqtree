@@ -97,8 +97,6 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLR].subtreeMLiq, 0 + 7);
         assertEq(liqTree.nodes[LLRL].subtreeMLiq, 7);
 
-        return;
-
         // Step 2) add taker liq
         vm.warp(t0 + 5);
 
@@ -177,8 +175,6 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLL].subtreeBorrowedY, 22);
         assertEq(liqTree.nodes[LLR].subtreeBorrowedY, 0);
         assertEq(liqTree.nodes[LLRL].subtreeBorrowedY, 0);
-
-
 
 
         return;
