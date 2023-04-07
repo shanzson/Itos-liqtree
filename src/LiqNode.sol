@@ -1,16 +1,21 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
+import { FeeRateSnapshot } from "src/FeeRateSnapshot.sol";
+
+struct LiqNodeTokenData {
+    uint256 borrowed;
+    uint256 subtreeBorrowed;
+    FeeRateSnapshot feeRateSnapshot;
+}
+
 struct LiqNode {
     uint128 mLiq;
     uint128 tLiq;
     uint128 subtreeMLiq;
 
-    uint256 borrowedX;
-    uint256 borrowedY;
-
-    uint256 subtreeBorrowedX;
-    uint256 subtreeBorrowedY;
+    LiqNodeTokenData tokenX;
+    LiqNodeTokenData tokenY;
 
     // --- above this line is used 100%
 
@@ -56,17 +61,17 @@ library LiqNodeImpl {
     }
 
     function borrow(LiqNode storage self, uint256 amountX, uint256 amountY) external {
-        self.borrowedX += amountX;
-        self.borrowedY += amountY;
-        self.subtreeBorrowedX += amountX;
-        self.subtreeBorrowedY += amountY;
+        self.tokenX.borrowed += amountX;
+        self.tokenY.borrowed += amountY;
+        self.tokenX.subtreeBorrowed += amountX;
+        self.tokenY.subtreeBorrowed += amountY;
     }
 
     function repay(LiqNode storage self, uint256 amountX, uint256 amountY) external {
-        self.borrowedX -= amountX;
-        self.borrowedY -= amountY;
-        self.subtreeBorrowedX -= amountX;
-        self.subtreeBorrowedY -= amountY;
+        self.tokenX.borrowed -= amountX;
+        self.tokenY.borrowed -= amountY;
+        self.tokenX.subtreeBorrowed -= amountX;
+        self.tokenY.subtreeBorrowed -= amountY;
     }
 
 }

@@ -110,33 +110,33 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLR].tLiq, 0);
         assertEq(liqTree.nodes[LLRL].tLiq, 0);
 
-        assertEq(liqTree.nodes[root].borrowedX, 0);
-        assertEq(liqTree.nodes[L].borrowedX, 0);
-        assertEq(liqTree.nodes[LL].borrowedX, 0);
-        assertEq(liqTree.nodes[LLL].borrowedX, 12);
-        assertEq(liqTree.nodes[LLR].borrowedX, 0);
-        assertEq(liqTree.nodes[LLRL].borrowedX, 0);
+        assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[L].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[LL].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[LLL].tokenX.borrowed, 12);
+        assertEq(liqTree.nodes[LLR].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenX.borrowed, 0);
 
-        assertEq(liqTree.nodes[root].subtreeBorrowedX, 12);
-        assertEq(liqTree.nodes[L].subtreeBorrowedX, 12);
-        assertEq(liqTree.nodes[LL].subtreeBorrowedX, 12);
-        assertEq(liqTree.nodes[LLL].subtreeBorrowedX, 12);
-        assertEq(liqTree.nodes[LLR].subtreeBorrowedX, 0);
-        assertEq(liqTree.nodes[LLRL].subtreeBorrowedX, 0);
+        assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 12);
+        assertEq(liqTree.nodes[L].tokenX.subtreeBorrowed, 12);
+        assertEq(liqTree.nodes[LL].tokenX.subtreeBorrowed, 12);
+        assertEq(liqTree.nodes[LLL].tokenX.subtreeBorrowed, 12);
+        assertEq(liqTree.nodes[LLR].tokenX.subtreeBorrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenX.subtreeBorrowed, 0);
 
-        assertEq(liqTree.nodes[root].borrowedY, 0);
-        assertEq(liqTree.nodes[L].borrowedY, 0);
-        assertEq(liqTree.nodes[LL].borrowedY, 0);
-        assertEq(liqTree.nodes[LLL].borrowedY, 22);
-        assertEq(liqTree.nodes[LLR].borrowedY, 0);
-        assertEq(liqTree.nodes[LLRL].borrowedY, 0);
+        assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[L].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[LL].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[LLL].tokenY.borrowed, 22);
+        assertEq(liqTree.nodes[LLR].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenY.borrowed, 0);
 
-        assertEq(liqTree.nodes[root].subtreeBorrowedY, 22);
-        assertEq(liqTree.nodes[L].subtreeBorrowedY, 22);
-        assertEq(liqTree.nodes[LL].subtreeBorrowedY, 22);
-        assertEq(liqTree.nodes[LLL].subtreeBorrowedY, 22);
-        assertEq(liqTree.nodes[LLR].subtreeBorrowedY, 0);
-        assertEq(liqTree.nodes[LLRL].subtreeBorrowedY, 0);
+        assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 22);
+        assertEq(liqTree.nodes[L].tokenY.subtreeBorrowed, 22);
+        assertEq(liqTree.nodes[LL].tokenY.subtreeBorrowed, 22);
+        assertEq(liqTree.nodes[LLL].tokenY.subtreeBorrowed, 22);
+        assertEq(liqTree.nodes[LLR].tokenY.subtreeBorrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenY.subtreeBorrowed, 0);
 
         // 2.b) add tLiq to L
         liqTree.addTLiq(LiqRange(0, 7), 9, 3, 4); // L
@@ -148,33 +148,33 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLR].tLiq, 0);
         assertEq(liqTree.nodes[LLRL].tLiq, 0);
 
-        assertEq(liqTree.nodes[root].borrowedX, 0);
-        assertEq(liqTree.nodes[L].borrowedX, 3);
-        assertEq(liqTree.nodes[LL].borrowedX, 0);
-        assertEq(liqTree.nodes[LLL].borrowedX, 12);
-        assertEq(liqTree.nodes[LLR].borrowedX, 0);
-        assertEq(liqTree.nodes[LLRL].borrowedX, 0);
+        assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[L].tokenX.borrowed, 3);
+        assertEq(liqTree.nodes[LL].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[LLL].tokenX.borrowed, 12);
+        assertEq(liqTree.nodes[LLR].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenX.borrowed, 0);
 
-        assertEq(liqTree.nodes[root].subtreeBorrowedX, 15);
-        assertEq(liqTree.nodes[L].subtreeBorrowedX, 15);
-        assertEq(liqTree.nodes[LL].subtreeBorrowedX, 12);
-        assertEq(liqTree.nodes[LLL].subtreeBorrowedX, 12);
-        assertEq(liqTree.nodes[LLR].subtreeBorrowedX, 0);
-        assertEq(liqTree.nodes[LLRL].subtreeBorrowedX, 0);
+        assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 15);
+        assertEq(liqTree.nodes[L].tokenX.subtreeBorrowed, 15);
+        assertEq(liqTree.nodes[LL].tokenX.subtreeBorrowed, 12);
+        assertEq(liqTree.nodes[LLL].tokenX.subtreeBorrowed, 12);
+        assertEq(liqTree.nodes[LLR].tokenX.subtreeBorrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenX.subtreeBorrowed, 0);
 
-        assertEq(liqTree.nodes[root].borrowedY, 0);
-        assertEq(liqTree.nodes[L].borrowedY, 4);
-        assertEq(liqTree.nodes[LL].borrowedY, 0);
-        assertEq(liqTree.nodes[LLL].borrowedY, 22);
-        assertEq(liqTree.nodes[LLR].borrowedY, 0);
-        assertEq(liqTree.nodes[LLRL].borrowedY, 0);
+        assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[L].tokenY.borrowed, 4);
+        assertEq(liqTree.nodes[LL].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[LLL].tokenY.borrowed, 22);
+        assertEq(liqTree.nodes[LLR].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenY.borrowed, 0);
 
-        assertEq(liqTree.nodes[root].subtreeBorrowedY, 26);
-        assertEq(liqTree.nodes[L].subtreeBorrowedY, 26);
-        assertEq(liqTree.nodes[LL].subtreeBorrowedY, 22);
-        assertEq(liqTree.nodes[LLL].subtreeBorrowedY, 22);
-        assertEq(liqTree.nodes[LLR].subtreeBorrowedY, 0);
-        assertEq(liqTree.nodes[LLRL].subtreeBorrowedY, 0);
+        assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 26);
+        assertEq(liqTree.nodes[L].tokenY.subtreeBorrowed, 26);
+        assertEq(liqTree.nodes[LL].tokenY.subtreeBorrowed, 22);
+        assertEq(liqTree.nodes[LLL].tokenY.subtreeBorrowed, 22);
+        assertEq(liqTree.nodes[LLR].tokenY.subtreeBorrowed, 0);
+        assertEq(liqTree.nodes[LLRL].tokenY.subtreeBorrowed, 0);
 
 
         return;

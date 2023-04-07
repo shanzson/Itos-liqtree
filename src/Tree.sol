@@ -402,12 +402,12 @@ library LiqTreeImpl {
             // calculate fees 
 
             node.addTLiq(liq);
+            node.borrow(amountX, amountY);
 
-            node.borrowedX += amountX;
-            node.borrowedY += amountY;
-            node.subtreeBorrowedX += amountX;
-            node.subtreeBorrowedY += amountY;
-
+            node.tokenX.borrowed += amountX;
+            node.tokenY.borrowed += amountY;
+            node.tokenX.subtreeBorrowed += amountX;
+            node.tokenY.subtreeBorrowed += amountY;
 
             {
                 (uint24 base, uint24 range) = current.explode();
@@ -420,8 +420,8 @@ library LiqTreeImpl {
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.subtreeBorrowedX += amountX;
-            parent.subtreeBorrowedY += amountY;
+            parent.tokenX.subtreeBorrowed += amountX;
+            parent.tokenY.subtreeBorrowed += amountY;
             (current, node) = (up, parent);
 
             // do fees need to be calculated here?
@@ -447,10 +447,10 @@ library LiqTreeImpl {
 
                     node.addTLiq(liq);
 
-                    node.borrowedX += amountX;
-                    node.borrowedY += amountY;
-                    node.subtreeBorrowedX += amountX;
-                    node.subtreeBorrowedY += amountY;
+                    node.tokenX.borrowed += amountX;
+                    node.tokenY.borrowed += amountY;
+                    node.tokenX.subtreeBorrowed += amountX;
+                    node.tokenY.subtreeBorrowed += amountY;
 
                     {
                         (uint24 base, uint24 range) = current.explode();
@@ -465,14 +465,14 @@ library LiqTreeImpl {
                 (up, left) = current.rightUp();
                 parent = self.nodes[up];
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.subtreeBorrowedX = self.nodes[left].subtreeBorrowedX + node.subtreeBorrowedX + parent.borrowedX;
-                parent.subtreeBorrowedY = self.nodes[left].subtreeBorrowedY + node.subtreeBorrowedY + parent.borrowedY;
+                parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
+                parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
 
                 {
                     (uint24 base, uint24 range) = current.explode();
-                    console.log("calculate borrowX to (base, range, value)", base, range, node.borrowedX);
-                    console.log("calculate borrowY to (base, range, value)", base, range, node.borrowedY);
+                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
+                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
                 }
             }
         }
@@ -487,10 +487,10 @@ library LiqTreeImpl {
 
             node.addTLiq(liq);
 
-            node.borrowedX += amountX;
-            node.borrowedY += amountY;
-            node.subtreeBorrowedX += amountX;
-            node.subtreeBorrowedY += amountY;
+            node.tokenX.borrowed += amountX;
+            node.tokenY.borrowed += amountY;
+            node.tokenX.subtreeBorrowed += amountX;
+            node.tokenY.subtreeBorrowed += amountY;
 
             {
                 (uint24 base, uint24 range) = current.explode();
@@ -502,8 +502,8 @@ library LiqTreeImpl {
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.subtreeBorrowedX += amountX;
-            parent.subtreeBorrowedY += amountY;
+            parent.tokenX.subtreeBorrowed += amountX;
+            parent.tokenY.subtreeBorrowed += amountY;
             (current, node) = (up, parent);
 
             {
@@ -526,10 +526,10 @@ library LiqTreeImpl {
 
                     node.addTLiq(liq);
 
-                    node.borrowedX += amountX;
-                    node.borrowedY += amountY;
-                    node.subtreeBorrowedX += amountX;
-                    node.subtreeBorrowedY += amountY;
+                    node.tokenX.borrowed += amountX;
+                    node.tokenY.borrowed += amountY;
+                    node.tokenX.subtreeBorrowed += amountX;
+                    node.tokenY.subtreeBorrowed += amountY;
                 }
 
                 // neeed to calculate because blah blah blah
@@ -538,14 +538,14 @@ library LiqTreeImpl {
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.subtreeBorrowedX = self.nodes[left].subtreeBorrowedX + node.subtreeBorrowedX + parent.borrowedX;
-                parent.subtreeBorrowedY = self.nodes[left].subtreeBorrowedY + node.subtreeBorrowedY + parent.borrowedY;
+                parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
+                parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
 
                 {
                     (uint24 base, uint24 range) = current.explode();
-                    console.log("calculate borrowX to (base, range, value)", base, range, node.borrowedX);
-                    console.log("calculate borrowY to (base, range, value)", base, range, node.borrowedY);
+                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
+                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
                 }
             }
         }
@@ -566,20 +566,20 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
             uint128 oldMax = parent.subtreeMaxT;
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.subtreeBorrowedX = self.nodes[other].subtreeBorrowedX + node.subtreeBorrowedX + parent.borrowedX;
-            parent.subtreeBorrowedY = self.nodes[other].subtreeBorrowedY + node.subtreeBorrowedY + parent.borrowedY;
+            parent.tokenX.subtreeBorrowed = self.nodes[other].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
+            parent.tokenY.subtreeBorrowed = self.nodes[other].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
 
             {
                 LiqNode storage otherNode = self.nodes[other];
 
                 (uint24 base, uint24 range) = current.explode();
                 console.log("current is (base, range, value)", base, range);
-                console.log("current subtreeBorrowedX", node.subtreeBorrowedX);
-                console.log("current subtreeBorrowedY", node.subtreeBorrowedY);
+                console.log("current subtreeBorrowedX", node.tokenX.subtreeBorrowed);
+                console.log("current subtreeBorrowedY", node.tokenY.subtreeBorrowed);
                 (base, range) = other.explode();
                 console.log("other is to (base, range, value)", base, range);
-                console.log("other subtreeBorrowedX", otherNode.subtreeBorrowedX);
-                console.log("other subtreeBorrowedY", otherNode.subtreeBorrowedY);
+                console.log("other subtreeBorrowedX", otherNode.tokenX.subtreeBorrowed);
+                console.log("other subtreeBorrowedY", otherNode.tokenY.subtreeBorrowed);
             }
 
             if (node.subtreeMaxT == oldMax) {
@@ -591,8 +591,8 @@ library LiqTreeImpl {
 
             {
                 (uint24 base, uint24 range) = current.explode();
-                console.log("calculate borrowX to (base, range, value)", base, range, node.subtreeBorrowedX);
-                console.log("calculate borrowY to (base, range, value)", base, range, node.subtreeBorrowedY);
+                console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.subtreeBorrowed);
+                console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.subtreeBorrowed);
             }
         }
     }
