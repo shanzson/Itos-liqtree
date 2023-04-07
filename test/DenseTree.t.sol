@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import { console } from "forge-std/console.sol";
 import { Test } from "forge-std/Test.sol";
 
+import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
 
 /**
@@ -14,6 +15,7 @@ contract DenseTreeTest is Test {
     LiqTree public liqTree;
     using LiqTreeImpl for LiqTree;
     using LKeyImpl for LKey;
+    using FeeRateSnapshotImpl for FeeRateSnapshot;
     
     function setUp() public {
         // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]). 
@@ -176,12 +178,18 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LLR].tokenY.subtreeBorrowed, 0);
         assertEq(liqTree.nodes[LLRL].tokenY.subtreeBorrowed, 0);
 
-
-        return;
-
         // Step 3) add new position that effects previous nodes, calculate fees
         vm.warp(t0 + 10);
 
+        // Let's say the rate is a 128.128 number
+        // With 0.000000007927 that has 8 zeros 
+        // The first 128 bits should represent 000000007927
+        // ?
+
+        // OG math
+        // (5 / (365 * 24 * 60 * 60)) = 0.000000007927
+        // rate = (5 << 128) / ((365 * 24 * 60 * 60) << 128)
+        liqTree.feeRateSnapshotTokenX.add(146227340272);
         liqTree.addMLiq(LiqRange(1, 3), 13); // LLLR, LLR
 
         // Step 4) verify

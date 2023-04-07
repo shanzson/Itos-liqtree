@@ -4,6 +4,8 @@ pragma solidity ^0.8.18;
 import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
 import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 
+import { FullMath } from "src/FullMath.sol";
+
 /**
  *  Liquidity Tree
  *
@@ -70,6 +72,7 @@ library LiqTreeImpl {
     using LKeyImpl for LKey;
     using LiqNodeImpl for LiqNode;
     using LiqTreeIntLib for uint24;
+    using FeeRateSnapshotImpl for FeeRateSnapshot;
 
     /****************************
      * Initialization Functions *
@@ -101,15 +104,33 @@ library LiqTreeImpl {
             console.log("Stop Range is (base, range, value)", sbase, srange, LKey.unwrap(stopRange));
         }
 
-
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
 
             console.log("adding low"); 
 
-            // calculate fees
-            // uint256 rateDiffX = self.feeRateSnapshotTokenX.diff(node.)
+            {
+                // Fees ---------------------------------------------------------------------------------
+                // 1) Compute Fees
+                uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
+                node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                // 2) Compute total mLiq
+                //uint128 auxillaryIndex = 0;
+                uint128[] memory auxillaryArray = walkToRootForMLiq(self, current);
+                uint256 totalMLiq = node.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                //++auxillaryIndex;
+
+                // 3) Accumulate Fees
+                // mulDiv takes the floor. Important we don't round fees up
+                if (totalMLiq > 0) {
+                    node.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                    node.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.borrowed, rateDiffX64, totalMLiq);
+                }
+
+                // --------------------------------------------------------------------------------------
+            }
 
             (rangeWidth,) = current.explode();
             uint128 totalLiq = rangeWidth * liq; // better name
@@ -125,6 +146,32 @@ library LiqTreeImpl {
             // Right Propogate M
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
+
+
+            {
+                // Once I fix the stack depth, the auxillary array can be shared across some calls
+                // Fees ---------------------------------------------------------------------------------
+                // 1) Compute Fees
+                uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(parent.tokenX.feeRateSnapshot);
+                parent.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                // 2) Compute total mLiq
+                //uint128 auxillaryIndex = 0;
+                uint128[] memory auxillaryArray = walkToRootForMLiq(self, up);
+                uint256 totalMLiq = parent.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                //++auxillaryIndex;
+
+                // 3) Accumulate Fees
+                // mulDiv takes the floor. Important we don't round fees up
+                if (totalMLiq > 0) {
+                    parent.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                    parent.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.borrowed, rateDiffX64, totalMLiq);
+                }
+
+                // --------------------------------------------------------------------------------------
+            }
+
+
             parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
             parent.subtreeMLiq += totalLiq;
             (current, node) = (up, parent);
@@ -145,6 +192,29 @@ library LiqTreeImpl {
 
                     (rangeWidth,) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
+
+                    {
+                        // Fees ---------------------------------------------------------------------------------
+                        // 1) Compute Fees
+                        uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
+                        node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                        // 2) Compute total mLiq
+                        //uint128 auxillaryIndex = 0;
+                        uint128[] memory auxillaryArray = walkToRootForMLiq(self, current);
+                        uint256 totalMLiq = node.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                        //++auxillaryIndex;
+
+                        // 3) Accumulate Fees
+                        // mulDiv takes the floor. Important we don't round fees up
+                        if (totalMLiq > 0) {
+                            node.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                            node.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.borrowed, rateDiffX64, totalMLiq);
+                        }
+
+                        // --------------------------------------------------------------------------------------
+                    }
+
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
 
@@ -161,6 +231,29 @@ library LiqTreeImpl {
                 (up, left) = current.rightUp();
                 (rangeWidth,) = up.explode();
                 parent = self.nodes[up];
+
+                {
+                    // Fees ---------------------------------------------------------------------------------
+                    // 1) Compute Fees
+                    uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(parent.tokenX.feeRateSnapshot);
+                    parent.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                    // 2) Compute total mLiq
+                    //uint128 auxillaryIndex = 0;
+                    uint128[] memory auxillaryArray = walkToRootForMLiq(self, up);
+                    uint256 totalMLiq = parent.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                    //++auxillaryIndex;
+
+                    // 3) Accumulate Fees
+                    // mulDiv takes the floor. Important we don't round fees up
+                    if (totalMLiq > 0) {
+                        parent.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                        parent.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.borrowed, rateDiffX64, totalMLiq);
+                    }
+
+                    // --------------------------------------------------------------------------------------
+                }
+
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
@@ -189,12 +282,57 @@ library LiqTreeImpl {
                 console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
             }
 
+            {
+                // Fees ---------------------------------------------------------------------------------
+                // 1) Compute Fees
+                uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
+                node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                // 2) Compute total mLiq
+                //uint128 auxillaryIndex = 0;
+                uint128[] memory auxillaryArray = walkToRootForMLiq(self, current);
+                uint256 totalMLiq = node.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                //++auxillaryIndex;
+
+                // 3) Accumulate Fees
+                // mulDiv takes the floor. Important we don't round fees up
+                if (totalMLiq > 0) {
+                    node.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                    node.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.borrowed, rateDiffX64, totalMLiq);
+                }
+
+                // --------------------------------------------------------------------------------------
+            }
+
             node.addMLiq(liq);
             node.subtreeMLiq += totalLiq;
 
             // Left Propogate M
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
+
+            {
+                // Fees ---------------------------------------------------------------------------------
+                // 1) Compute Fees
+                uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(parent.tokenX.feeRateSnapshot);
+                parent.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                // 2) Compute total mLiq
+                //uint128 auxillaryIndex = 0;
+                uint128[] memory auxillaryArray = walkToRootForMLiq(self, up);
+                uint256 totalMLiq = parent.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                //++auxillaryIndex;
+
+                // 3) Accumulate Fees
+                // mulDiv takes the floor. Important we don't round fees up
+                if (totalMLiq > 0) {
+                    parent.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                    parent.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.borrowed, rateDiffX64, totalMLiq);
+                }
+
+                // --------------------------------------------------------------------------------------
+            }
+
             parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
             parent.subtreeMLiq += totalLiq;
             (current, node) = (up, parent);
@@ -216,6 +354,28 @@ library LiqTreeImpl {
                     (rangeWidth,) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
 
+                    {
+                        // Fees ---------------------------------------------------------------------------------
+                        // 1) Compute Fees
+                        uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
+                        node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                        // 2) Compute total mLiq
+                        //uint128 auxillaryIndex = 0;
+                        uint128[] memory auxillaryArray = walkToRootForMLiq(self, current);
+                        uint256 totalMLiq = node.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                        //++auxillaryIndex;
+
+                        // 3) Accumulate Fees
+                        // mulDiv takes the floor. Important we don't round fees up
+                        if (totalMLiq > 0) {
+                            node.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                            node.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(node.tokenX.borrowed, rateDiffX64, totalMLiq);
+                        }
+
+                        // --------------------------------------------------------------------------------------
+                    }
+
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
 
@@ -232,6 +392,29 @@ library LiqTreeImpl {
                 (up, left) = current.leftUp();
                 (rangeWidth,) = up.explode();
                 parent = self.nodes[up];
+
+                {
+                    // Fees ---------------------------------------------------------------------------------
+                    // 1) Compute Fees
+                    uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(parent.tokenX.feeRateSnapshot);
+                    parent.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                    // 2) Compute total mLiq
+                    //uint128 auxillaryIndex = 0;
+                    uint128[] memory auxillaryArray = walkToRootForMLiq(self, up);
+                    uint256 totalMLiq = parent.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                    //++auxillaryIndex;
+
+                    // 3) Accumulate Fees
+                    // mulDiv takes the floor. Important we don't round fees up
+                    if (totalMLiq > 0) {
+                        parent.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                        parent.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.borrowed, rateDiffX64, totalMLiq);
+                    }
+
+                    // --------------------------------------------------------------------------------------
+                }
+
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
@@ -273,6 +456,28 @@ library LiqTreeImpl {
             uint128 oldMin = parent.subtreeMinM;
 
             (rangeWidth,) = up.explode();
+
+            {
+                // Fees ---------------------------------------------------------------------------------
+                // 1) Compute Fees
+                uint256 rateDiffX64 = self.feeRateSnapshotTokenX.diff(parent.tokenX.feeRateSnapshot);
+                parent.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+
+                // 2) Compute total mLiq
+                //uint128 auxillaryIndex = 0;
+                uint128[] memory auxillaryArray = walkToRootForMLiq(self, up);
+                uint256 totalMLiq = parent.subtreeMLiq + auxillaryArray[0] * rangeWidth;
+                //++auxillaryIndex;
+
+                // 3) Accumulate Fees
+                // mulDiv takes the floor. Important we don't round fees up
+                if (totalMLiq > 0) {
+                    parent.tokenX.subtreeCummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.subtreeBorrowed, rateDiffX64, totalMLiq);
+                    parent.tokenX.cummulativeEarnedPerMLiq += FullMath.mulDiv(parent.tokenX.borrowed, rateDiffX64, totalMLiq);
+                }
+
+                // --------------------------------------------------------------------------------------
+            }
 
             // We're just propogating the min, if our value doesn't change none of the parents need to.
             parent.subtreeMinM = min(self.nodes[other].subtreeMinM, node.subtreeMinM) + parent.mLiq;

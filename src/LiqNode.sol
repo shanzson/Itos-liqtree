@@ -7,6 +7,8 @@ struct LiqNodeTokenData {
     uint256 borrowed;
     uint256 subtreeBorrowed;
     FeeRateSnapshot feeRateSnapshot;
+    uint256 cummulativeEarnedPerMLiq;
+    uint256 subtreeCummulativeEarnedPerMLiq;
 }
 
 struct LiqNode {
@@ -18,19 +20,8 @@ struct LiqNode {
     LiqNodeTokenData tokenY;
 
     // --- above this line is used 100%
-
-    // The first four are for liquidity constraints
-    //uint128 mLiq;
-    //uint128 tLiq; // This is also used for fees.
     uint128 subtreeMinM;
     uint128 subtreeMaxT;
-
-    // uint128 subtreeMLiq;
-
-    // snapshot
-
-    uint128 cummulativeXEarnedPerMLiq;
-    uint128 cummulativeYEarnedPerMLiq;
 
     // DEPRECATED
     uint128 subtreeMaxM;
