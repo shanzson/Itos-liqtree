@@ -192,6 +192,20 @@ contract DenseTreeTest is Test {
         liqTree.feeRateSnapshotTokenX.add(146227340272);
         liqTree.addMLiq(LiqRange(1, 3), 13); // LLLR, LLR
 
+        assertEq(liqTree.nodes[root].tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[L].tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LL].tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLL].tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLR].tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLRL].tokenX.cummulativeEarnedPerMLiq, 0);
+
+        assertEq(liqTree.nodes[root].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[L].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LL].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLL].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLR].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLRL].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+
         // Step 4) verify
 
         // LLLR
@@ -230,3 +244,176 @@ contract DenseTreeTest is Test {
         return tree.nodes[_nodeKey(depth, index, tree.offset)];
     }
 }
+
+/**
+ * Re-writing example 2 using Q192.64 numbers
+
+ Time Premium Calculation (Example 2)
+
+ 
+                                                                root [0, 15]
+                                                        ____----    ----____
+                                          __________----------                    ----------__________
+                                        L [0, 7]                                                      
+                                   __--  --__                  
+                         __---                   ---__              
+                     /                                   \                           
+                  LL [0, 3]                                 LR [4, 7]                
+                /           \                            /       \                           
+              /               \                        /           \                                         
+            /                   \                    /               \                            
+          LLL [0, 1]            LLR [2, 3]         LRL [4, 5]            LRR [6, 7]       
+         /     \              /     \            /     \                /     \              
+        /       \            /       \          /       \              /       \          
+     LLLL[0]   LLLR[1]   LLRL[2]    LLRR[3]   LRLL[4]  LRLR[5]      LRRL[6]     LRRR[7] 
+
+
+make(low, high, liq, tokenX, tokenY)
+take(low, high, liq, tokenX, tokenY)
+
+Adding Q192.64 numbers in ()
+
+Step 1) add maker Liq -------------------------------------------------------------------
+
+make(low=0, high=3, liq=2, tokenX=2, tokenY=7)  // LL
+
+root [0, 15] mLiq: 0
+L    [0, 7]  mLiq: 0
+LL   [0, 3]  mLiq: 2
+
+-
+
+make(low=0, high=2, liq=7, tokenX=5, tokenY=8)  // LLL, LLRL
+
+root [0, 15] mLiq: 0
+L    [0, 7]  mLiq: 0
+LL   [0, 3]  mLiq: 2
+LLL  [0, 1]  mLiq: 7
+LLR  [2, 3]  mLiq: 0
+LLRL [2]     mLiq: 7
+
+-
+
+make(low=0, high=7, liq=20, tokenX=9, tokenY=12) // L
+
+
+root [0, 15] mLiq: 0
+L    [0, 7]  mLiq: 20
+LL   [0, 3]  mLiq: 2
+LLL  [0, 1]  mLiq: 7
+LLR  [2, 3]  mLiq: 0
+LLRL [2]     mLiq: 7
+
+
+
+
+Step 2) add taker liq --------------------------------------------------------------------
+t = 5s
+
+take(low=0, high=1, liq=5, tokenX=12, tokenY=22) // LLL
+
+root [0, 15] mLiq: 0,  tLiq: 0, borrowX: 0
+L    [0, 7]  mLiq: 20, tLiq: 0, borrowX: 0
+LL   [0, 3]  mLiq: 2,  tLiq: 0, borrowX: 0
+LLL  [0, 1]  mLiq: 7,  tLiq: 5, borrowX: 12
+LLR  [2, 3]  mLiq: 0,  tLiq: 0, borrowX: 0
+LLRL [2]     mLiq: 7,  tLiq: 0, borrowX: 0
+
+- 
+
+take(low=0, high=7, liq=9, tokenX=3, tokenY=4) // L
+
+root [0, 15] mLiq: 0,  tLiq: 0, borrowX: 0
+L    [0, 7]  mLiq: 20, tLiq: 9, borrowX: 3
+LL   [0, 3]  mLiq: 2,  tLiq: 0, borrowX: 0
+LLL  [0, 1]  mLiq: 7,  tLiq: 5, borrowX: 12
+LLR  [2, 3]  mLiq: 0,  tLiq: 0, borrowX: 0
+LLRL [2]     mLiq: 7,  tLiq: 0, borrowX: 0
+
+
+
+
+
+Step 3) calculate fees --------------------------------------------------------------------
+t=10s
+
+make(low=1, high=3, liq=13, tokenX=19, tokenY=1) // LLLR, LLR
+
+3.a) calculate earned fees before adding new maker position
+
+Update LLLR first
+
+LLLR
+	// 1) Compute Fees
+	rate 5%
+	rateDiff = t10 - t5 = 0.05 * (5 / (365 * 24 * 60 * 60)) = 0.000000007927 (146227340272)
+	subtreeFees = 0 * rateDiff = 0
+	nodeFees = 0 * rateDiff = 0
+	snapshot = t10
+
+	// 2) Compute total maker liq
+	A[level] = LLL.mLiq + LL.mLiq + L.mLiq + root.mLiq = 7 + 2 + 20 + 0 = 29 (534955578137576996864)
+	perTickMLiq = 0 + 29 = 29
+	totalMLiq = 0 + 29 * 1 = 29
+
+	// 3) Accumulate fee
+	subtreeCummulativeEarnPerMLiq += 0 / 29 = 0
+	nodeCummulativeEarnPerMLiq += 0 / 29 = 0
+
+LLL
+
+	subtreeFees = 0
+	nodeFees = 12 * 0.000000007927 = 9.5124e-8 (1754728083264) (would be 1754728083267 but precision is lost calculating the rate diff)
+
+	A[level] = LL + L + root = 2 + 20 + 0 = 22 (405828369621610135552)
+	perTickMLiq = 7 + 22 = 29
+	totalMLiq = 0 + 29 * 2 = 58 (1069911156275153993728)
+
+	subtreeCummulativeEarnPerMLiq += 0
+	nodeCummulativeEarnPerMLiq += 9.5124e-8 / 58 = 0.00000000164 (1754728083264 / 1069911156275153993728 = truncates to 0)
+
+LL
+
+	subtreeFees = 12 * 0.000000007927 = 9.5124e-8 (1754728083264)
+	nodeFees = 0
+
+	A[level] = 20
+	perTickMLiq = 2 + 20 = 22
+	totalMLiq = 7 + 22 * 4 = 95 
+
+	subtreeCummulativeEarnPerMLiq += 9.5124e-8 / 95 ~= 0.0000000010013052 (would also truncate to 0)
+	nodeCummulativeEarnPerMLiq += 0
+
+L
+
+	subtreeFees = 12 * rateDiff = 9.5124e-8 (1754728083264)
+	nodeFees = 3 * rateDiff = 2.3781e-8 (438682020816)
+
+	A[level] = 0
+	perTickMLiq = 20 + 0 = 20
+	totalMLiq = 16 + 20 * 8 = 176 (3246626956972881084416)
+
+	subtree..Earn... += 9.5124e-8 / 176 = ... lol 0
+	node...Earn... += 2.3781e-8 / 176 = ... 0
+
+--
+
+Update LLR
+
+LLR
+	subtreeFees = 0
+	nodeFees = 0
+
+	...
+
+LL
+	
+	// will no-op because the snapshot was just updated to t10 
+	...
+
+L
+
+	// will no-op because the snapshot was just updated to t10 
+	subtreeFees = 	
+
+ */
