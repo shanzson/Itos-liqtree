@@ -38,6 +38,33 @@ contract DenseTreeTest is Test {
         assertEq(mLiqs[3], 140);
     }
 
+    function testOutputRangeCombinations() public {
+        uint24 range;
+        uint24 base;
+
+        // 16 is the offset
+        for (uint24 i = 0; i < 16; i++) {
+            for (uint24 j = i; j < 16; j++) {
+                if (i == 0 && j == 15) {
+                    continue;
+                }
+
+                console.log("\n\nOutputing (i, j)", i, j);
+                (LKey low, LKey high, LKey peak, LKey stopRange) = liqTree.getKeys(i, j);
+
+                (range, base) = peak.explode();
+                console.log("Peak (r,b,v)", range, base, LKey.unwrap(peak));
+                (range, base) = stopRange.explode();
+                console.log("Stop (r,b,v)", range, base, LKey.unwrap(stopRange));
+                (range, base) = low.explode();
+                console.log("Low (r,b,v)", range, base, LKey.unwrap(low));
+                (range, base) = high.explode();
+                console.log("High (r,b,v)", range, base, LKey.unwrap(high));
+
+            }
+        }
+    }
+
     function testExample2Fees() public {
         // Keys
 
@@ -373,7 +400,7 @@ LLL
 	nodeCummulativeEarnPerMLiq += 9.5124e-8 / 58 = 0.00000000164 (1754728083264 / 1069911156275153993728 = truncates to 0)
 
 LL
-
+// 30253932470.068966
 	subtreeFees = 12 * 0.000000007927 = 9.5124e-8 (1754728083264)
 	nodeFees = 0
 

@@ -1111,7 +1111,7 @@ library LiqTreeIntLib {
     function getRangeBounds(
         uint24 rangeLow,
         uint24 rangeHigh
-    ) public pure returns (LKey low, LKey high, LKey peak, LKey limitRange) {
+    ) public view returns (LKey low, LKey high, LKey peak, LKey limitRange) {
         LKey peakRange;
         (peak, peakRange) = lowestCommonAncestor(rangeLow, rangeHigh);
 
@@ -1123,19 +1123,23 @@ library LiqTreeIntLib {
 
         // Case on whether left and right are below the peak range or not.
         if (lowBelow && highBelow) {
+            console.log("getRangeBounds - 1st");
             // The simple case where we can just walk up both legs.
             // Each individual leg will stop at the children of the peak,
             // so our limit range is one below peak range.
             limitRange = LKey.wrap(LKey.unwrap(peakRange) >> 1);
         } else if (lowBelow && !highBelow) {
+            console.log("getRangeBounds - 2nd");
             // We only have the left leg to worry about.
             // So our limit range will be at the peak, because we want to include
             // the right child of the peak.
             limitRange = peakRange;
         } else if (!lowBelow && highBelow) {
+            console.log("getRangeBounds - 3rd");
             // Just the right leg. So include the left child of peak.
             limitRange = peakRange;
         } else {
+            console.log("getRangeBounds - 4th");
             // Both are at or higher than the peak! So our range breakdown is just
             // the peak.
             // You can prove that one of the keys must be the peak itself trivially.
