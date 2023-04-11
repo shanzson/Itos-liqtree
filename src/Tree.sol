@@ -42,6 +42,7 @@ import { console } from "forge-std/console.sol";
 type LKey is uint48;
 // Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks.
 uint8 constant MAX_TREE_DEPTH = 21; // We zero index depth, so this is 22 levels.
+uint256 constant TWO_POW_64 = 18446744073709551616;
 
 // This is okay as the NIL key because it can't possibly be used in any breakdowns since the depth portion of
 // the lkey is one-hot.
@@ -886,7 +887,23 @@ library LiqTreeImpl {
     function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        // TODO (urlaubaitos) adjust for fee accounting
+        // TODO (urlaubaitos) adjust for fee accounting totalMLiq
+
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
+
+        // TODO: determine if we need to check for overflow
+        // TODO: round earned fees up
+        uint256 totalMLiq = rootNode.subtreeMLiq;
+        if (totalMLiq > 0) {
+            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+
+            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+        }
 
         rootNode.mLiq += liq;
         rootNode.subtreeMLiq += self.offset * liq;

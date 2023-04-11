@@ -85,19 +85,23 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[root].tokenY.borrowed, 928e6);
         assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 928e6);
 
-        return;
-
         // Testing 4 methods addInfRangeMLiq, removeInfRangeMLiq, addInfRangeTLiq, removeInfRangeTLiq
         // Assert tree structure and fee calculations after each operation
         liqTree.addInfRangeMLiq(9287); // addInfRangeMLiq
 
-        assertEq(liqTree.nodes[root].mLiq, 0);
-        assertEq(liqTree.nodes[root].subtreeMLiq, 0);
-        assertEq(liqTree.nodes[root].tLiq, 0);
-        assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
-        assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 0);
-        assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
-        assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 0);
+        assertEq(liqTree.nodes[root].tokenX.cummulativeEarnedPerMLiq, 38024667284);
+        assertEq(liqTree.nodes[root].tokenX.subtreeCummulativeEarnedPerMLiq, 38024667284);
+        assertEq(liqTree.nodes[root].tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[root].tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+
+
+        // assertEq(liqTree.nodes[root].mLiq, 0);
+        // assertEq(liqTree.nodes[root].subtreeMLiq, 0);
+        // assertEq(liqTree.nodes[root].tLiq, 0);
+        // assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
+        // assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 0);
+        // assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
+        // assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 0);
 
         // liqTree.removeInfRangeMLiq(3682);
         // liqTree.addInfRangeMLiq(7287);
