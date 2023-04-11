@@ -30,17 +30,17 @@ contract LiqTreeTest is PRBTest {
         t.addInfRangeMLiq(10);
         assertWideMT(20, 0);
 
-        t.addInfRangeTLiq(10);
+        t.addInfRangeTLiq(10, 0, 0);
         assertWideMT(20, 10);
 
         // Going over won't happen in practice but we should still test.
-        t.addInfRangeTLiq(20);
+        t.addInfRangeTLiq(20, 0, 0);
         assertWideMT(20, 30);
 
         t.removeInfRangeMLiq(10);
         assertWideMT(10, 30);
 
-        t.removeInfRangeTLiq(30);
+        t.removeInfRangeTLiq(30, 0, 0);
         assertWideMT(10, 0);
 
         // And adding mliq anywhere else won't change the wide mliq.

@@ -884,31 +884,47 @@ library LiqTreeImpl {
     }
 
     function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
-        // TODO (urlaubaitos) adjust for fee accounting
         LiqNode storage rootNode = self.nodes[self.root];
+
+        // TODO (urlaubaitos) adjust for fee accounting
+
         rootNode.mLiq += liq;
-        rootNode.subtreeMinM += liq;
+        rootNode.subtreeMLiq += self.offset * liq;
     }
 
     function removeInfRangeMLiq(LiqTree storage self, uint128 liq) external {
-        // TODO (urlaubaitos) adjust for fee accounting
         LiqNode storage rootNode = self.nodes[self.root];
+
+        // TODO (urlaubaitos) adjust for fee accounting
+
         rootNode.mLiq -= liq;
-        rootNode.subtreeMinM -= liq;
+        rootNode.subtreeMLiq -= self.offset * liq;
     }
 
-    function addInfRangeTLiq(LiqTree storage self, uint128 liq) external {
-        // TODO (urlaubaitos) adjust for fee accounting
+    function addInfRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
         LiqNode storage rootNode = self.nodes[self.root];
+
+        // TODO (urlaubaitos) adjust for fee accounting
+
         rootNode.tLiq += liq;
         rootNode.subtreeMaxT += liq;
+        rootNode.tokenX.borrowed += amountX;
+        rootNode.tokenX.subtreeBorrowed += amountX;
+        rootNode.tokenY.borrowed += amountY;
+        rootNode.tokenY.subtreeBorrowed += amountY;
     }
 
-    function removeInfRangeTLiq(LiqTree storage self, uint128 liq) external {
-        // TODO (urlaubaitos) adjust for fee accounting
+    function removeInfRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
         LiqNode storage rootNode = self.nodes[self.root];
+
+        // TODO (urlaubaitos) adjust for fee accounting
+
         rootNode.tLiq -= liq;
         rootNode.subtreeMaxT -= liq;
+        rootNode.tokenX.borrowed -= amountX;
+        rootNode.tokenX.subtreeBorrowed -= amountX;
+        rootNode.tokenY.borrowed -= amountY;
+        rootNode.tokenY.subtreeBorrowed -= amountY;
     }
 
     function borrow(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal {

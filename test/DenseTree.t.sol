@@ -65,6 +65,55 @@ contract DenseTreeTest is Test {
         }
     }
 
+    function testRootNodeOnly() public {
+        LKey root = liqTree.root;
+
+        vm.warp(0); // T0
+        liqTree.addInfRangeMLiq(8430); // Step 1
+        liqTree.addInfRangeTLiq(4381, 832e18, 928e6); // Step 2
+
+        vm.warp(60 * 60); // T3600 (1hr)
+        liqTree.feeRateSnapshotTokenX.add(113712805933826); // 5.4% APR as Q192.64
+        liqTree.feeRateSnapshotTokenY.add(113712805933826);
+
+        // Verify root state is as expected
+        assertEq(liqTree.nodes[root].mLiq, 8430);
+        assertEq(liqTree.nodes[root].subtreeMLiq, 134880);
+        assertEq(liqTree.nodes[root].tLiq, 4381);
+        assertEq(liqTree.nodes[root].tokenX.borrowed, 832e18);
+        assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 832e18);
+        assertEq(liqTree.nodes[root].tokenY.borrowed, 928e6);
+        assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 928e6);
+
+        return;
+
+        // Testing 4 methods addInfRangeMLiq, removeInfRangeMLiq, addInfRangeTLiq, removeInfRangeTLiq
+        // Assert tree structure and fee calculations after each operation
+        liqTree.addInfRangeMLiq(9287); // addInfRangeMLiq
+
+        assertEq(liqTree.nodes[root].mLiq, 0);
+        assertEq(liqTree.nodes[root].subtreeMLiq, 0);
+        assertEq(liqTree.nodes[root].tLiq, 0);
+        assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 0);
+        assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 0);
+
+        // liqTree.removeInfRangeMLiq(3682);
+        // liqTree.addInfRangeMLiq(7287);
+        // liqTree.removeInfRangeMLiq(4923);
+
+        /*
+        assertEq(liqTree.nodes[root].mLiq, 0);
+        assertEq(liqTree.nodes[root].subtreeMLiq, 0);
+        assertEq(liqTree.nodes[root].tLiq, 0);
+        assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
+        assertEq(liqTree.nodes[root].tokenX.sbutreeBorrowed, 0);
+        assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
+        assertEq(liqTree.nodes[root].tokenY.sbutreeBorrowed, 0);
+        */
+    }
+
     function testExample2Fees() public {
         // Keys
 
@@ -370,6 +419,10 @@ make(low=1, high=3, liq=13, tokenX=19, tokenY=1) // LLLR, LLR
 
 Update LLLR first
 
+Rate will be a Q192.64 number
+Round rate down? 
+
+
 LLLR
 	// 1) Compute Fees
 	rate 5%
@@ -379,7 +432,7 @@ LLLR
 	snapshot = t10
 
 	// 2) Compute total maker liq
-	A[level] = LLL.mLiq + LL.mLiq + L.mLiq + root.mLiq = 7 + 2 + 20 + 0 = 29 (534955578137576996864)
+	A[level] = LLL.mLiq + LL.mLiq + L.mLiq + root.mLiq = 7 + 2 + 20 + 0 = 29
 	perTickMLiq = 0 + 29 = 29
 	totalMLiq = 0 + 29 * 1 = 29
 
@@ -390,14 +443,14 @@ LLLR
 LLL
 
 	subtreeFees = 0
-	nodeFees = 12 * 0.000000007927 = 9.5124e-8 (1754728083264) (would be 1754728083267 but precision is lost calculating the rate diff)
+	nodeFees = 12 * 146227340272 = 1754728083264 (X64)
 
-	A[level] = LL + L + root = 2 + 20 + 0 = 22 (405828369621610135552)
+	A[level] = LL + L + root = 2 + 20 + 0 = 22
 	perTickMLiq = 7 + 22 = 29
-	totalMLiq = 0 + 29 * 2 = 58 (1069911156275153993728)
+	totalMLiq = 0 + 29 * 2 = 58
 
 	subtreeCummulativeEarnPerMLiq += 0
-	nodeCummulativeEarnPerMLiq += 9.5124e-8 / 58 = 0.00000000164 (1754728083264 / 1069911156275153993728 = truncates to 0)
+	nodeCummulativeEarnPerMLiq += 1754728083264 / 58 = 30253932470 (X64) or 1.6400689655101872e-09
 
 LL
 // 30253932470.068966
