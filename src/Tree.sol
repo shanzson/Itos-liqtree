@@ -935,6 +935,22 @@ library LiqTreeImpl {
 
         // TODO (urlaubaitos) adjust for fee accounting
 
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
+
+        // TODO: determine if we need to check for overflow
+        // TODO: round earned fees up
+        uint256 totalMLiq = rootNode.subtreeMLiq;
+        if (totalMLiq > 0) {
+            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+
+            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+        }
+
         rootNode.tLiq += liq;
         rootNode.subtreeMaxT += liq;
         rootNode.tokenX.borrowed += amountX;
