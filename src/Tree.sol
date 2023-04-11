@@ -887,8 +887,6 @@ library LiqTreeImpl {
     function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        // TODO (urlaubaitos) adjust for fee accounting totalMLiq
-
         uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
         rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
         uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
@@ -912,7 +910,21 @@ library LiqTreeImpl {
     function removeInfRangeMLiq(LiqTree storage self, uint128 liq) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        // TODO (urlaubaitos) adjust for fee accounting
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
+
+        // TODO: determine if we need to check for overflow
+        // TODO: round earned fees up
+        uint256 totalMLiq = rootNode.subtreeMLiq;
+        if (totalMLiq > 0) {
+            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+
+            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+        }
 
         rootNode.mLiq -= liq;
         rootNode.subtreeMLiq -= self.offset * liq;
@@ -934,7 +946,21 @@ library LiqTreeImpl {
     function removeInfRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        // TODO (urlaubaitos) adjust for fee accounting
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
+
+        // TODO: determine if we need to check for overflow
+        // TODO: round earned fees up
+        uint256 totalMLiq = rootNode.subtreeMLiq;
+        if (totalMLiq > 0) {
+            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+
+            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+        }
 
         rootNode.tLiq -= liq;
         rootNode.subtreeMaxT -= liq;
