@@ -986,14 +986,6 @@ library LiqTreeImpl {
         rootNode.tokenY.subtreeBorrowed -= amountY;
     }
 
-    function borrow(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal {
-        // TODO (urlaubaitos)
-    }
-
-    function repay(LiqTree storage self, LiqRange memory range, uint256 amountX, uint256 amountY) internal {
-        // TODO (urlaubaitos)
-    }
-
     // determine better way to keep private + support testing
     function walkToRootForMLiq(LiqTree storage self, LKey nodeKey) public view returns (uint128[] memory mLiqs) {
         // Feels like there should be a better way to calculate depth of a node?
