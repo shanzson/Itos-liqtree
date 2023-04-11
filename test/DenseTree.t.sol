@@ -158,17 +158,35 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[root].tokenY.borrowed, 7927848e6);
         assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 7927848e6);
 
-        // liqTree.removeInfRangeMLiq(4923);
+        vm.warp(57212); // T57212
+        liqTree.feeRateSnapshotTokenX.add(1055375100301031600000000); // 11.1% APR as Q192.64 TT57212 - T37002
+        liqTree.feeRateSnapshotTokenY.add(1055375100301031600000000);
+        
+        liqTree.removeInfRangeTLiq(4923, 222e18, 786e6);
 
         /*
-        assertEq(liqTree.nodes[root].mLiq, 0);
-        assertEq(liqTree.nodes[root].subtreeMLiq, 0);
-        assertEq(liqTree.nodes[root].tLiq, 0);
-        assertEq(liqTree.nodes[root].tokenX.borrowed, 0);
-        assertEq(liqTree.nodes[root].tokenX.sbutreeBorrowed, 0);
-        assertEq(liqTree.nodes[root].tokenY.borrowed, 0);
-        assertEq(liqTree.nodes[root].tokenY.sbutreeBorrowed, 0);
-        */
+            x-rate 1055375100301031600000000 (correct)
+            x num 10570637004615132505600000000000000000000000000 (correct)
+            x Q.64 47072662115314982657641610260064125400783 (47072662115314980000000000000000000000000 is correct)
+            x token 2551814126505030241953 (2.55181412650503024195387164028103035638433335980020216618053 × 10^21 is correct) // need to round up 1
+            y-rate 1055375100301031600000000
+            y num 8366853378171332767996800000000000000 (correct)
+            y Q.64 37258876817649326540776629853936 (3.7258876817649324e+31 is correct)
+            y token 2019807759503 (2.01980775950325988354767545683493270255599285721099372431609 × 10^12 is correct)
+  */
+
+        assertEq(liqTree.nodes[root].tokenX.cummulativeEarnedPerMLiq, 2563695146166521368512);
+        assertEq(liqTree.nodes[root].tokenX.subtreeCummulativeEarnedPerMLiq, 2563695146166521368512);
+        assertEq(liqTree.nodes[root].tokenY.cummulativeEarnedPerMLiq, 2019821011408);
+        assertEq(liqTree.nodes[root].tokenY.subtreeCummulativeEarnedPerMLiq, 2019821011408);
+
+        assertEq(liqTree.nodes[root].mLiq, 14035);
+        assertEq(liqTree.nodes[root].subtreeMLiq, 224560);
+        assertEq(liqTree.nodes[root].tLiq, 6745);
+        assertEq(liqTree.nodes[root].tokenX.borrowed, 9794e18);
+        assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 9794e18);
+        assertEq(liqTree.nodes[root].tokenY.borrowed, 7927062e6);
+        assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 7927062e6);
     }
 
     function testExample2Fees() public {
