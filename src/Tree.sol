@@ -601,6 +601,7 @@ library LiqTreeImpl {
             console.log("adding low"); 
 
             // calculate fees 
+            _handleFee(self, current, node);
 
             node.addTLiq(liq);
 
@@ -619,6 +620,8 @@ library LiqTreeImpl {
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
+            _handleFee(self, up, parent);
+
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
             parent.tokenX.subtreeBorrowed += amountX;
             parent.tokenY.subtreeBorrowed += amountY;
@@ -644,6 +647,7 @@ library LiqTreeImpl {
                     node = self.nodes[current];
 
                     // calculate fees 
+                    _handleFee(self, current, node);
 
                     node.addTLiq(liq);
 
@@ -664,6 +668,7 @@ library LiqTreeImpl {
                 // Right Propogate T
                 (up, left) = current.rightUp();
                 parent = self.nodes[up];
+                _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
                 parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
                 parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
@@ -684,6 +689,7 @@ library LiqTreeImpl {
             console.log("adding high"); 
 
             // calculate fees 
+            _handleFee(self, current, node);
 
             node.addTLiq(liq);
 
@@ -701,6 +707,7 @@ library LiqTreeImpl {
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
+            _handleFee(self, up, parent);
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
             parent.tokenX.subtreeBorrowed += amountX;
             parent.tokenY.subtreeBorrowed += amountY;
@@ -723,6 +730,7 @@ library LiqTreeImpl {
                     node = self.nodes[current];
 
                     // calculate fees 
+                    _handleFee(self, current, node);
 
                     node.addTLiq(liq);
 
@@ -737,6 +745,7 @@ library LiqTreeImpl {
                 // Left Propogate T
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
+                _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
                 parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
                 parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
@@ -764,6 +773,7 @@ library LiqTreeImpl {
 
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
+            _handleFee(self, up, parent);
             uint128 oldMax = parent.subtreeMaxT;
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
             parent.tokenX.subtreeBorrowed = self.nodes[other].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
