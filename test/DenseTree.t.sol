@@ -232,18 +232,18 @@ contract DenseTreeTest is Test {
 
         // subtreeMLiq
         assertEq(liqTree.nodes[root].subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        assertEq(liqTree.nodes[L].subtreeMLiq, 324063953); // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        assertEq(liqTree.nodes[LL].subtreeMLiq, 324056493); // 9082734*4 + 45346*2 + 287634865*1
-        assertEq(liqTree.nodes[LR].subtreeMLiq, 4444); // 1111*4
-        assertEq(liqTree.nodes[LLR].subtreeMLiq, 287725557); // 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[L].subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[LL].subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[LR].subtreeMLiq, 4444);        // 1111*4
+        assertEq(liqTree.nodes[LLR].subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
         assertEq(liqTree.nodes[LLRR].subtreeMLiq, 287634865); // 287634865*1
 
         // borrowedX
         assertEq(liqTree.nodes[root].tokenX.borrowed, 492e18);
         assertEq(liqTree.nodes[L].tokenX.borrowed, 998e18);
-        assertEq(liqTree.nodes[LL].tokenX.borrowed, 765e18); // 1402
-        assertEq(liqTree.nodes[LR].tokenX.borrowed, 24e18); // 48
-        assertEq(liqTree.nodes[LLR].tokenX.borrowed, 53e18); // 106
+        assertEq(liqTree.nodes[LL].tokenX.borrowed, 765e18);
+        assertEq(liqTree.nodes[LR].tokenX.borrowed, 24e18);
+        assertEq(liqTree.nodes[LLR].tokenX.borrowed, 53e18);
         assertEq(liqTree.nodes[LLRR].tokenX.borrowed, 701e18);
 
         // borrowedY
@@ -256,23 +256,23 @@ contract DenseTreeTest is Test {
 
         // subtreeBorrowedX
         assertEq(liqTree.nodes[root].tokenX.subtreeBorrowed, 3033e18); // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        assertEq(liqTree.nodes[L].tokenX.subtreeBorrowed, 2541e18); // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        assertEq(liqTree.nodes[LL].tokenX.subtreeBorrowed, 1519e18); // 765e18 + 53e18 + 701e18
+        assertEq(liqTree.nodes[L].tokenX.subtreeBorrowed, 2541e18);    // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(liqTree.nodes[LL].tokenX.subtreeBorrowed, 1519e18);   // 765e18 + 53e18 + 701e18
         assertEq(liqTree.nodes[LR].tokenX.subtreeBorrowed, 24e18);
-        assertEq(liqTree.nodes[LLR].tokenX.subtreeBorrowed, 754e18); // 53e18 + 701e18
-        assertEq(liqTree.nodes[LLRR].tokenX.subtreeBorrowed, 701e18); // 701e18
+        assertEq(liqTree.nodes[LLR].tokenX.subtreeBorrowed, 754e18);   // 53e18 + 701e18
+        assertEq(liqTree.nodes[LLRR].tokenX.subtreeBorrowed, 701e18);  // 701e18
 
         // subtreeBorrowedY
         assertEq(liqTree.nodes[root].tokenY.subtreeBorrowed, 1143822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        assertEq(liqTree.nodes[L].tokenY.subtreeBorrowed, 888964e6); // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        assertEq(liqTree.nodes[LL].tokenY.subtreeBorrowed, 888059e6); // 99763e6 + 8765e6 + 779531e6
+        assertEq(liqTree.nodes[L].tokenY.subtreeBorrowed, 888964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(liqTree.nodes[LL].tokenY.subtreeBorrowed, 888059e6);    // 99763e6 + 8765e6 + 779531e6
         assertEq(liqTree.nodes[LR].tokenY.subtreeBorrowed, 552e6);
-        assertEq(liqTree.nodes[LLR].tokenY.subtreeBorrowed, 788296e6); // 8765e6 + 779531e6
-        assertEq(liqTree.nodes[LLRR].tokenY.subtreeBorrowed, 779531e6); // 779531e6
+        assertEq(liqTree.nodes[LLR].tokenY.subtreeBorrowed, 788296e6);   // 8765e6 + 779531e6
+        assertEq(liqTree.nodes[LLRR].tokenY.subtreeBorrowed, 779531e6);  // 779531e6
 
         // Step 2) Assign different rates for X & Y
         vm.warp(98273); // T98273
-        liqTree.feeRateSnapshotTokenX.add(4541239648278065); // 7.9% APR as Q192.64 T98273 - T0
+        liqTree.feeRateSnapshotTokenX.add(4541239648278065);  // 7.9% APR as Q192.64 T98273 - T0
         liqTree.feeRateSnapshotTokenY.add(13278814667749784); // 23.1% APR as Q192.64 T98273 - T0
 
         // Step 3) Apply change that effects the entire tree, to calculate the fees at each node
@@ -322,6 +322,83 @@ contract DenseTreeTest is Test {
         assertEq(liqTree.nodes[LR].mLiq, 3845);
         assertEq(liqTree.nodes[LLR].mLiq, 45346);
         assertEq(liqTree.nodes[LLRR].mLiq, 287637599);
+
+        // subtreeMLiq
+        assertEq(liqTree.nodes[root].subtreeMLiq, 324212503); // 8430*16 + 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
+        assertEq(liqTree.nodes[L].subtreeMLiq, 324077623);    // 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
+        assertEq(liqTree.nodes[LL].subtreeMLiq, 324059227);   // 9082734*4 + 45346*2 + 287637599*1
+        assertEq(liqTree.nodes[LR].subtreeMLiq, 15380);       // 3845*4
+        assertEq(liqTree.nodes[LLR].subtreeMLiq, 287728291);  // 45346*2 + 287637599*1
+        assertEq(liqTree.nodes[LLRR].subtreeMLiq, 287637599); // 287637599*1
+
+        // 3.2) removeMLiq
+        vm.warp(2876298273); // T2876298273
+
+        liqTree.feeRateSnapshotTokenX.add(16463537718422861220174597);   // 978567.9% APR as Q192.64 T2876298273 - T98273
+        liqTree.feeRateSnapshotTokenY.add(3715979586694123491881712207); // 220872233.1% APR as Q192.64 T2876298273 - T98273
+
+        liqTree.removeMLiq(LiqRange(3, 7), 2734); // LLRR, LR
+
+        // root
+        assertEq(liqTree.nodes[root].tokenX.cummulativeEarnedPerMLiq, 373601278 + 460869777391306865342443209777865480613255022999529416667);
+        assertEq(liqTree.nodes[root].tokenX.subtreeCummulativeEarnedPerMLiq, 2303115199 + 2841093566723239273543963933447695127439029440564172196653);
+        assertEq(liqTree.nodes[root].tokenY.cummulativeEarnedPerMLiq, 0 + 53884214175249651044114128777971887129030372509401);
+        assertEq(liqTree.nodes[root].tokenY.subtreeCummulativeEarnedPerMLiq, 2 + 241836432940548879597974993945951705968428610223921);
+
+        return;
+
+        // L
+        assertEq(liqTree.nodes[L].tokenX.cummulativeEarnedPerMLiq, 757991165);
+        assertEq(liqTree.nodes[L].tokenX.subtreeCummulativeEarnedPerMLiq, 1929915382);
+        assertEq(liqTree.nodes[L].tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[L].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // LL
+        assertEq(liqTree.nodes[LL].tokenX.cummulativeEarnedPerMLiq, 581096415);
+        assertEq(liqTree.nodes[LL].tokenX.subtreeCummulativeEarnedPerMLiq, 1153837196);
+        assertEq(liqTree.nodes[LL].tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LL].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // LR
+        assertEq(liqTree.nodes[LR].tokenX.cummulativeEarnedPerMLiq, 148929881804);
+        assertEq(liqTree.nodes[LR].tokenX.subtreeCummulativeEarnedPerMLiq, 148929881804);
+        assertEq(liqTree.nodes[LR].tokenY.cummulativeEarnedPerMLiq, 10);
+        assertEq(liqTree.nodes[LR].tokenY.subtreeCummulativeEarnedPerMLiq, 10);
+
+        // LLR
+        assertEq(liqTree.nodes[LLR].tokenX.cummulativeEarnedPerMLiq, 42651943);
+        assertEq(liqTree.nodes[LLR].tokenX.subtreeCummulativeEarnedPerMLiq, 606784254);
+        assertEq(liqTree.nodes[LLR].tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLR].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // LLRR
+        assertEq(liqTree.nodes[LLRR].tokenX.cummulativeEarnedPerMLiq, 581500584);
+        assertEq(liqTree.nodes[LLRR].tokenX.subtreeCummulativeEarnedPerMLiq, 581500584);
+        assertEq(liqTree.nodes[LLRR].tokenY.cummulativeEarnedPerMLiq, 1);
+        assertEq(liqTree.nodes[LLRR].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+        
+        // mLiq
+        assertEq(liqTree.nodes[root].mLiq, 8430);
+        assertEq(liqTree.nodes[L].mLiq, 377);
+        assertEq(liqTree.nodes[LL].mLiq, 9082734);
+        assertEq(liqTree.nodes[LR].mLiq, 1111);
+        assertEq(liqTree.nodes[LLR].mLiq, 45346);
+        assertEq(liqTree.nodes[LLRR].mLiq, 287634865);
+
+        // subtreeMLiq
+        assertEq(liqTree.nodes[root].subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[L].subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[LL].subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[LR].subtreeMLiq, 4444);        // 1111*4
+        assertEq(liqTree.nodes[LLR].subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
+        assertEq(liqTree.nodes[LLRR].subtreeMLiq, 287634865); // 287634865*1
+
+        // 3.3) addTLiq
+
+
+        // 3.4) removeTLiq
+
+
     } 
 
     function testExample2Fees() public {
