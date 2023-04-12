@@ -808,63 +808,180 @@ library LiqTreeImpl {
     }
 
     function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) external {
+        console.log("\nCalling removeTLiq ------------------------------------------------");
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
         LiqNode storage node;
 
+        {
+            (uint24 sbase, uint24 srange) = stopRange.explode();
+            console.log("Stop Range is (base, range, value)", sbase, srange, LKey.unwrap(stopRange));
+        }
+
         // Start with the left side of all right nodes.
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
+
+            console.log("adding low"); 
+
+            // calculate fees 
+            _handleFee(self, current, node);
+
             node.removeTLiq(liq);
+
+            node.tokenX.borrowed -= amountX;
+            node.tokenY.borrowed -= amountY;
+            node.tokenX.subtreeBorrowed -= amountX;
+            node.tokenY.subtreeBorrowed -= amountY;
+
+            {
+                (uint24 base, uint24 range) = current.explode();
+                console.log("adding borrowX to (base, range, value)", base, range, amountX);
+                console.log("adding borrowY to (base, range, value)", base, range, amountY);
+            }
+
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
+            _handleFee(self, up, parent);
+
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            parent.tokenX.subtreeBorrowed -= amountX;
+            parent.tokenY.subtreeBorrowed -= amountY;
             (current, node) = (up, parent);
 
+            // do fees need to be calculated here?
+
+            {
+                (uint24 base, uint24 range) = current.explode();
+                console.log("adding borrowX to (base, range, value)", base, range, amountX);
+                console.log("adding borrowY to (base, range, value)", base, range, amountY);
+            }
+
+
             while (current.isLess(stopRange)) {
+                console.log("low inner while");
+
                 // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
                 if (current.isLeft()) {
+                    console.log("low inner while if");
+
                     current = current.rightSib();
                     node = self.nodes[current];
+
+                    // calculate fees 
+                    _handleFee(self, current, node);
+
                     node.removeTLiq(liq);
+
+                    node.tokenX.borrowed -= amountX;
+                    node.tokenY.borrowed -= amountY;
+                    node.tokenX.subtreeBorrowed -= amountX;
+                    node.tokenY.subtreeBorrowed -= amountY;
+
+                    {
+                        (uint24 base, uint24 range) = current.explode();
+                        console.log("adding borrowX to (base, range, value)", base, range, amountX);
+                        console.log("adding borrowY to (base, range, value)", base, range, amountY);
+                    }
                 }
+
+                // neeed to calculate because blah blah blah
 
                 // Right Propogate T
                 (up, left) = current.rightUp();
                 parent = self.nodes[up];
+                _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
+                parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
+
+                {
+                    (uint24 base, uint24 range) = current.explode();
+                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
+                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
+                }
             }
         }
 
         if (high.isLess(stopRange)) {
             current = high;
             node = self.nodes[current];
+
+            console.log("adding high"); 
+
+            // calculate fees 
+            _handleFee(self, current, node);
+
             node.removeTLiq(liq);
+
+            node.tokenX.borrowed -= amountX;
+            node.tokenY.borrowed -= amountY;
+            node.tokenX.subtreeBorrowed -= amountX;
+            node.tokenY.subtreeBorrowed -= amountY;
+
+            {
+                (uint24 base, uint24 range) = current.explode();
+                console.log("adding borrowX to (base, range, value)", base, range, amountX);
+                console.log("adding borrowY to (base, range, value)", base, range, amountY);
+            }
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
+            _handleFee(self, up, parent);
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            parent.tokenX.subtreeBorrowed -= amountX;
+            parent.tokenY.subtreeBorrowed -= amountY;
             (current, node) = (up, parent);
 
+            {
+                (uint24 base, uint24 range) = current.explode();
+                console.log("adding borrowX to (base, range, value)", base, range, amountX);
+                console.log("adding borrowY to (base, range, value)", base, range, amountY);
+            }
+
             while(current.isLess(stopRange)) {
+                console.log("high inner while");
+
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
                 if (current.isRight()) {
+                    console.log("high inner while if");
+
                     current = current.leftSib();
                     node = self.nodes[current];
+
+                    // calculate fees 
+                    _handleFee(self, current, node);
+
                     node.removeTLiq(liq);
+
+                    node.tokenX.borrowed -= amountX;
+                    node.tokenY.borrowed -= amountY;
+                    node.tokenX.subtreeBorrowed -= amountX;
+                    node.tokenY.subtreeBorrowed -= amountY;
                 }
+
+                // neeed to calculate because blah blah blah
 
                 // Left Propogate T
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
+                _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+                parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
+                parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
+
+                {
+                    (uint24 base, uint24 range) = current.explode();
+                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
+                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
+                }
             }
         }
 
@@ -875,16 +992,44 @@ library LiqTreeImpl {
 
         node = self.nodes[current];
 
+        console.log("end");
+
         while (current.isNeq(self.root)) {
+            console.log("last while");
+
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
+            _handleFee(self, up, parent);
             uint128 oldMax = parent.subtreeMaxT;
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
+            parent.tokenX.subtreeBorrowed = self.nodes[other].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
+            parent.tokenY.subtreeBorrowed = self.nodes[other].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
+
+            {
+                LiqNode storage otherNode = self.nodes[other];
+
+                (uint24 base, uint24 range) = current.explode();
+                console.log("current is (base, range, value)", base, range);
+                console.log("current subtreeBorrowedX", node.tokenX.subtreeBorrowed);
+                console.log("current subtreeBorrowedY", node.tokenY.subtreeBorrowed);
+                (base, range) = other.explode();
+                console.log("other is to (base, range, value)", base, range);
+                console.log("other subtreeBorrowedX", otherNode.tokenX.subtreeBorrowed);
+                console.log("other subtreeBorrowedY", otherNode.tokenY.subtreeBorrowed);
+            }
+
             if (node.subtreeMaxT == oldMax) {
-                return;
+            // Don't think we can early return anymore
+            //    return;
             }
             current = up;
             node = parent;
+
+            {
+                (uint24 base, uint24 range) = current.explode();
+                console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.subtreeBorrowed);
+                console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.subtreeBorrowed);
+            }
         }
     }
 
