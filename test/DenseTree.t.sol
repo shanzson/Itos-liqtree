@@ -279,46 +279,39 @@ contract DenseTreeTest is Test {
         // 3.1) addMLiq
         liqTree.addMLiq(LiqRange(3, 7), 2734); // LLRR, LR
 
-        assertEq(liqTree.nodes[LLRR].tokenX.cummulativeEarnedPerMLiq, 581500584);
-        assertEq(liqTree.nodes[LLRR].tokenX.subtreeCummulativeEarnedPerMLiq, 581500584);
-        assertEq(liqTree.nodes[LLRR].tokenY.cummulativeEarnedPerMLiq, 1);
-        assertEq(liqTree.nodes[LLRR].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
-
-        return;
-
         // root
-        assertEq(liqTree.nodes[root].tokenX.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[root].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[root].tokenX.cummulativeEarnedPerMLiq, 373601278);
+        assertEq(liqTree.nodes[root].tokenX.subtreeCummulativeEarnedPerMLiq, 2303115199);
         assertEq(liqTree.nodes[root].tokenY.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[root].tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[root].tokenY.subtreeCummulativeEarnedPerMLiq, 2);
 
         // L
-        assertEq(liqTree.nodes[L].tokenX.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[L].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[L].tokenX.cummulativeEarnedPerMLiq, 757991165);
+        assertEq(liqTree.nodes[L].tokenX.subtreeCummulativeEarnedPerMLiq, 1929915382);
         assertEq(liqTree.nodes[L].tokenY.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[L].tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[L].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
 
         // LL
-        assertEq(liqTree.nodes[LL].tokenX.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LL].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LL].tokenX.cummulativeEarnedPerMLiq, 581096415);
+        assertEq(liqTree.nodes[LL].tokenX.subtreeCummulativeEarnedPerMLiq, 1153837196);
         assertEq(liqTree.nodes[LL].tokenY.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LL].tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LL].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
 
         // LR
-        assertEq(liqTree.nodes[LR].tokenX.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LR].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LR].tokenY.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LR].tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LR].tokenX.cummulativeEarnedPerMLiq, 148929881804);
+        assertEq(liqTree.nodes[LR].tokenX.subtreeCummulativeEarnedPerMLiq, 148929881804);
+        assertEq(liqTree.nodes[LR].tokenY.cummulativeEarnedPerMLiq, 10);
+        assertEq(liqTree.nodes[LR].tokenY.subtreeCummulativeEarnedPerMLiq, 10);
 
         // LLR
-        assertEq(liqTree.nodes[LLR].tokenX.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LLR].tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLR].tokenX.cummulativeEarnedPerMLiq, 42651943);
+        assertEq(liqTree.nodes[LLR].tokenX.subtreeCummulativeEarnedPerMLiq, 606784254);
         assertEq(liqTree.nodes[LLR].tokenY.cummulativeEarnedPerMLiq, 0);
-        assertEq(liqTree.nodes[LLR].tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(liqTree.nodes[LLR].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
 
         // LLRR
-        assertEq(liqTree.nodes[LLRR].tokenX.cummulativeEarnedPerMLiq, 599857033);
-        assertEq(liqTree.nodes[LLRR].tokenX.subtreeCummulativeEarnedPerMLiq, 599857033);
+        assertEq(liqTree.nodes[LLRR].tokenX.cummulativeEarnedPerMLiq, 581500584);
+        assertEq(liqTree.nodes[LLRR].tokenX.subtreeCummulativeEarnedPerMLiq, 581500584);
         assertEq(liqTree.nodes[LLRR].tokenY.cummulativeEarnedPerMLiq, 1);
         assertEq(liqTree.nodes[LLRR].tokenY.subtreeCummulativeEarnedPerMLiq, 1);
 
