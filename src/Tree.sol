@@ -608,7 +608,6 @@ library LiqTreeImpl {
             // calculate fees 
 
             node.addTLiq(liq);
-            node.borrow(amountX, amountY);
 
             node.tokenX.borrowed += amountX;
             node.tokenY.borrowed += amountY;
