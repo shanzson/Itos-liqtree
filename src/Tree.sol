@@ -659,6 +659,7 @@ library LiqTreeImpl {
         }
 
         rootNode.mLiq += liq;
+        rootNode.subtreeMinM += liq;
         rootNode.subtreeMLiq += self.offset * liq;
     }
 
@@ -682,6 +683,7 @@ library LiqTreeImpl {
         }
 
         rootNode.mLiq -= liq;
+        rootNode.subtreeMinM -= liq;
         rootNode.subtreeMLiq -= self.offset * liq;
     }
 
