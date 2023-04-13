@@ -11,7 +11,7 @@ import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tre
  * In practice, the LiqTree will have many nodes. So many, that testing at that scale is intractable.
  * Thus the reason for this file. A smaller scale LiqTree, where we can more easily populate the values densely.
  */ 
-contract DenseTreeTest is Test {
+contract DenseTreeTreeStructureTest is Test {
     LiqTree public liqTree;
     using LiqTreeImpl for LiqTree;
     using LKeyImpl for LKey;
@@ -145,6 +145,14 @@ contract DenseTreeTest is Test {
         assertEq(root.tokenX.subtreeBorrowed, 9794e18);
         assertEq(root.tokenY.borrowed, 7927062e6);
         assertEq(root.tokenY.subtreeBorrowed, 7927062e6);
+    }
+
+    function testLeafNodeOnly() public {
+
+    }
+
+    function testSingleNodeOnly() public {
+
     }
 
     function testLeftLegOnly() public {
@@ -954,11 +962,108 @@ contract DenseTreeTest is Test {
         assertEq(RRLL.tokenY.subtreeBorrowed, 779531e6);  // 779531e6
     }
 
+    function testLeftAndRightLegBelowPeak() public {
+
+    }
+
+    function testLeftAndRightLegAtOrHigherThanPeak() public {
+
+    }
+
+    function testLeftAndRightLegSameDistanceToStop() public {
+
+    }
+
+    function testLeftLegLowerThanRightLeg() public {
+
+    }
+
+    function testRightLegLowerThanLeftLeg() public {
+
+    }
+
     function _nodeKey(uint24 depth, uint24 index, uint24 offset) public returns (LKey) {
         uint24 baseStep = uint24(offset / 2 ** depth);
 
         uint24 range = offset >> depth;
         uint24 base = offset + baseStep * index;
         return LKeyImpl.makeKey(range, base);
+    }
+}
+
+
+contract DenseTreeCodeStructureTest is Test {
+    LiqTree public liqTree;
+    using LiqTreeImpl for LiqTree;
+    using LKeyImpl for LKey;
+    using FeeRateSnapshotImpl for FeeRateSnapshot;
+    
+    function setUp() public {
+        // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]). 
+        // ie. A complete tree matching the ascii documentation. 
+        liqTree.init(4);
+    }
+
+    // NOTE: Technically all these cases are already covered by leftLegOnly + rightLegOnly
+    //       I'm not yet sure if this is necessary or not.
+    //       Leaning toward no.
+
+    function testLowOutterIfStatementOnly() public {
+
+    }
+
+    function testLowInnerWhileWithoutInnerIf() public {
+
+    }
+
+    function testLowInnerWhileWithInnerIf() public {
+
+    }
+
+    function testHighOutterIfStatementOnly() public {
+
+    }
+
+    function testHighInnerWhileWithoutInnerIf() public {
+
+    }
+
+    function testHighInnerWhileWithInnerIf() public {
+
+    }
+
+}
+
+
+contract DenseTreeMathmaticalLimitationsTest is Test {
+    LiqTree public liqTree;
+    using LiqTreeImpl for LiqTree;
+    using LKeyImpl for LKey;
+    using FeeRateSnapshotImpl for FeeRateSnapshot;
+    
+    function setUp() public {
+        // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]). 
+        // ie. A complete tree matching the ascii documentation. 
+        liqTree.init(4);
+    }
+
+    function testNoFeeAccumulationWithoutRate() public {
+
+    }
+
+    function testFeeAccumulationDoesNotRoundUp() public {
+
+    }
+
+    function testNodeTraversedTwiceWithoutRateUpdateDoesNotAccumulateAdditionalFees() public {
+
+    }
+
+    function testFeeAccumulationDoesNotOverflowUint256() public {
+
+    }
+
+    function testFeeAccumulationAccuracyWithRidiculousRates() public {
+
     }
 }
