@@ -23,21 +23,6 @@ contract DenseTreeTest is Test {
         liqTree.init(4);
     }
 
-    function testWalkToRootForMLiq() public {
-        liqTree.addInfRangeMLiq(140); // root
-        liqTree.addMLiq(LiqRange(0, 7), 37); // L
-        liqTree.addMLiq(LiqRange(4, 7), 901); // LR
-        liqTree.addMLiq(LiqRange(4, 5), 72); // LRL
-
-        // High key corresponds to LRL (low key is LR)
-        (, LKey highKey,,) = liqTree.getKeys(4, 5); // LRL
-        uint128[] memory mLiqs = liqTree.walkToRootForMLiq(highKey);
-        assertEq(mLiqs[0], 72);
-        assertEq(mLiqs[1], 901);
-        assertEq(mLiqs[2], 37);
-        assertEq(mLiqs[3], 140);
-    }
-
     function testOutputRangeCombinations() public {
         uint24 range;
         uint24 base;

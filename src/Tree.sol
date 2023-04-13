@@ -1149,29 +1149,6 @@ library LiqTreeImpl {
         mLiq += self.nodes[self.root].mLiq;
     }
 
-    // determine better way to keep private + support testing
-    function walkToRootForMLiq(LiqTree storage self, LKey nodeKey) public view returns (uint128[] memory mLiqs) {
-        // Feels like there should be a better way to calculate depth of a node?
-        (uint24 range,) = LKeyImpl.explode(nodeKey);
-        uint8 nodeCount = 1;
-        while (range < self.offset) {
-            range <<= 1;
-            ++nodeCount;
-        }
-        
-        // Depth is the number of edges traversed. +1 for total number of nodes
-        mLiqs = new uint128[](nodeCount);
-
-        uint8 index = 0;
-        while (nodeKey.isLess(self.root)) {
-            LiqNode storage node = self.nodes[nodeKey];
-            mLiqs[index] = node.mLiq;
-            (nodeKey, ) = nodeKey.genericUp();
-            ++index;
-        }
-        mLiqs[index] = self.nodes[self.root].mLiq;
-    }
-
     /***********************************
      * Raw int range to LKey functions *
      ***********************************/
