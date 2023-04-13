@@ -91,34 +91,21 @@ library LiqTreeImpl {
      ***********************************/
 
     function addMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
-        console.log("\nCalling addMLiq -----------------------------------------------");
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
         LiqNode storage node;
         uint24 rangeWidth;
 
-        {
-            (uint24 sbase, uint24 srange) = stopRange.explode();
-            console.log("Stop Range is (base, range, value)", sbase, srange, LKey.unwrap(stopRange));
-        }
-
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
-
-            console.log("adding low"); 
 
             (rangeWidth,) = current.explode();
 
             _handleFee(self, current, node);
 
             uint128 totalLiq = rangeWidth * liq; // better name
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
 
             node.addMLiq(liq);
             node.subtreeMLiq += totalLiq;
@@ -133,17 +120,8 @@ library LiqTreeImpl {
             parent.subtreeMLiq += totalLiq;
             (current, node) = (up, parent);
 
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
-
             while (current.isLess(stopRange)) {
-                console.log("low inner while");
-
                 if (current.isLeft()) {
-                    console.log("low inner while if");
-
                     current = current.rightSib();
                     node = self.nodes[current];
 
@@ -152,14 +130,8 @@ library LiqTreeImpl {
 
                     _handleFee(self, current, node);
 
-
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
-
-                    {
-                        (uint24 base, uint24 range) = current.explode();
-                        console.log("flip adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-                    }
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
@@ -175,11 +147,6 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = up.explode();
-                    console.log("calculate subtreeMLiq to (base, range, value)", base, range, parent.subtreeMLiq);
-                }
             }
         }
 
@@ -187,18 +154,8 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
 
-            // calculate fees
-
-            console.log("adding high");
-
-
             (rangeWidth,) = current.explode();
             uint128 totalLiq = rangeWidth * liq; // better name
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
 
             _handleFee(self, current, node);
 
@@ -215,17 +172,8 @@ library LiqTreeImpl {
             parent.subtreeMLiq += totalLiq;
             (current, node) = (up, parent);
 
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
-
             while(current.isLess(stopRange)) {
-                console.log("high inner while");
-
                 if (current.isRight()) {
-                    console.log("high inner while if");
-
                     current = current.leftSib();
                     node = self.nodes[current];
 
@@ -236,11 +184,6 @@ library LiqTreeImpl {
 
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
-
-                    {
-                        (uint24 base, uint24 range) = current.explode();
-                        console.log("flip adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-                    }
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
@@ -256,11 +199,6 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = up.explode();
-                    console.log("calculate subtreeMLiq to (base, range, value)", base, range, parent.subtreeMLiq);
-                }
             }
         }
 
@@ -274,21 +212,8 @@ library LiqTreeImpl {
 
         node = self.nodes[current];
 
-        console.log("end");
-
-        /*
-        (LKey leftKey, LKey rightKey) = current.children();
-        node.subtreeMLiq = self.nodes[leftKey].subtreeMLiq + self.nodes[rightKey].subtreeMLiq + node.mLiq;
-
-        {
-            (uint24 base, uint24 range) = current.explode();
-            console.log("calculating subtreeMLiq to (base, range, value)", base, range, node.subtreeMLiq);
-        }
-*/
         // Is less works on root since root has the largest possible base.
         while (current.isLess(self.root)) {
-            console.log("last while");
-
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
             uint128 oldMin = parent.subtreeMinM;
@@ -303,90 +228,25 @@ library LiqTreeImpl {
 
             current = up;
             node = parent; // Store this to save one lookup..
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("calculating subtreeMLiq to (base, range, value)", base, range, node.subtreeMLiq);
-            }
-        }
-    }
-
-    function _handleFee(LiqTree storage self, LKey current, LiqNode storage node) internal {
-        (uint24 rangeWidth,) = current.explode();
-
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
-        node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(node.tokenY.feeRateSnapshot);
-        node.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
-
-        // TODO: determine if we need to check for overflow
-        uint256 auxLevel = auxilliaryLevelMLiq(self, current);
-        uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth;
-
-        if (totalMLiq > 0) {
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("calculating fee for (base, range)", base, range);
-                console.log("A[level]", auxLevel);
-                console.log("totalMLiq", totalMLiq);
-                console.log("x-rate", tokenXRateDiffX64);
-
-                console.log("x num", node.tokenX.borrowed * tokenXRateDiffX64);
-                console.log("x Q192.64", node.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq);
-                console.log("x", node.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64);
-
-                console.log("x sub num", node.tokenX.subtreeBorrowed * tokenXRateDiffX64);
-                console.log("x sub Q192.64", node.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq);
-                console.log("x sub", node.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64);
-
-                console.log("y-rate", tokenYRateDiffX64);
-
-                console.log("y num", node.tokenX.borrowed * tokenYRateDiffX64);
-                console.log("y Q192.64", node.tokenX.borrowed * tokenYRateDiffX64 / totalMLiq);
-                console.log("y", node.tokenX.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64);
-
-                console.log("y sub num", node.tokenY.subtreeBorrowed * tokenYRateDiffX64);
-                console.log("y sub Q192.64", node.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq);
-                console.log("y sub", node.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64);
-            }
-
-            node.tokenX.cummulativeEarnedPerMLiq += node.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            node.tokenX.subtreeCummulativeEarnedPerMLiq += node.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-
-            node.tokenY.cummulativeEarnedPerMLiq += node.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            node.tokenY.subtreeCummulativeEarnedPerMLiq += node.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
         }
     }
 
     function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
-        console.log("\nCalling removeMLiq -----------------------------------------------");
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
         LiqNode storage node;
         uint24 rangeWidth;
 
-        {
-            (uint24 sbase, uint24 srange) = stopRange.explode();
-            console.log("Stop Range is (base, range, value)", sbase, srange, LKey.unwrap(stopRange));
-        }
-
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
-
-            console.log("adding low"); 
 
             (rangeWidth,) = current.explode();
 
             _handleFee(self, current, node);
 
             uint128 totalLiq = rangeWidth * liq; // better name
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
 
             node.removeMLiq(liq);
             node.subtreeMLiq -= totalLiq;
@@ -401,17 +261,8 @@ library LiqTreeImpl {
             parent.subtreeMLiq -= totalLiq;
             (current, node) = (up, parent);
 
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
-
             while (current.isLess(stopRange)) {
-                console.log("low inner while");
-
                 if (current.isLeft()) {
-                    console.log("low inner while if");
-
                     current = current.rightSib();
                     node = self.nodes[current];
 
@@ -423,11 +274,6 @@ library LiqTreeImpl {
 
                     node.removeMLiq(liq);
                     node.subtreeMLiq -= totalLiq;
-
-                    {
-                        (uint24 base, uint24 range) = current.explode();
-                        console.log("flip adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-                    }
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
@@ -443,11 +289,6 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = up.explode();
-                    console.log("calculate subtreeMLiq to (base, range, value)", base, range, parent.subtreeMLiq);
-                }
             }
         }
 
@@ -455,18 +296,8 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
 
-            // calculate fees
-
-            console.log("adding high");
-
-
             (rangeWidth,) = current.explode();
             uint128 totalLiq = rangeWidth * liq; // better name
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
 
             _handleFee(self, current, node);
 
@@ -483,17 +314,8 @@ library LiqTreeImpl {
             parent.subtreeMLiq -= totalLiq;
             (current, node) = (up, parent);
 
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-            }
-
             while(current.isLess(stopRange)) {
-                console.log("high inner while");
-
                 if (current.isRight()) {
-                    console.log("high inner while if");
-
                     current = current.leftSib();
                     node = self.nodes[current];
 
@@ -504,11 +326,6 @@ library LiqTreeImpl {
 
                     node.removeMLiq(liq);
                     node.subtreeMLiq -= totalLiq;
-
-                    {
-                        (uint24 base, uint24 range) = current.explode();
-                        console.log("flip adding subtreeMLiq to (base, range, value)", base, range, totalLiq);
-                    }
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
@@ -524,11 +341,6 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = up.explode();
-                    console.log("calculate subtreeMLiq to (base, range, value)", base, range, parent.subtreeMLiq);
-                }
             }
         }
 
@@ -542,21 +354,8 @@ library LiqTreeImpl {
 
         node = self.nodes[current];
 
-        console.log("end");
-
-        /*
-        (LKey leftKey, LKey rightKey) = current.children();
-        node.subtreeMLiq = self.nodes[leftKey].subtreeMLiq + self.nodes[rightKey].subtreeMLiq + node.mLiq;
-
-        {
-            (uint24 base, uint24 range) = current.explode();
-            console.log("calculating subtreeMLiq to (base, range, value)", base, range, node.subtreeMLiq);
-        }
-*/
         // Is less works on root since root has the largest possible base.
         while (current.isLess(self.root)) {
-            console.log("last while");
-
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
             uint128 oldMin = parent.subtreeMinM;
@@ -571,34 +370,20 @@ library LiqTreeImpl {
 
             current = up;
             node = parent; // Store this to save one lookup..
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("calculating subtreeMLiq to (base, range, value)", base, range, node.subtreeMLiq);
-            }
         }
     }
 
     function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) public {
-        console.log("\nCalling addTLiq ------------------------------------------------");
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
         LiqNode storage node;
-
-        {
-            (uint24 sbase, uint24 srange) = stopRange.explode();
-            console.log("Stop Range is (base, range, value)", sbase, srange, LKey.unwrap(stopRange));
-        }
 
         // Start with the left side of all right nodes.
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
 
-            console.log("adding low"); 
-
-            // calculate fees 
             _handleFee(self, current, node);
 
             node.addTLiq(liq);
@@ -607,13 +392,6 @@ library LiqTreeImpl {
             node.tokenY.borrowed += amountY;
             node.tokenX.subtreeBorrowed += amountX;
             node.tokenY.subtreeBorrowed += amountY;
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
-
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
@@ -625,26 +403,12 @@ library LiqTreeImpl {
             parent.tokenY.subtreeBorrowed += amountY;
             (current, node) = (up, parent);
 
-            // do fees need to be calculated here?
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
-
-
             while (current.isLess(stopRange)) {
-                console.log("low inner while");
-
                 // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
                 if (current.isLeft()) {
-                    console.log("low inner while if");
-
                     current = current.rightSib();
                     node = self.nodes[current];
 
-                    // calculate fees 
                     _handleFee(self, current, node);
 
                     node.addTLiq(liq);
@@ -653,15 +417,7 @@ library LiqTreeImpl {
                     node.tokenY.borrowed += amountY;
                     node.tokenX.subtreeBorrowed += amountX;
                     node.tokenY.subtreeBorrowed += amountY;
-
-                    {
-                        (uint24 base, uint24 range) = current.explode();
-                        console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                        console.log("adding borrowY to (base, range, value)", base, range, amountY);
-                    }
                 }
-
-                // neeed to calculate because blah blah blah
 
                 // Right Propogate T
                 (up, left) = current.rightUp();
@@ -671,12 +427,6 @@ library LiqTreeImpl {
                 parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
                 parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = current.explode();
-                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
-                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
-                }
             }
         }
 
@@ -684,9 +434,6 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
 
-            console.log("adding high"); 
-
-            // calculate fees 
             _handleFee(self, current, node);
 
             node.addTLiq(liq);
@@ -695,12 +442,6 @@ library LiqTreeImpl {
             node.tokenY.borrowed += amountY;
             node.tokenX.subtreeBorrowed += amountX;
             node.tokenY.subtreeBorrowed += amountY;
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
@@ -711,23 +452,12 @@ library LiqTreeImpl {
             parent.tokenY.subtreeBorrowed += amountY;
             (current, node) = (up, parent);
 
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
-
             while(current.isLess(stopRange)) {
-                console.log("high inner while");
-
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
                 if (current.isRight()) {
-                    console.log("high inner while if");
-
                     current = current.leftSib();
                     node = self.nodes[current];
 
-                    // calculate fees 
                     _handleFee(self, current, node);
 
                     node.addTLiq(liq);
@@ -738,8 +468,6 @@ library LiqTreeImpl {
                     node.tokenY.subtreeBorrowed += amountY;
                 }
 
-                // neeed to calculate because blah blah blah
-
                 // Left Propogate T
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
@@ -748,12 +476,6 @@ library LiqTreeImpl {
                 parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
                 parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = current.explode();
-                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
-                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
-                }
             }
         }
 
@@ -764,11 +486,7 @@ library LiqTreeImpl {
 
         node = self.nodes[current];
 
-        console.log("end");
-
         while (current.isNeq(self.root)) {
-            console.log("last while");
-
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
@@ -777,54 +495,26 @@ library LiqTreeImpl {
             parent.tokenX.subtreeBorrowed = self.nodes[other].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
             parent.tokenY.subtreeBorrowed = self.nodes[other].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
 
-            {
-                LiqNode storage otherNode = self.nodes[other];
-
-                (uint24 base, uint24 range) = current.explode();
-                console.log("current is (base, range, value)", base, range);
-                console.log("current subtreeBorrowedX", node.tokenX.subtreeBorrowed);
-                console.log("current subtreeBorrowedY", node.tokenY.subtreeBorrowed);
-                (base, range) = other.explode();
-                console.log("other is to (base, range, value)", base, range);
-                console.log("other subtreeBorrowedX", otherNode.tokenX.subtreeBorrowed);
-                console.log("other subtreeBorrowedY", otherNode.tokenY.subtreeBorrowed);
-            }
-
             if (node.subtreeMaxT == oldMax) {
             // Don't think we can early return anymore
             //    return;
             }
             current = up;
             node = parent;
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.subtreeBorrowed);
-                console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.subtreeBorrowed);
-            }
         }
     }
 
     function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) external {
-        console.log("\nCalling removeTLiq ------------------------------------------------");
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
         LiqNode storage node;
-
-        {
-            (uint24 sbase, uint24 srange) = stopRange.explode();
-            console.log("Stop Range is (base, range, value)", sbase, srange, LKey.unwrap(stopRange));
-        }
 
         // Start with the left side of all right nodes.
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
 
-            console.log("adding low"); 
-
-            // calculate fees 
             _handleFee(self, current, node);
 
             node.removeTLiq(liq);
@@ -833,13 +523,6 @@ library LiqTreeImpl {
             node.tokenY.borrowed -= amountY;
             node.tokenX.subtreeBorrowed -= amountX;
             node.tokenY.subtreeBorrowed -= amountY;
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
-
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
@@ -851,26 +534,12 @@ library LiqTreeImpl {
             parent.tokenY.subtreeBorrowed -= amountY;
             (current, node) = (up, parent);
 
-            // do fees need to be calculated here?
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
-
-
             while (current.isLess(stopRange)) {
-                console.log("low inner while");
-
                 // TODO: This can be gas optimized by sharing the left key and node with rightPropogate
                 if (current.isLeft()) {
-                    console.log("low inner while if");
-
                     current = current.rightSib();
                     node = self.nodes[current];
 
-                    // calculate fees 
                     _handleFee(self, current, node);
 
                     node.removeTLiq(liq);
@@ -879,12 +548,6 @@ library LiqTreeImpl {
                     node.tokenY.borrowed -= amountY;
                     node.tokenX.subtreeBorrowed -= amountX;
                     node.tokenY.subtreeBorrowed -= amountY;
-
-                    {
-                        (uint24 base, uint24 range) = current.explode();
-                        console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                        console.log("adding borrowY to (base, range, value)", base, range, amountY);
-                    }
                 }
 
                 // neeed to calculate because blah blah blah
@@ -897,12 +560,6 @@ library LiqTreeImpl {
                 parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
                 parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = current.explode();
-                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
-                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
-                }
             }
         }
 
@@ -910,9 +567,6 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
 
-            console.log("adding high"); 
-
-            // calculate fees 
             _handleFee(self, current, node);
 
             node.removeTLiq(liq);
@@ -921,12 +575,6 @@ library LiqTreeImpl {
             node.tokenY.borrowed -= amountY;
             node.tokenX.subtreeBorrowed -= amountX;
             node.tokenY.subtreeBorrowed -= amountY;
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
@@ -937,23 +585,12 @@ library LiqTreeImpl {
             parent.tokenY.subtreeBorrowed -= amountY;
             (current, node) = (up, parent);
 
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("adding borrowX to (base, range, value)", base, range, amountX);
-                console.log("adding borrowY to (base, range, value)", base, range, amountY);
-            }
-
             while(current.isLess(stopRange)) {
-                console.log("high inner while");
-
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
                 if (current.isRight()) {
-                    console.log("high inner while if");
-
                     current = current.leftSib();
                     node = self.nodes[current];
 
-                    // calculate fees 
                     _handleFee(self, current, node);
 
                     node.removeTLiq(liq);
@@ -974,12 +611,6 @@ library LiqTreeImpl {
                 parent.tokenX.subtreeBorrowed = self.nodes[left].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
                 parent.tokenY.subtreeBorrowed = self.nodes[left].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
                 (current, node) = (up, parent);
-
-                {
-                    (uint24 base, uint24 range) = current.explode();
-                    console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.borrowed);
-                    console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.borrowed);
-                }
             }
         }
 
@@ -990,11 +621,7 @@ library LiqTreeImpl {
 
         node = self.nodes[current];
 
-        console.log("end");
-
         while (current.isNeq(self.root)) {
-            console.log("last while");
-
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
@@ -1003,31 +630,12 @@ library LiqTreeImpl {
             parent.tokenX.subtreeBorrowed = self.nodes[other].tokenX.subtreeBorrowed + node.tokenX.subtreeBorrowed + parent.tokenX.borrowed;
             parent.tokenY.subtreeBorrowed = self.nodes[other].tokenY.subtreeBorrowed + node.tokenY.subtreeBorrowed + parent.tokenY.borrowed;
 
-            {
-                LiqNode storage otherNode = self.nodes[other];
-
-                (uint24 base, uint24 range) = current.explode();
-                console.log("current is (base, range, value)", base, range);
-                console.log("current subtreeBorrowedX", node.tokenX.subtreeBorrowed);
-                console.log("current subtreeBorrowedY", node.tokenY.subtreeBorrowed);
-                (base, range) = other.explode();
-                console.log("other is to (base, range, value)", base, range);
-                console.log("other subtreeBorrowedX", otherNode.tokenX.subtreeBorrowed);
-                console.log("other subtreeBorrowedY", otherNode.tokenY.subtreeBorrowed);
-            }
-
             if (node.subtreeMaxT == oldMax) {
             // Don't think we can early return anymore
             //    return;
             }
             current = up;
             node = parent;
-
-            {
-                (uint24 base, uint24 range) = current.explode();
-                console.log("calculate borrowX to (base, range, value)", base, range, node.tokenX.subtreeBorrowed);
-                console.log("calculate borrowY to (base, range, value)", base, range, node.tokenY.subtreeBorrowed);
-            }
         }
     }
 
@@ -1133,21 +741,40 @@ library LiqTreeImpl {
         rootNode.tokenY.subtreeBorrowed -= amountY;
     }
 
+    function _handleFee(LiqTree storage self, LKey current, LiqNode storage node) internal {
+        (uint24 rangeWidth,) = current.explode();
+
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
+        node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(node.tokenY.feeRateSnapshot);
+        node.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
+
+        // TODO: determine if we need to check for overflow
+        uint256 auxLevel = auxilliaryLevelMLiq(self, current);
+        uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth;
+
+        if (totalMLiq > 0) {
+            node.tokenX.cummulativeEarnedPerMLiq += node.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenX.subtreeCummulativeEarnedPerMLiq += node.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+
+            node.tokenY.cummulativeEarnedPerMLiq += node.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenY.subtreeCummulativeEarnedPerMLiq += node.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+        }
+    }
+
     function auxilliaryLevelMLiq(LiqTree storage self, LKey nodeKey) internal view returns (uint256 mLiq) {
-        console.log("auxilliaryLevelMLiq");
         if (nodeKey.isEq(self.root)) {
             return 0;
         }
 
         (nodeKey, ) = nodeKey.genericUp();
         while (nodeKey.isLess(self.root)) {
-            console.log("adding", self.nodes[nodeKey].mLiq);
             mLiq += self.nodes[nodeKey].mLiq;
             (nodeKey, ) = nodeKey.genericUp();
         }
-        console.log("adding", self.nodes[self.root].mLiq);
         mLiq += self.nodes[self.root].mLiq;
     }
+
 
     /***********************************
      * Raw int range to LKey functions *
@@ -1189,10 +816,6 @@ library LiqTreeImpl {
     ) internal view returns (uint128 minMaker, uint128 maxTaker) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, rawLow, rawHigh);
 
-        // console.log("query low", LKey.unwrap(low));
-        // console.log("query high", LKey.unwrap(high));
-        // console.log("query stop", LKey.unwrap(stopRange));
-
         LKey current;
         LiqNode storage node;
 
@@ -1205,7 +828,6 @@ library LiqTreeImpl {
 
             current = low;
             node = self.nodes[current];
-            // console.log("found low", LKey.unwrap(current), node.subtreeMinM);
             minMaker = min(node.subtreeMinM, minMaker);
             maxTaker = max(node.subtreeMaxT, maxTaker);
             (current,) = current.rightUp();
@@ -1213,14 +835,11 @@ library LiqTreeImpl {
             LKey right;
             while(current.isLess(stopRange)) {
                 node = self.nodes[current];
-                // console.log("found current addition", LKey.unwrap(current), node.mLiq);
                 minMaker += node.mLiq;
                 maxTaker += node.tLiq;
 
                 if (current.isLeft()) {
                     (current, right) = current.leftUp();
-                    // console.log("minning low", LKey.unwrap(current), LKey.unwrap(right));
-                    // console.log(minMaker, self.nodes[right].subtreeMinM);
                     minMaker = min(minMaker, self.nodes[right].subtreeMinM);
                     maxTaker = max(maxTaker, self.nodes[right].subtreeMaxT);
                 } else {
@@ -1241,23 +860,18 @@ library LiqTreeImpl {
 
             current = high;
             node = self.nodes[current];
-            // console.log("found high", LKey.unwrap(current), node.subtreeMinM);
             rightMaker = min(node.subtreeMinM, rightMaker);
             rightTaker = max(node.subtreeMaxT, rightTaker);
             (current,) = current.leftUp();
 
             LKey left;
-            // console.log("stopRange", LKey.unwrap(stopRange));
             while(current.isLess(stopRange)) {
                 node = self.nodes[current];
-                // console.log("found current addition", LKey.unwrap(current), node.mLiq);
                 rightMaker += node.mLiq;
                 rightTaker += node.tLiq;
 
                 if (current.isRight()) {
                     (current, left) = current.rightUp();
-                    // console.log("minning high", LKey.unwrap(current), LKey.unwrap(left));
-                    // console.log(rightMaker, self.nodes[left].subtreeMinM);
                     rightMaker = min(rightMaker, self.nodes[left].subtreeMinM);
                     rightTaker = max(rightTaker, self.nodes[left].subtreeMaxT);
                 } else {
@@ -1275,8 +889,6 @@ library LiqTreeImpl {
             maxTaker = max(maxTaker, rightTaker);
         }
 
-        // console.log("PrePeak", minMaker, maxTaker);
-
         // At this moment, we've already added the liq at the node AT the stoprange.
         // To regardless if we're in the two legged case, the one legged case, or the single node case,
         // the node above current is new and incorporates both all nodes in our range breakdown.
@@ -1285,11 +897,9 @@ library LiqTreeImpl {
         while (current.isLess(self.root)) {
             (current,) = current.genericUp();
             node = self.nodes[current];
-            // console.log("Found Peak Add", node.mLiq, node.tLiq);
             minMaker += node.mLiq;
             maxTaker += node.tLiq;
         }
-        // console.log("PostPeak", minMaker, maxTaker);
     }
 
     /**********
@@ -1330,23 +940,19 @@ library LiqTreeIntLib {
 
         // Case on whether left and right are below the peak range or not.
         if (lowBelow && highBelow) {
-            console.log("getRangeBounds - 1st");
             // The simple case where we can just walk up both legs.
             // Each individual leg will stop at the children of the peak,
             // so our limit range is one below peak range.
             limitRange = LKey.wrap(LKey.unwrap(peakRange) >> 1);
         } else if (lowBelow && !highBelow) {
-            console.log("getRangeBounds - 2nd");
             // We only have the left leg to worry about.
             // So our limit range will be at the peak, because we want to include
             // the right child of the peak.
             limitRange = peakRange;
         } else if (!lowBelow && highBelow) {
-            console.log("getRangeBounds - 3rd");
             // Just the right leg. So include the left child of peak.
             limitRange = peakRange;
         } else {
-            console.log("getRangeBounds - 4th");
             // Both are at or higher than the peak! So our range breakdown is just
             // the peak.
             // You can prove that one of the keys must be the peak itself trivially.
