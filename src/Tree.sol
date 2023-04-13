@@ -4,8 +4,6 @@ pragma solidity ^0.8.18;
 import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
 import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 
-import { FullMath } from "src/FullMath.sol";
-
 /**
  *  Liquidity Tree
  *
