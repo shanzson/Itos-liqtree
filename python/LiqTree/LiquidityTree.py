@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from .LiquidityKey import LiquidityKey
 
 #  Liquidity Tree
 #
@@ -85,6 +86,19 @@ class LiquidityTree:
     # region Liquidity Limited Range Methods
 
     def add_m_liq(self, liq_range: LiqRange, liq: int) -> None:
+        low_node: LiqNode = None
+
+        # less than stop range?
+        if (True):
+            low_node.m_liq += liq
+            low_node.subtree_m_liq += liq * (self.width >> low_node.depth)
+
+            # right up
+
+            # while less than stop range
+
+            #   if left, change right sib
+
         pass
 
     def remove_m_liq(self, liq_range: LiqRange, liq: int) -> None:
