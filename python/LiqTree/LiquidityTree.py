@@ -104,10 +104,10 @@ class LiquidityTree:
         current: int
         node: LiqNode
 
-        # less than stop range?
         if low < stop_range:
             current = low
             node = self.nodes[current]
+            self.handle_fee(current, node)
 
             # Thought calculation was cool, might be useful in refactor
             # m_liq_per_tick: int = liq * (self.width >> low_node.depth)
@@ -115,17 +115,72 @@ class LiquidityTree:
             node.m_liq += liq
             node.subtree_m_liq += m_liq_per_tick
 
-            # right up
-            node = node.parent
+            # right propagate
+            current, _ = LiquidityKey.right_up(current)
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
             node.subtree_m_liq += m_liq_per_tick
 
-            # while less than stop ranged
-            while node.depth < stop_range:
+            while current < stop_range:
+                if LiquidityKey.is_left(current):
+                    current = LiquidityKey.right_sibling(current)
+                    node = self.nodes[current]
+                    self.handle_fee(current, node)
 
+                    node.m_liq += liq
+                    node.subtree_m_liq += liq * (current >> 24)
 
-            #   if left, change right sib
+                # right propagate
+                up, left = LiquidityKey.right_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
 
-        pass
+                parent.subtree_m_liq = self.nodes[left].subtree_m_liq + node.subtree_m_liq + parent.m_liq * (up >> 24)
+                current, node = up, parent
+
+        if high < stop_range:
+            current = high
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            m_liq_per_tick = liq * (current >> 24)
+            node.m_liq += liq
+            node.subtree_m_liq += m_liq_per_tick
+
+            # left propagate
+            current, _ = LiquidityKey.left_up(current)
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            node.subtree_m_liq += m_liq_per_tick
+
+            while current < stop_range:
+                if LiquidityKey.is_right(current):
+                    current = LiquidityKey.left_sibling(current)
+                    node = self.nodes[current]
+                    self.handle_fee(current, node)
+
+                    node.m_liq += liq
+                    node.subtree_m_liq += liq * (current >> 24)
+
+                # left propogate
+                up, right = LiquidityKey.left_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.subtree_m_liq = self.nodes[right].subtree_m_liq + node.subtree_m_liq + parent.m_liq * (up >> 24)
+                current, node = up, parent
+
+            node = self.nodes[current]
+
+            while node != self.root:
+                up, other = LiquidityKey.generic_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.subtree_m_liq = self.nodes[other].subtree_m_liq + node.subtree_m_liq + parent.m_liq * (up >> 24)
+                current, node = up, parent
 
     def remove_m_liq(self, liq_range: LiqRange, liq: int) -> None:
         pass
@@ -144,6 +199,17 @@ class LiquidityTree:
         node.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
         node.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
 
+        aux_level: int = self.auxiliary_level_m_liq(self, current)
+        total_m_liq: int = node.subtree_m_liq + aux_level * (current >> 24)
+
+        if total_m_liq <= 0:
+            return
+
+        node.token_x_cummulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
+        node.token_x_cummulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
+        node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
+        node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed / total_m_liq / 2**64
+
 
     def auxiliary_level_m_liq(self, node_key: int) -> int:
         node: LiqNode = self.nodes[node_key]
@@ -153,7 +219,10 @@ class LiquidityTree:
         m_liq: int = 0
         while node != self.root:
             m_liq += node.m_liq
-            # node = node.parent
+
+            # move to parent
+            node_key, _ = LiquidityKey.generic_up(node_key)
+            node = self.nodes[node_key]
 
         m_liq += self.root.m_liq
         return m_liq
@@ -2140,242 +2209,6 @@ library LiqTreeImpl {
     function max(uint128 a, uint128 b) private pure returns (uint128) {
         return (a >= b) ? a : b;
     }
-}
-
-library LiqTreeIntLib {
-    // LiqTreeInts are uint24 values that don't have a range. Their assumed range is 1.
-    // They are used to specify the range [low, high].
-    using LKeyImpl for LKey;
-
-    /// Convenience for fetching the bounds of our range.
-    /// Here we coerce the range keys to the ones we expect in our proofs.
-    /// I.e. A one-sided trapezoid has one key equal to the peak.
-    function getRangeBounds(
-        uint24 rangeLow,
-        uint24 rangeHigh
-    ) public view returns (LKey low, LKey high, LKey peak, LKey limitRange) {
-        LKey peakRange;
-        (peak, peakRange) = lowestCommonAncestor(rangeLow, rangeHigh);
-
-        low = lowKey(rangeLow);
-        high = highKey(rangeHigh);
-
-        bool lowBelow = low.isLess(peakRange);
-        bool highBelow = high.isLess(peakRange);
-
-        // Case on whether left and right are below the peak range or not.
-        if (lowBelow && highBelow) {
-            // The simple case where we can just walk up both legs.
-            // Each individual leg will stop at the children of the peak,
-            // so our limit range is one below peak range.
-            limitRange = LKey.wrap(LKey.unwrap(peakRange) >> 1);
-        } else if (lowBelow && !highBelow) {
-            // We only have the left leg to worry about.
-            // So our limit range will be at the peak, because we want to include
-            // the right child of the peak.
-            limitRange = peakRange;
-        } else if (!lowBelow && highBelow) {
-            // Just the right leg. So include the left child of peak.
-            limitRange = peakRange;
-        } else {
-            // Both are at or higher than the peak! So our range breakdown is just
-            // the peak.
-            // You can prove that one of the keys must be the peak itself trivially.
-            // Thus we don't modify our keys and just stop at one above the peak.
-            limitRange = LKey.wrap(LKey.unwrap(peakRange) << 1);
-        }
-    }
-
-    /// Get the key for the node that represents the lowest bound of our range.
-    /// This works by finding the first right sided node that contains this value.
-    /// @dev Only to be used by getRangeBounds
-    function lowKey(uint24 low) internal pure returns (LKey) {
-        return LKeyImpl.makeKey(lsb(low), low);
-    }
-
-    /// Get the key for the node that is the inclusive high of our exclusive range.
-    /// This works by finding the first left sided node that contains this value.
-    /// @dev Only to be used by getRangeBounds
-    function highKey(uint24 high) internal pure returns (LKey) {
-        // Add one to propogate past any trailing ones
-        // Then use lsb to find the range before zero-ing it out to get our left sided node.
-        unchecked {
-            high += 1;
-            uint24 range = lsb(high);
-            return LKeyImpl.makeKey(range, high ^ range);
-        }
-    }
-
-    /// Get the node that is the lowest common ancestor of both the low and high nodes.
-    /// This is the peak of our range breakdown which does not modify its liq.
-    function lowestCommonAncestor(uint24 low, uint24 high) internal pure returns (LKey peak, LKey peakRange) {
-        // Find the bitwise common prefix by finding the bits not in a common prefix.
-        // This way uses less gas than directly finding the common prefix.
-        uint32 diffMask = 0x00FFFFFF;
-        uint256 diffBits = uint256(low ^ high);
-
-        if (diffBits & 0xFFF000 == 0) {
-            diffMask >>= 12;
-            diffBits <<= 12;
-        }
-
-        if (diffBits & 0xFC0000 == 0) {
-            diffMask >>= 6;
-            diffBits <<= 6;
-        }
-
-        if (diffBits & 0xE00000 == 0) {
-            diffMask >>= 3;
-            diffBits <<= 3;
-        }
-
-        if (diffBits & 0xC00000 == 0) {
-            diffMask >>= 2;
-            diffBits <<= 2;
-        }
-
-        if (diffBits & 0x800000 == 0) {
-            diffMask >>= 1;
-            // we don't need diffBits anymore
-        }
-
-        uint24 commonMask = uint24(~diffMask);
-        uint24 base = commonMask & low;
-        uint24 range = lsb(commonMask);
-
-        return (LKeyImpl.makeKey(range, base), LKeyImpl.makeKey(range, 0));
-    }
-
-    /// @dev this returns 0 for 0
-    function lsb(uint24 x) internal pure returns (uint24) {
-        unchecked {
-            return x & (~x + 1);
-        }
-    }
-}
-
-library LKeyImpl {
-    function makeKey(uint24 range, uint24 base) internal pure returns (LKey) {
-        return LKey.wrap((uint48(range) << 24) | uint48(base));
-    }
-
-    function explode(LKey self) internal pure returns (uint24 range, uint24 base) {
-        uint48 all = LKey.unwrap(self);
-        base = uint24(all);
-        range = uint24(all >> 24);
-    }
-
-    function isEq(LKey self, LKey other) internal pure returns (bool) {
-        return LKey.unwrap(self) == LKey.unwrap(other);
-    }
-
-    function isNeq(LKey self, LKey other) internal pure returns (bool) {
-        return !isEq(self, other);
-    }
-
-    /// Used for comparing an Lkey to the peak's range to stop at.
-    /// @dev Only use on stopRanges and roots. Less can be ill-defined otherwise.
-    function isLess(LKey self, LKey other) internal pure returns (bool) {
-        // Since the range bits come first, a smaller key means it's below the ancestor's range.
-        // We expect other to be a raw range, meaning its base is 0.
-        return LKey.unwrap(self) < LKey.unwrap(other);
-    }
-
-    /// Go up to the parent from the right child.
-    function rightUp(LKey self) internal pure returns (LKey up, LKey left) {
-        unchecked {
-            uint48 pair = LKey.unwrap(self);
-            uint48 range = pair >> 24;
-            uint48 leftRaw = pair ^ range;
-            left = LKey.wrap(leftRaw);
-            up = LKey.wrap(leftRaw + (range << 24));
-        }
-    }
-
-    /// Go up to the parent from the left child.
-    function leftUp(LKey self) internal pure returns (LKey up, LKey right) {
-        unchecked {
-            uint48 pair = LKey.unwrap(self);
-            uint48 range = pair >> 24;
-            right = LKey.wrap(pair ^ range);
-            up = LKey.wrap(pair + (range << 24));
-        }
-    }
-
-    /// Go up without knowing which side we are on originally.
-    function genericUp(LKey self) internal pure returns (LKey up, LKey other) {
-        uint48 pair = LKey.unwrap(self);
-        uint48 range = pair >> 24;
-        uint48 rawOther = range ^ pair;
-        other = LKey.wrap(rawOther);
-        unchecked {
-            up = LKey.wrap((rawOther < pair ? rawOther : pair) + (range << 24));
-        }
-    }
-
-    /// Test if the node is a right node or not.
-    function isRight(LKey self) internal pure returns (bool) {
-        uint48 pair = LKey.unwrap(self);
-        return ((pair >> 24) & pair) != 0;
-    }
-
-    /// Test if the node is a left node or not.
-    function isLeft(LKey self) internal pure returns (bool) {
-        uint48 pair = LKey.unwrap(self);
-        return ((pair >> 24) & pair) == 0;
-    }
-
-    /// Get the key of the right sibling of this key
-    function rightSib(LKey self) internal pure returns (LKey right) {
-        uint48 pair = LKey.unwrap(self);
-        return LKey.wrap(pair | (pair >> 24));
-    }
-
-    /// Get the key of the left sibling of this key
-    function leftSib(LKey self) internal pure returns (LKey left) {
-        uint48 pair = LKey.unwrap(self);
-        return LKey.wrap(pair & ~(pair >> 24));
-    }
-
-    /// Get the children of a key.
-    function children(LKey self) internal pure returns (LKey left, LKey right) {
-        uint48 pair = LKey.unwrap(self);
-        uint48 childRange = pair >> 25;
-        unchecked {
-            uint48 rawLeft = pair - (childRange << 24);
-            uint48 rawRight = rawLeft + childRange;
-            return (LKey.wrap(rawLeft), LKey.wrap(rawRight));
-        }
-    }
-
-    /// Get the left adjacent node to this node that is at a higher range.
-    /// @dev We use the raw int values to save gas. This keeps us to 8 binary options. And avoids explodes/makeKeys
-    function getNextLeftAdjacent(LKey key) internal pure returns (LKey) {
-        uint48 raw = LKey.unwrap(key);
-        unchecked {
-            raw = (raw >> 24) + raw;
-        }
-        return LKey.wrap((lsb(raw) << 24) ^ (0x000000FFFFFF & raw));
-    }
-
-    /// Get the right adjacent node to this node that is at a higher range.
-    /// @dev We use the raw int values to save gas. TODO we don't really need range here.
-    function getNextRightAdjacent(LKey key) internal pure returns (LKey) {
-        uint48 raw = LKey.unwrap(key);
-        uint48 lsb_bit = lsb(raw);
-        return LKey.wrap(((raw ^ lsb_bit) & 0x000000FFFFFF) ^ (lsb_bit << 24));
-    }
-
-    /********
-     * MISC *
-     ********/
-
-    function lsb(uint48 x) private pure returns (uint48) {
-        unchecked {
-            return x & (~x + 1);
-        }
-    }
-
 }
 
 
