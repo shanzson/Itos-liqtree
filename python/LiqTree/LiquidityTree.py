@@ -144,7 +144,7 @@ class LiquidityTree:
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            m_liq_per_tick = liq * (current >> 24)
+            m_liq_per_tick: int = liq * (current >> 24)
             node.m_liq += liq
             node.subtree_m_liq += m_liq_per_tick
 
@@ -183,7 +183,88 @@ class LiquidityTree:
                 current, node = up, parent
 
     def remove_m_liq(self, liq_range: LiqRange, liq: int) -> None:
-        pass
+        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+
+        current: int
+        node: LiqNode
+
+        if low < stop_range:
+            current = low
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            # Thought calculation was cool, might be useful in refactor
+            # m_liq_per_tick: int = liq * (self.width >> low_node.depth)
+            m_liq_per_tick: int = liq * (current >> 24)
+            node.m_liq -= liq
+            node.subtree_m_liq -= m_liq_per_tick
+
+            # right propagate
+            current, _ = LiquidityKey.right_up(current)
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            node.subtree_m_liq -= m_liq_per_tick
+
+            while current < stop_range:
+                if LiquidityKey.is_left(current):
+                    current = LiquidityKey.right_sibling(current)
+                    node = self.nodes[current]
+                    self.handle_fee(current, node)
+
+                    node.m_liq -= liq
+                    node.subtree_m_liq -= liq * (current >> 24)
+
+                # right propagate
+                up, left = LiquidityKey.right_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.subtree_m_liq = self.nodes[left].subtree_m_liq + node.subtree_m_liq + parent.m_liq * (up >> 24)
+                current, node = up, parent
+
+        if high < stop_range:
+            current = high
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            m_liq_per_tick: int = liq * (current >> 24)
+            node.m_liq -= liq
+            node.subtree_m_liq -= m_liq_per_tick
+
+            # left propagate
+            current, _ = LiquidityKey.left_up(current)
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            node.subtree_m_liq += m_liq_per_tick
+
+            while current < stop_range:
+                if LiquidityKey.is_right(current):
+                    current = LiquidityKey.left_sibling(current)
+                    node = self.nodes[current]
+                    self.handle_fee(current, node)
+
+                    node.m_liq -= liq
+                    node.subtree_m_liq -= liq * (current >> 24)
+
+                # left propogate
+                up, right = LiquidityKey.left_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.subtree_m_liq = self.nodes[right].subtree_m_liq + node.subtree_m_liq + parent.m_liq * (up >> 24)
+                current, node = up, parent
+
+            node = self.nodes[current]
+
+            while node != self.root:
+                up, other = LiquidityKey.generic_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.subtree_m_liq = self.nodes[other].subtree_m_liq + node.subtree_m_liq + parent.m_liq * (up >> 24)
+                current, node = up, parent
 
     def add_t_liq(self, liq_range: LiqRange, liq: int, amount_x: int, amount_y: int) -> None:
         pass
