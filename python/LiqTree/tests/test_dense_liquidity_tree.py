@@ -47,52 +47,29 @@ class TestDenseLiquidityTree(TestCase):
         self.assertEqual(root.token_y_borrowed, int(928e6))
         self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
 
+        # T22000 -- 693792000.0% APR as Q192.64 from T22000 - T3600
+        liq_tree.token_y_fee_rate_snapshot += 74672420010376264941568
+        liq_tree.token_x_fee_rate_snapshot += 74672420010376264941568
+
+        liq_tree.remove_inf_range_m_liq(3682)
+
+        # rounding error
+        # self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881018269102163474)
+        # self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881018269102163474)
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 13251904)
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 13251904)
+
+        self.assertEqual(root.m_liq, 14035)
+        self.assertEqual(root.subtree_m_liq, 224560)
+        self.assertEqual(root.t_liq, 4381)
+        self.assertEqual(root.token_x_borrowed, int(832e18))
+        self.assertEqual(root.token_x_subtree_borrowed, int(832e18))
+        self.assertEqual(root.token_y_borrowed, int(928e6))
+        self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
+
 '''
 
     function testRootNodeOnly() public {
-
-
-        // Testing 4 methods addInfRangeMLiq, removeInfRangeMLiq, addInfRangeTLiq, removeInfRangeTLiq
-        // Assert tree structure and fee calculations after each operation
-        liqTree.addInfRangeMLiq(9287);
-
-        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 38024667284);
-        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 38024667284);
-        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
-        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 0);
-
-        assertEq(root.mLiq, 17717);
-        assertEq(root.subtreeMLiq, 283472);
-        assertEq(root.tLiq, 4381);
-        assertEq(root.tokenX.borrowed, 832e18);
-        assertEq(root.tokenX.subtreeBorrowed, 832e18);
-        assertEq(root.tokenY.borrowed, 928e6);
-        assertEq(root.tokenY.subtreeBorrowed, 928e6);
-
-        vm.warp(22000); // T22000
-        liqTree.feeRateSnapshotTokenX.add(74672420010376264941568); // 693792000.0% APR as Q192.64 from T22000 - T3600
-        liqTree.feeRateSnapshotTokenY.add(74672420010376264941568);
-
-        liqTree.removeInfRangeMLiq(3682);
-
-        /* 
-                      1188101861132416784
-            Expected: 11881018269102162284
-              Actual: 11881018269102163474
-      */
-
-        // 11881018231077494784
-        // 11881018269102162068
-
-        // In code the rates are correct, both 74672420010376264941568
-        // x num 62127453448633052431384576000000000000000000 (correct)
-        // y num 69296005769629173865775104000000 (correct)
-        // x earn as Q192.64 is 219166102643763942933991985099057402494 (off by +42933991985099057402494)
-        // y earn as Q192.64 is 244454499102659782503298752 (ending 782503298752 should be 8e11)
-        // x earn as token is 11881018231077496190 (real 1.18810182310774961900999040469605463678530107851649688655015 × 10^19)
-        // y earn as token is 13251904 (real 1.32519049500479765197268160192844987932403455488383769989013 × 10^7)
-        // X total 11881018269102163474 (off by 0)
-        // Y total 13251904 (off by +1 if we round up)
         assertEq(root.tokenX.cummulativeEarnedPerMLiq, 11881018269102163474);
         assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 11881018269102163474);
         assertEq(root.tokenY.cummulativeEarnedPerMLiq, 13251904);

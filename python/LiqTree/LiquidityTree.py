@@ -481,7 +481,7 @@ class LiquidityTree:
         node.token_x_cummulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
         node.token_x_cummulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
         node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
-        node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed / total_m_liq / 2**64
+        node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
 
     def handle_root_fee(self):
         token_x_fee_rate_diff: int = self.token_x_fee_rate_snapshot - self.root.token_x_fee_rate_snapshot
@@ -497,7 +497,7 @@ class LiquidityTree:
         self.root.token_x_cummulative_earned_per_m_liq += self.root.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
         self.root.token_x_cummulative_earned_per_m_subtree_liq += self.root.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
         self.root.token_y_cummulative_earned_per_m_liq += self.root.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
-        self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed / total_m_liq / 2**64
+        self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
 
     def auxiliary_level_m_liq(self, node_key: int) -> int:
         node: LiqNode = self.nodes[node_key]
