@@ -1,6 +1,12 @@
 from unittest import TestCase
 from decimal import Decimal
 
+# NOTE: all numbers must be given as Decimal numbers to avoid precision errors.
+#       each Decimal number must be created using a string! Otherwise precision is lost when the input variable is created
+#       For instance, 7927848e16 yields 79278479999999997378560 as an integer. While the type 7.927848e+22 looks ok, when passed to
+#       Decimal(7.927848e+22) is still equates to Decimal('79278479999999997378560').
+#       However, Decimal("7927848e16") is correct. Converting to an int yields 79278480000000000000000
+
 from LiqTree.LiquidityTree import LiquidityTree, LiqNode
 
 
@@ -12,101 +18,100 @@ class TestDenseLiquidityTree(TestCase):
         liq_tree: LiquidityTree = self.liq_tree
 
         # T0
-        liq_tree.add_inf_range_m_liq(8430)
-        liq_tree.add_inf_range_t_liq(4381, int(832e18), int(928e6))
+        liq_tree.add_inf_range_m_liq(Decimal("8430"))
+        liq_tree.add_inf_range_t_liq(Decimal("4381"), Decimal("832e18"), Decimal("928e6"))
         self.assertEqual(True, True)
 
         # T3600 (1hr) --- 5.4% APR as Q192.64
-        liq_tree.token_y_fee_rate_snapshot += 113712805933826
-        liq_tree.token_x_fee_rate_snapshot += 113712805933826
+        liq_tree.token_y_fee_rate_snapshot += Decimal("113712805933826")           # Q192.64 - 2097631028964689100923538627362816
+        liq_tree.token_x_fee_rate_snapshot += Decimal("113712805933826")           # Q192.64 - 2097631028964689100923538627362816
 
         # Verify root state
         root: LiqNode = liq_tree.root
-        self.assertEqual(root.m_liq, 8430)
-        self.assertEqual(root.subtree_m_liq, 134880)
-        self.assertEqual(root.t_liq, 4381)
-        self.assertEqual(root.token_x_borrowed, int(832e18))
-        self.assertEqual(root.token_x_subtree_borrowed, int(832e18))
-        self.assertEqual(root.token_y_borrowed, int(928e6))
-        self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
+        self.assertEqual(root.m_liq, Decimal("8430"))                              #
+        self.assertEqual(root.subtree_m_liq, Decimal("134880"))                    #
+        self.assertEqual(root.t_liq, Decimal("4381"))                              #
+        self.assertEqual(root.token_x_borrowed, Decimal("832e18"))            #
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("832e18"))    #
+        self.assertEqual(root.token_y_borrowed, Decimal("928e6"))             #
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("928e6"))     #
 
         # Testing 4 methods for proper fee accumulation:
         # add_inf_range_m_liq, remove_inf_range_m_liq
         # add_inf_range_t_liq, remove_inf_range_t_liq
-        liq_tree.add_inf_range_m_liq(9287)
+        liq_tree.add_inf_range_m_liq(Decimal("9287"))
 
-        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 38024667284)
-        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 38024667284)
-        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 0)
-        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 0)
+        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, Decimal("38024667284"))
+        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, Decimal("38024667284"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, Decimal("0"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, Decimal("0"))
 
-        self.assertEqual(root.m_liq, 17717)
-        self.assertEqual(root.subtree_m_liq, 283472)
-        self.assertEqual(root.t_liq, 4381)
-        self.assertEqual(root.token_x_borrowed, int(832e18))
-        self.assertEqual(root.token_x_subtree_borrowed, int(832e18))
-        self.assertEqual(root.token_y_borrowed, int(928e6))
-        self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
+        self.assertEqual(root.m_liq, Decimal("17717"))
+        self.assertEqual(root.subtree_m_liq, Decimal("283472"))
+        self.assertEqual(root.t_liq, Decimal("4381"))
+        self.assertEqual(root.token_x_borrowed, Decimal("832e18"))
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("832e18"))
+        self.assertEqual(root.token_y_borrowed, Decimal("928e6"))
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("928e6"))
 
         # T22000 -- 693792000.0% APR as Q192.64 from T22000 - T3600
-        liq_tree.token_y_fee_rate_snapshot += 74672420010376264941568
-        liq_tree.token_x_fee_rate_snapshot += 74672420010376264941568
+        liq_tree.token_y_fee_rate_snapshot += Decimal("74672420010376264941568")   # Q192.64 - 1377463021295958900099740410883797719973888
+        liq_tree.token_x_fee_rate_snapshot += Decimal("74672420010376264941568")   # Q192.64 - 1377463021295958900099740410883797719973888
 
-        liq_tree.remove_inf_range_m_liq(3682)
+        liq_tree.remove_inf_range_m_liq(Decimal("3682"))
 
         # rounding error
-        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881018269102163474)
-        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881018269102163474)
-        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 13251904)
-        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 13251904)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("11881018269102163474"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("11881018269102163474"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("13251904"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("13251904"))
 
-        self.assertEqual(root.m_liq, 14035)
-        self.assertEqual(root.subtree_m_liq, 224560)
-        self.assertEqual(root.t_liq, 4381)
-        self.assertEqual(root.token_x_borrowed, int(832e18))
-        self.assertEqual(root.token_x_subtree_borrowed, int(832e18))
-        self.assertEqual(root.token_y_borrowed, int(928e6))
-        self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
+        self.assertEqual(root.m_liq, Decimal("14035"))
+        self.assertEqual(root.subtree_m_liq, Decimal("224560"))
+        self.assertEqual(root.t_liq, Decimal("4381"))
+        self.assertEqual(root.token_x_borrowed, Decimal("832e18"))
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("832e18"))
+        self.assertEqual(root.token_y_borrowed, Decimal("928e6"))
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("928e6"))
 
         # T37002 --- 7.9% APR as Q192.64 T37002 - T22000
-        liq_tree.token_y_fee_rate_snapshot += 6932491854677024
-        liq_tree.token_x_fee_rate_snapshot += 6932491854677024
+        liq_tree.token_y_fee_rate_snapshot += Decimal("6932491854677024")  # Q192.64 - 127881903036303130599671671537270784
+        liq_tree.token_x_fee_rate_snapshot += Decimal("6932491854677024")  # Q192.64 - 127881903036303130599671671537270784
 
-        liq_tree.add_inf_range_t_liq(7287, int(9184e18), int(7926920e6))
+        liq_tree.add_inf_range_t_liq(Decimal("7287"), Decimal("9184e18"), Decimal("7926920e6"))
 
         # rounding error
-        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881019661491126559)
-        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881019661491126559)
-        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 13251906)
-        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 13251906)
+        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, Decimal("11881019661491126559"))
+        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, Decimal("11881019661491126559"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, Decimal("13251906"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, Decimal("13251906"))
 
-        self.assertEqual(root.m_liq, 14035)
-        self.assertEqual(root.subtree_m_liq, 224560)
-        self.assertEqual(root.t_liq, 11668)
-        self.assertEqual(root.token_x_borrowed, int(10016e18))
-        self.assertEqual(root.token_x_subtree_borrowed, int(10016e18))
-        self.assertEqual(root.token_y_borrowed, int(7927848e6))
-        self.assertEqual(root.token_y_subtree_borrowed, int(7927848e6))
+        self.assertEqual(root.m_liq, Decimal("14035"))
+        self.assertEqual(root.subtree_m_liq, Decimal("224560"))
+        self.assertEqual(root.t_liq, Decimal("11668"))
+        self.assertEqual(root.token_x_borrowed, Decimal("10016e18"))
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("10016e18"))
+        self.assertEqual(root.token_y_borrowed, Decimal("7927848e6"))
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("7927848e6"))
 
         # T57212 --- 11.1% APR as Q192.64 TT57212 - T37002
-        liq_tree.token_y_fee_rate_snapshot += 1055375100301031600000000
-        liq_tree.token_x_fee_rate_snapshot += 1055375100301031600000000
+        liq_tree.token_y_fee_rate_snapshot += Decimal("1055375100301031600000000")     # Q192.64 - 19468234377018678290990465858247065600000000
+        liq_tree.token_x_fee_rate_snapshot += Decimal("1055375100301031600000000")     # Q192.64 - 19468234377018678290990465858247065600000000
 
-        liq_tree.remove_inf_range_t_liq(4923, int(222e18), int(786e6))
+        liq_tree.remove_inf_range_t_liq(Decimal("4923"), Decimal("222e18"), Decimal("786e6"))
 
-        # rounding error
-        # self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 2563695146166521368512)
-        # self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, 2563695146166521368512)
-        # self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 2019821011408)
-        # self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, 2019821011408)
+        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, Decimal("2563695146166521368513"))
+        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, Decimal("2563695146166521368513"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, Decimal("2019821011408"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, Decimal("2019821011408"))
 
-        self.assertEqual(root.m_liq, 14035)
-        self.assertEqual(root.subtree_m_liq, 224560)
-        self.assertEqual(root.t_liq, 6745)
-        # self.assertEqual(root.token_x_borrowed, int(9794e18))
-        # self.assertEqual(root.token_x_subtree_borrowed, int(9794e18))
-        self.assertEqual(root.token_y_borrowed, int(7927062e6))
-        self.assertEqual(root.token_y_subtree_borrowed, int(7927062e6))
+        self.assertEqual(root.m_liq, Decimal("14035"))
+        self.assertEqual(root.subtree_m_liq, Decimal("224560"))
+        self.assertEqual(root.t_liq, Decimal("6745"))
+        self.assertEqual(root.token_x_borrowed, Decimal("9794e18"))
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("9794e18"))
+        self.assertEqual(root.token_y_borrowed, Decimal("7927062e6"))
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("7927062e6"))
 
 '''
     function testLeftLegOnly() public {
