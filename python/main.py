@@ -133,10 +133,9 @@ def root_node_only():
     }
 '''
 
-def main():
-    liq_tree = LiquidityTree()
 
-    print("hello world")
+def main():
+    root_node_only()
 
 
 if __name__ == "__main__":

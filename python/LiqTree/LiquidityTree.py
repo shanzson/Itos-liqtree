@@ -27,10 +27,58 @@ class LiqRange:
     high: int
 
 
+@dataclass
+class LiqNode:
+    m_liq: int = 0
+    t_liq: int = 0
+    subtree_m_liq: int = 0
+
+    token_x_borrowed: int = 0
+    token_x_subtree_borrowed: int = 0
+    token_x_fee_rate_snapshot: int = 0
+    token_x_cummulative_earned_per_m_liq: int = 0
+    token_x_cummulative_earned_per_m_subtree_liq: int = 0
+
+    token_y_borrowed: int = 0
+    token_y_subtree_borrowed: int = 0
+    token_y_fee_rate_snapshot: int = 0
+    token_y_cummulative_earned_per_m_liq: int = 0
+    token_y_cummulative_earned_per_m_subtree_liq: int = 0
+
+    # Can think of node in a tree as the combination key of (value, base)
+    # ex. R is (1, 1) while LRR is (3, 2)
+    # value is the nodes binary value. If in the tree 0 is prepended for a left traversal, and a 1 for a right traversal
+    value: int = 0
+    depth: int = 0
+
+    parent = None
+    left = None
+    right = None
+
+
 class LiquidityTree:
     # region Initialization
     def __init__(self, depth: int):
-        pass
+        self.root = LiqNode()
+        self.width = (1 << depth)
+        self._init_tree(self.root, None, 0, 0, depth)
+
+    def _init_tree(self, current: LiqNode, parent: LiqNode, value: int, depth: int, max_depth: int) -> None:
+        current.parent = parent
+
+        if depth > max_depth:
+            return
+
+        current.left = LiqNode()
+        current.right = LiqNode()
+
+        current.left.depth = depth
+        current.left.value = (0 << depth) + value
+        current.right.depth = depth
+        current.right = (1 << depth) + value
+
+        self._init_tree(current.left, current, depth + 1, max_depth)
+        self._init_tree(current.right, current, depth + 1, max_depth)
 
     # endregion
 
@@ -53,16 +101,40 @@ class LiquidityTree:
     # region Liquidity INF Range Methods
 
     def add_inf_range_m_liq(self, liq: int) -> None:
-        pass
+        # TODO: fee
+        self.root.m_liq += liq
+        self.root.subtree_m_liq += self.width * liq
 
     def remove_inf_range_m_liq(self, liq: int) -> None:
-        pass
+        # TODO: fee
+        self.root.m_liq -= liq
+        self.root.subtree_m_liq -= self.width * liq
 
     def add_inf_range_t_liq(self, liq: int, amount_x: int, amount_y: int) -> None:
-        pass
+        # TODO: fee
+        self.root.t_liq += liq
+        self.root.token_x_borrowed += amount_x
+        self.root.token_x_subtree_borrowed += amount_x
+        self.root.token_y_borrowed += amount_y
+        self.root.token_x_subtree_borrowed += amount_y
 
     def remove_inf_range_t_liq(self, liq: int, amount_x: int, amount_y: int) -> None:
-        pass
+        # TODO: fee
+        self.root.t_liq -= liq
+        self.root.token_x_borrowed -= amount_x
+        self.root.token_x_subtree_borrowed -= amount_x
+        self.root.token_y_borrowed -= amount_y
+        self.root.token_x_subtree_borrowed -= amount_y
+
+    # endregion
+
+    # region Sol
+
+    def _l_key_by_index(self, depth: int, row: int) -> int:
+        return self._l_key(depth, row)
+
+    def _l_key(self, base: int, range: int) -> int:
+        return base << 24 | range
 
     # endregion
 
