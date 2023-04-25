@@ -1,5 +1,8 @@
+from collections import defaultdict
 from dataclasses import dataclass
-from .LiquidityKey import LiquidityKey
+
+from LiqTree.LiquidityKey import LiquidityKey
+
 
 #  Liquidity Tree
 #
@@ -49,12 +52,13 @@ class LiqNode:
     # Can think of node in a tree as the combination key of (value, base)
     # ex. R is (1, 1) while LRR is (3, 2)
     # value is the nodes binary value. If in the tree 0 is prepended for a left traversal, and a 1 for a right traversal
-    value: int = 0
-    depth: int = 0
-
-    parent = None
-    left = None
-    right = None
+    # value: int = 0
+    # depth: int = 0
+    # liq_key: int = 0
+    #
+    # parent = None
+    # left = None
+    # right = None
 
 
 class LiquidityTree:
@@ -62,40 +66,62 @@ class LiquidityTree:
     def __init__(self, depth: int):
         self.root = LiqNode()
         self.width = (1 << depth)
-        self._init_tree(self.root, None, 0, 0, depth)
+        self.nodes = defaultdict(LiqNode)
 
-    def _init_tree(self, current: LiqNode, parent: LiqNode, value: int, depth: int, max_depth: int) -> None:
-        current.parent = parent
+        self.token_x_fee_rate_snapshot = 0
+        self.token_y_fee_rate_snapshot = 0
 
-        if depth > max_depth:
-            return
+        # self._init_tree(self.root, None, 0, 0, depth)
 
-        current.left = LiqNode()
-        current.right = LiqNode()
-
-        current.left.depth = depth
-        current.left.value = (0 << depth) + value
-        current.right.depth = depth
-        current.right = (1 << depth) + value
-
-        self._init_tree(current.left, current, depth + 1, max_depth)
-        self._init_tree(current.right, current, depth + 1, max_depth)
+    # def _init_tree(self, current: LiqNode, parent: LiqNode, value: int, depth: int, max_depth: int) -> None:
+    #     current.parent = parent
+    #
+    #     if depth > max_depth:
+    #         return
+    #
+    #     left: LiqNode = LiqNode()
+    #     left.depth = depth
+    #     left.value = (0 << depth) + value
+    #     left.liq_key = 0
+    #     current.left = left
+    #
+    #     right: LiqNode = LiqNode()
+    #     right.depth = depth
+    #     right.value = (1 << depth) + value
+    #     right.liq_key = 0
+    #     current.right = right
+    #
+    #     self._init_tree(left, current, depth + 1, max_depth)
+    #     self._init_tree(right, current, depth + 1, max_depth)
 
     # endregion
 
     # region Liquidity Limited Range Methods
 
     def add_m_liq(self, liq_range: LiqRange, liq: int) -> None:
-        low_node: LiqNode = None
+        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+
+        current: int
+        node: LiqNode
 
         # less than stop range?
-        if (True):
-            low_node.m_liq += liq
-            low_node.subtree_m_liq += liq * (self.width >> low_node.depth)
+        if low < stop_range:
+            current = low
+            node = self.nodes[current]
+
+            # Thought calculation was cool, might be useful in refactor
+            # m_liq_per_tick: int = liq * (self.width >> low_node.depth)
+            m_liq_per_tick: int = liq * (current >> 24)
+            node.m_liq += liq
+            node.subtree_m_liq += m_liq_per_tick
 
             # right up
+            node = node.parent
+            node.subtree_m_liq += m_liq_per_tick
 
-            # while less than stop range
+            # while less than stop ranged
+            while node.depth < stop_range:
+
 
             #   if left, change right sib
 
@@ -111,6 +137,27 @@ class LiquidityTree:
         pass
 
     # endregion
+
+    def handle_fee(self, current: int, node: LiqNode):
+        token_x_fee_rate_diff: int = self.token_x_fee_rate_snapshot - node.token_x_fee_rate_snapshot
+        token_y_fee_rate_diff: int = self.token_y_fee_rate_snapshot - node.token_y_fee_rate_snapshot
+        node.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
+        node.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
+
+
+    def auxiliary_level_m_liq(self, node_key: int) -> int:
+        node: LiqNode = self.nodes[node_key]
+        if node == self.root:
+            return 0
+
+        m_liq: int = 0
+        while node != self.root:
+            m_liq += node.m_liq
+            # node = node.parent
+
+        m_liq += self.root.m_liq
+        return m_liq
+
 
     # region Liquidity INF Range Methods
 
