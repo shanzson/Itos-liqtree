@@ -483,6 +483,21 @@ class LiquidityTree:
         node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
         node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed / total_m_liq / 2**64
 
+    def handle_root_fee(self):
+        token_x_fee_rate_diff: int = self.token_x_fee_rate_snapshot - self.root.token_x_fee_rate_snapshot
+        token_y_fee_rate_diff: int = self.token_y_fee_rate_snapshot - self.root.token_y_fee_rate_snapshot
+        self.root.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
+        self.root.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
+
+        total_m_liq: int = self.root.subtree_m_liq
+
+        if total_m_liq <= 0:
+            return
+
+        self.root.token_x_cummulative_earned_per_m_liq += self.root.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
+        self.root.token_x_cummulative_earned_per_m_subtree_liq += self.root.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
+        self.root.token_y_cummulative_earned_per_m_liq += self.root.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
+        self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed / total_m_liq / 2**64
 
     def auxiliary_level_m_liq(self, node_key: int) -> int:
         node: LiqNode = self.nodes[node_key]
@@ -504,17 +519,20 @@ class LiquidityTree:
     # region Liquidity INF Range Methods
 
     def add_inf_range_m_liq(self, liq: int) -> None:
-        # TODO: fee
+        self.handle_root_fee()
+
         self.root.m_liq += liq
         self.root.subtree_m_liq += self.width * liq
 
     def remove_inf_range_m_liq(self, liq: int) -> None:
-        # TODO: fee
+        self.handle_root_fee()
+
         self.root.m_liq -= liq
         self.root.subtree_m_liq -= self.width * liq
 
     def add_inf_range_t_liq(self, liq: int, amount_x: int, amount_y: int) -> None:
-        # TODO: fee
+        self.handle_root_fee()
+
         self.root.t_liq += liq
         self.root.token_x_borrowed += amount_x
         self.root.token_x_subtree_borrowed += amount_x
@@ -522,7 +540,8 @@ class LiquidityTree:
         self.root.token_y_subtree_borrowed += amount_y
 
     def remove_inf_range_t_liq(self, liq: int, amount_x: int, amount_y: int) -> None:
-        # TODO: fee
+        self.handle_root_fee()
+
         self.root.t_liq -= liq
         self.root.token_x_borrowed -= amount_x
         self.root.token_x_subtree_borrowed -= amount_x

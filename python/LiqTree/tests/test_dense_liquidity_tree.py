@@ -29,6 +29,23 @@ class TestDenseLiquidityTree(TestCase):
         self.assertEqual(root.token_y_borrowed, int(928e6))
         self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
 
+        # Testing 4 methods for proper fee accumulation:
+        # add_inf_range_m_liq, remove_inf_range_m_liq
+        # add_inf_range_t_liq, remove_inf_range_t_liq
+        liq_tree.add_inf_range_m_liq(9287)
+
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 38024667284)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 38024667284)
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 0)
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 0)
+
+        self.assertEqual(root.m_liq, 17717)
+        self.assertEqual(root.subtree_m_liq, 283472)
+        self.assertEqual(root.t_liq, 4381)
+        self.assertEqual(root.token_x_borrowed, int(832e18))
+        self.assertEqual(root.token_x_subtree_borrowed, int(832e18))
+        self.assertEqual(root.token_y_borrowed, int(928e6))
+        self.assertEqual(root.token_y_subtree_borrowed, int(928e6))
 
 '''
 
