@@ -546,7 +546,7 @@ class LiquidityTree:
         self.root.token_x_borrowed -= amount_x
         self.root.token_x_subtree_borrowed -= amount_x
         self.root.token_y_borrowed -= amount_y
-        self.root.token_x_subtree_borrowed -= amount_y
+        self.root.token_y_subtree_borrowed -= amount_y
 
     # endregion
 
