@@ -1,4 +1,5 @@
 from unittest import TestCase
+from decimal import Decimal
 
 from LiqTree.LiquidityTree import LiquidityTree, LiqNode
 
@@ -54,8 +55,8 @@ class TestDenseLiquidityTree(TestCase):
         liq_tree.remove_inf_range_m_liq(3682)
 
         # rounding error
-        # self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881018269102163474)
-        # self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881018269102163474)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881018269102163474)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881018269102163474)
         self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 13251904)
         self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 13251904)
 
@@ -74,10 +75,10 @@ class TestDenseLiquidityTree(TestCase):
         liq_tree.add_inf_range_t_liq(7287, int(9184e18), int(7926920e6))
 
         # rounding error
-        # self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881019661491126559)
-        # self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881019661491126559)
-        # self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 13251905)
-        # self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 13251905)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), 11881019661491126559)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), 11881019661491126559)
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), 13251906)
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), 13251906)
 
         self.assertEqual(root.m_liq, 14035)
         self.assertEqual(root.subtree_m_liq, 224560)

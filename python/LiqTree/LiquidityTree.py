@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass
+from decimal import Decimal
 
 from LiqTree.LiquidityKey import LiquidityKey
 
@@ -24,6 +25,7 @@ from LiqTree.LiquidityKey import LiquidityKey
 #         /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
 #      LLLL    LLLR    LLRL    LLRR   LRLL    LRLR   LRRL    LRRR      RLLL   RLLR   RLRL    RLRR   RRLL    RRLR   RRRL    RRRR
 
+TWO_POW_SIXTY_FOUR: Decimal = Decimal(2**64)
 
 @dataclass
 class LiqRange:
@@ -40,14 +42,14 @@ class LiqNode:
     token_x_borrowed: int = 0
     token_x_subtree_borrowed: int = 0
     token_x_fee_rate_snapshot: int = 0
-    token_x_cummulative_earned_per_m_liq: int = 0
-    token_x_cummulative_earned_per_m_subtree_liq: int = 0
+    token_x_cummulative_earned_per_m_liq: Decimal = Decimal(0)
+    token_x_cummulative_earned_per_m_subtree_liq: Decimal = Decimal(0)
 
     token_y_borrowed: int = 0
     token_y_subtree_borrowed: int = 0
     token_y_fee_rate_snapshot: int = 0
-    token_y_cummulative_earned_per_m_liq: int = 0
-    token_y_cummulative_earned_per_m_subtree_liq: int = 0
+    token_y_cummulative_earned_per_m_liq: Decimal = Decimal(0)
+    token_y_cummulative_earned_per_m_subtree_liq: Decimal = Decimal(0)
 
     # Can think of node in a tree as the combination key of (value, base)
     # ex. R is (1, 1) while LRR is (3, 2)
@@ -467,37 +469,37 @@ class LiquidityTree:
     # endregion
 
     def handle_fee(self, current: int, node: LiqNode):
-        token_x_fee_rate_diff: int = self.token_x_fee_rate_snapshot - node.token_x_fee_rate_snapshot
-        token_y_fee_rate_diff: int = self.token_y_fee_rate_snapshot - node.token_y_fee_rate_snapshot
+        token_x_fee_rate_diff: Decimal = Decimal(self.token_x_fee_rate_snapshot - node.token_x_fee_rate_snapshot)
+        token_y_fee_rate_diff: Decimal = Decimal(self.token_y_fee_rate_snapshot - node.token_y_fee_rate_snapshot)
         node.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
         node.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
 
-        aux_level: int = self.auxiliary_level_m_liq(self, current)
-        total_m_liq: int = node.subtree_m_liq + aux_level * (current >> 24)
+        aux_level: Decimal = Decimal(self.auxiliary_level_m_liq(self, current))
+        total_m_liq: Decimal = Decimal(node.subtree_m_liq) + aux_level * Decimal(current >> 24)
 
         if total_m_liq <= 0:
             return
 
-        node.token_x_cummulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
-        node.token_x_cummulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
-        node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
-        node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
+        node.token_x_cummulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_x_cummulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
     def handle_root_fee(self):
-        token_x_fee_rate_diff: int = self.token_x_fee_rate_snapshot - self.root.token_x_fee_rate_snapshot
-        token_y_fee_rate_diff: int = self.token_y_fee_rate_snapshot - self.root.token_y_fee_rate_snapshot
+        token_x_fee_rate_diff: Decimal = Decimal(self.token_x_fee_rate_snapshot - self.root.token_x_fee_rate_snapshot)
+        token_y_fee_rate_diff: Decimal = Decimal(self.token_y_fee_rate_snapshot - self.root.token_y_fee_rate_snapshot)
         self.root.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
         self.root.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
 
-        total_m_liq: int = self.root.subtree_m_liq
+        total_m_liq: Decimal = Decimal(self.root.subtree_m_liq)
 
         if total_m_liq <= 0:
             return
 
-        self.root.token_x_cummulative_earned_per_m_liq += self.root.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
-        self.root.token_x_cummulative_earned_per_m_subtree_liq += self.root.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / 2**64
-        self.root.token_y_cummulative_earned_per_m_liq += self.root.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
-        self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / 2**64
+        self.root.token_x_cummulative_earned_per_m_liq += self.root.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        self.root.token_x_cummulative_earned_per_m_subtree_liq += self.root.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        self.root.token_y_cummulative_earned_per_m_liq += self.root.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
     def auxiliary_level_m_liq(self, node_key: int) -> int:
         node: LiqNode = self.nodes[node_key]
