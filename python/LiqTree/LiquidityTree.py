@@ -267,7 +267,103 @@ class LiquidityTree:
                 current, node = up, parent
 
     def add_t_liq(self, liq_range: LiqRange, liq: int, amount_x: int, amount_y: int) -> None:
-        pass
+        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+
+        current: int
+        node: LiqNode
+
+        if low < stop_range:
+            current = low
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            # Thought calculation was cool, might be useful in refactor
+            # m_liq_per_tick: int = liq * (self.width >> low_node.depth)
+            node.t_liq += liq
+            node.token_x_borrowed += amount_x
+            node.token_y_borrowed += amount_y
+            node.token_x_subtree_borrowed += amount_x
+            node.token_y_subtree_borrowed += amount_y
+
+            # right propagate
+            current, _ = LiquidityKey.right_up(current)
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            node.token_x_subtree_borrowed += amount_x
+            node.token_y_subtree_borrowed += amount_y
+
+            while current < stop_range:
+                if LiquidityKey.is_left(current):
+                    current = LiquidityKey.right_sibling(current)
+                    node = self.nodes[current]
+                    self.handle_fee(current, node)
+
+                    node.t_liq += liq
+                    node.token_x_borrowed += amount_x
+                    node.token_y_borrowed += amount_y
+                    node.token_x_subtree_borrowed += amount_x
+                    node.token_y_subtree_borrowed += amount_y
+
+                # right propagate
+                up, left = LiquidityKey.right_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.token_x_subtree_borrowed += self.nodes[left].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
+                parent.token_y_subtree_borrowed += self.nodes[left].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                current, node = up, parent
+
+        if high < stop_range:
+            current = high
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            node.t_liq += liq
+            node.token_x_borrowed += amount_x
+            node.token_y_borrowed += amount_y
+            node.token_x_subtree_borrowed += amount_x
+            node.token_y_subtree_borrowed += amount_y
+
+            # left propagate
+            current, _ = LiquidityKey.left_up(current)
+            node = self.nodes[current]
+            self.handle_fee(current, node)
+
+            node.token_x_subtree_borrowed += amount_x
+            node.token_y_subtree_borrowed += amount_y
+
+            while current < stop_range:
+                if LiquidityKey.is_right(current):
+                    current = LiquidityKey.left_sibling(current)
+                    node = self.nodes[current]
+                    self.handle_fee(current, node)
+
+                    node.t_liq += liq
+                    node.token_x_borrowed += amount_x
+                    node.token_y_borrowed += amount_y
+                    node.token_x_subtree_borrowed += amount_x
+                    node.token_y_subtree_borrowed += amount_y
+
+                # left propogate
+                up, right = LiquidityKey.left_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.token_x_subtree_borrowed += self.nodes[left].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
+                parent.token_y_subtree_borrowed += self.nodes[left].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                current, node = up, parent
+
+            node = self.nodes[current]
+
+            while node != self.root:
+                up, other = LiquidityKey.generic_up(current)
+                parent = self.nodes[up]
+                self.handle_fee(up, parent)
+
+                parent.token_x_subtree_borrowed += self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
+                parent.token_y_subtree_borrowed += self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                current, node = up, parent
 
     def remove_t_liq(self, liq_range: LiqRange, liq: int, amount_x: int, amount_y: int) -> None:
         pass
