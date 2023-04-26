@@ -6,6 +6,11 @@ from decimal import Decimal
 #       For instance, 7927848e16 yields 79278479999999997378560 as an integer. While the type 7.927848e+22 looks ok, when passed to
 #       Decimal(7.927848e+22) is still equates to Decimal('79278479999999997378560').
 #       However, Decimal("7927848e16") is correct. Converting to an int yields 79278480000000000000000
+#
+#       When asserting values are equal, the calculated decimal is truncated to its int representation
+#       as the compared value in solidity would lose that extra precision.
+#
+#       If all goes perfectly, the final result in python would 100% match the final output in solidity
 
 from LiqTree.LiquidityTree import LiquidityTree, LiqNode
 
@@ -41,10 +46,10 @@ class TestDenseLiquidityTree(TestCase):
         # add_inf_range_t_liq, remove_inf_range_t_liq
         liq_tree.add_inf_range_m_liq(Decimal("9287"))
 
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, Decimal("38024667284"))
-        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, Decimal("38024667284"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, Decimal("0"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, Decimal("0"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("38024667284"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("38024667284"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("0"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("0"))
 
         self.assertEqual(root.m_liq, Decimal("17717"))
         self.assertEqual(root.subtree_m_liq, Decimal("283472"))
@@ -81,10 +86,10 @@ class TestDenseLiquidityTree(TestCase):
         liq_tree.add_inf_range_t_liq(Decimal("7287"), Decimal("9184e18"), Decimal("7926920e6"))
 
         # rounding error
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, Decimal("11881019661491126559"))
-        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, Decimal("11881019661491126559"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, Decimal("13251906"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, Decimal("13251906"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("11881019661491126559"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("11881019661491126559"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("13251906"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("13251906"))
 
         self.assertEqual(root.m_liq, Decimal("14035"))
         self.assertEqual(root.subtree_m_liq, Decimal("224560"))
@@ -100,10 +105,10 @@ class TestDenseLiquidityTree(TestCase):
 
         liq_tree.remove_inf_range_t_liq(Decimal("4923"), Decimal("222e18"), Decimal("786e6"))
 
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, Decimal("2563695146166521368513"))
-        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, Decimal("2563695146166521368513"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, Decimal("2019821011408"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, Decimal("2019821011408"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("2563695146166521368513"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2563695146166521368513"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("2019821011409"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("2019821011409"))
 
         self.assertEqual(root.m_liq, Decimal("14035"))
         self.assertEqual(root.subtree_m_liq, Decimal("224560"))
