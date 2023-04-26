@@ -178,15 +178,15 @@ class LiquidityTree:
                 parent.subtree_m_liq = self.nodes[right].subtree_m_liq + node.subtree_m_liq + parent.m_liq * Decimal(up >> 24)
                 current, node = up, parent
 
-            node = self.nodes[current]
+        node = self.nodes[current]
 
-            while current < self.root_key:
-                up, other = LiquidityKey.generic_up(current)
-                parent = self.nodes[up]
-                self.handle_fee(up, parent)
+        while current < self.root_key:
+            up, other = LiquidityKey.generic_up(current)
+            parent = self.nodes[up]
+            self.handle_fee(up, parent)
 
-                parent.subtree_m_liq = self.nodes[other].subtree_m_liq + node.subtree_m_liq + parent.m_liq * Decimal(up >> 24)
-                current, node = up, parent
+            parent.subtree_m_liq = self.nodes[other].subtree_m_liq + node.subtree_m_liq + parent.m_liq * Decimal(up >> 24)
+            current, node = up, parent
 
     def remove_m_liq(self, liq_range: LiqRange, liq: Decimal) -> None:
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
@@ -262,15 +262,15 @@ class LiquidityTree:
                 parent.subtree_m_liq = self.nodes[right].subtree_m_liq + node.subtree_m_liq + parent.m_liq * Decimal(up >> 24)
                 current, node = up, parent
 
-            node = self.nodes[current]
+        node = self.nodes[current]
 
-            while current < self.root_key:
-                up, other = LiquidityKey.generic_up(current)
-                parent = self.nodes[up]
-                self.handle_fee(up, parent)
+        while current < self.root_key:
+            up, other = LiquidityKey.generic_up(current)
+            parent = self.nodes[up]
+            self.handle_fee(up, parent)
 
-                parent.subtree_m_liq = self.nodes[other].subtree_m_liq + node.subtree_m_liq + parent.m_liq * Decimal(up >> 24)
-                current, node = up, parent
+            parent.subtree_m_liq = self.nodes[other].subtree_m_liq + node.subtree_m_liq + parent.m_liq * Decimal(up >> 24)
+            current, node = up, parent
 
     def add_t_liq(self, liq_range: LiqRange, liq: Decimal, amount_x: Decimal, amount_y: Decimal) -> None:
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
@@ -360,16 +360,16 @@ class LiquidityTree:
                 parent.token_y_subtree_borrowed += self.nodes[left].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
                 current, node = up, parent
 
-            node = self.nodes[current]
+        node = self.nodes[current]
 
-            while current < self.root_key:
-                up, other = LiquidityKey.generic_up(current)
-                parent = self.nodes[up]
-                self.handle_fee(up, parent)
+        while current < self.root_key:
+            up, other = LiquidityKey.generic_up(current)
+            parent = self.nodes[up]
+            self.handle_fee(up, parent)
 
-                parent.token_x_subtree_borrowed += self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-                parent.token_y_subtree_borrowed += self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
-                current, node = up, parent
+            parent.token_x_subtree_borrowed += self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
+            parent.token_y_subtree_borrowed += self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+            current, node = up, parent
 
     def remove_t_liq(self, liq_range: LiqRange, liq: Decimal, amount_x: Decimal, amount_y: Decimal) -> None:
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
@@ -459,16 +459,16 @@ class LiquidityTree:
                 parent.token_y_subtree_borrowed += self.nodes[left].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
                 current, node = up, parent
 
-            node = self.nodes[current]
+        node = self.nodes[current]
 
-            while current < self.root_key:
-                up, other = LiquidityKey.generic_up(current)
-                parent = self.nodes[up]
-                self.handle_fee(up, parent)
+        while current < self.root_key:
+            up, other = LiquidityKey.generic_up(current)
+            parent = self.nodes[up]
+            self.handle_fee(up, parent)
 
-                parent.token_x_subtree_borrowed += self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-                parent.token_y_subtree_borrowed += self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
-                current, node = up, parent
+            parent.token_x_subtree_borrowed += self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
+            parent.token_y_subtree_borrowed += self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+            current, node = up, parent
 
     # endregion
 
