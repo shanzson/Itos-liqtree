@@ -260,12 +260,11 @@ class TestDenseLiquidityTree(TestCase):
         self.assertEqual(LLRR.subtree_m_liq, Decimal("287637599"))  # 287637599*1
         
         # T2876298273
-        # Apply change that requires fee calculation
-        # remove_m_liq
-        
         liq_tree.token_x_fee_rate_snapshot += Decimal("16463537718422861220174597")    # 978567.9% APR as Q192.64 T2876298273 - T98273
         liq_tree.token_y_fee_rate_snapshot += Decimal("3715979586694123491881712207")  # 220872233.1% APR as Q192.64 T2876298273 - T98273
 
+        # Apply change that requires fee calculation
+        # remove_m_liq
         liq_tree.remove_m_liq(LiqRange(low=3, high=7), Decimal("2734"))  # LLRR, LR
 
         # root
@@ -320,208 +319,185 @@ class TestDenseLiquidityTree(TestCase):
         self.assertEqual(LLR.subtree_m_liq, Decimal("287725557"))   # 45346*2 + 287634865*1
         self.assertEqual(LLRR.subtree_m_liq, Decimal("287634865"))  # 287634865*1
 
-'''
+        # T9214298113
+        liq_tree.token_x_fee_rate_snapshot += Decimal("11381610389149375791104")   # 307% APR as Q192.64 T9214298113 - T2876298273
+        liq_tree.token_y_fee_rate_snapshot += Decimal("185394198934916215865344")  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
-        # 3.3) addTLiq
-        vm.warp(9214298113) # T2876298273
-        liq_tree.token_x_fee_rate_snapshot += 11381610389149375791104)   # 307% APR as Q192.64 T9214298113 - T2876298273
-        liq_tree.token_y_fee_rate_snapshot += 185394198934916215865344)  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
-
-        liq_tree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6) # LLRR, LR
+        # Apply change that requires fee calculation
+        # add_t_liq
+        liq_tree.add_t_liq(LiqRange(low=3, high=7), Decimal("1000"), Decimal("1000e18"), Decimal("1000e6"))  # LLRR, LR
 
         # root
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 1354374549844117328 + 936348777891386)         # 1355310898622008714
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 8349223596904894020 + 5772247649074341) # 8354995844553968361
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 158351473403 + 7900657)                        # 158359374060
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 710693401863 + 35458749)                # 710728860612
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("1355310898622008715"))            # 1354374549844117328 + 936348777891386
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("8354995844553968362"))    # 8349223596904894020 + 5772247649074341
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("158359374061"))                   # 158351473403 + 7900657
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("710728860613"))           # 710693401863 + 35458749
 
         # L
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, 2747859799935140577 + 1899736810880077)        # 2749759536746020654
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, 6996304360355904016 + 4836905046539355) # 7001141265402443371
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, 219375887 + 10945)                             # 219386832
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, 552456845956 + 27563825)                # 552484409781
+        self.assertEqual(int(L.token_x_cummulative_earned_per_m_liq), Decimal("2749759536746020655"))           # 2747859799935140577 + 1899736810880077
+        self.assertEqual(int(L.token_x_cummulative_earned_per_m_subtree_liq), Decimal("7001141265402443372"))   # 6996304360355904016 + 4836905046539355
+        self.assertEqual(int(L.token_y_cummulative_earned_per_m_liq), Decimal("219386833"))                     # 219375887 + 10945
+        self.assertEqual(int(L.token_y_cummulative_earned_per_m_subtree_liq), Decimal("552484409783"))          # 552456845956 + 27563825
 
         # LL
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, 2106654304686669588 + 1456389336983247)        # 2108110694023652835
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, 4183016848129478568 + 2891837127944514) # 4185908685257423082
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, 62008538706 + 3093698)                         # 62011632404
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, 551980602777 + 27539135)                # 552008141912
+        self.assertEqual(int(LL.token_x_cummulative_earned_per_m_liq), Decimal("2108110694023652836"))           # 2106654304686669588 + 1456389336983247
+        self.assertEqual(int(LL.token_x_cummulative_earned_per_m_subtree_liq), Decimal("4185908685257423083"))   # 4183016848129478568 + 2891837127944514
+        self.assertEqual(int(LL.token_y_cummulative_earned_per_m_liq), Decimal("62011632404"))                   # 62008538706 + 3093698
+        self.assertEqual(int(LL.token_y_cummulative_earned_per_m_subtree_liq), Decimal("552008141914"))          # 551980602777 + 27539135
 
         # LR
-        self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, 423248578107618890129 + 373259731104033296)        # 423621837838722923425
-        self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, 423248578107618890129 + 373259731104033296) # 423621837838722923425
-        self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, 2197219781195 + 139839995)                         # 2197359621190
-        self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, 2197219781195 + 139839995)                  # 2197359621190
+        self.assertEqual(int(LR.token_x_cummulative_earned_per_m_liq), Decimal("423621837838722923425"))            # 423248578107618890129 + 373259731104033296
+        self.assertEqual(int(LR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("423621837838722923425"))    # 423248578107618890129 + 373259731104033296
+        self.assertEqual(int(LR.token_y_cummulative_earned_per_m_liq), Decimal("2197359621190"))                    # 2197219781195 + 139839995
+        self.assertEqual(int(LR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("2197359621190"))            # 2197219781195 + 139839995
 
         # LLR
-        self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, 154626415017241476 + 106897640711262)          # 154733312657952738
-        self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, 2199779564584907057 + 1520770209363996) # 2201300334794271053
-        self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, 5771781665 + 287962)                           # 5772069627
-        self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, 519095539055 + 25898463)                # 519121437518
+        self.assertEqual(int(LLR.token_x_cummulative_earned_per_m_liq), Decimal("154733312657952739"))           # 154626415017241476 + 106897640711262
+        self.assertEqual(int(LLR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2201300334794271054"))  # 2199779564584907057 + 1520770209363996
+        self.assertEqual(int(LLR.token_y_cummulative_earned_per_m_liq), Decimal("5772069628"))                   # 5771781665 + 287962
+        self.assertEqual(int(LLR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("519121437519"))         # 519095539055 + 25898463
 
         # LLRR
-        self.assertEqual(LLRR.token_x_cummulative_earned_per_m_liq, 2108117905996538332 + 1457402297493569)        # 2109575308294031901
-        self.assertEqual(LLRR.token_x_cummulative_earned_per_m_liq, 2108117905996538332 + 1457402297493569) # 2109575308294031901
-        self.assertEqual(LLRR.token_y_cummulative_earned_per_m_liq, 529127613135 + 26398986)                       # 529154012121
-        self.assertEqual(LLRR.token_y_cummulative_earned_per_m_liq, 529127613135 + 26398986)                # 529154012121
+        self.assertEqual(int(LLRR.token_x_cummulative_earned_per_m_liq), Decimal("2109575308294031902"))            # 2108117905996538332 + 1457402297493569
+        self.assertEqual(int(LLRR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2109575308294031902"))    # 2108117905996538332 + 1457402297493569
+        self.assertEqual(int(LLRR.token_y_cummulative_earned_per_m_liq), Decimal("529154012122"))                   # 529127613135 + 26398986
+        self.assertEqual(int(LLRR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("529154012122"))           # 529127613135 + 26398986
 
         # t_liq
-        self.assertEqual(root.t_liq, 4430)
-        self.assertEqual(L.t_liq, 77)
-        self.assertEqual(LL.t_liq, 82734)
-        self.assertEqual(LR.t_liq, 1111)
-        self.assertEqual(LLR.t_liq, 5346)
-        self.assertEqual(LLRR.t_liq, 7635865)
+        self.assertEqual(root.t_liq, Decimal("4430"))
+        self.assertEqual(L.t_liq, Decimal("77"))
+        self.assertEqual(LL.t_liq, Decimal("82734"))
+        self.assertEqual(LR.t_liq, Decimal("1111"))
+        self.assertEqual(LLR.t_liq, Decimal("5346"))
+        self.assertEqual(LLRR.t_liq, Decimal("7635865"))
 
         # borrowed_x
-        self.assertEqual(root.token_x_borrowed, 492e18)
-        self.assertEqual(L.token_x_borrowed, 998e18)
-        self.assertEqual(LL.token_x_borrowed, 765e18)
-        self.assertEqual(LR.token_x_borrowed, 1024e18)
-        self.assertEqual(LLR.token_x_borrowed, 53e18)
-        self.assertEqual(LLRR.token_x_borrowed, 1701e18)
+        self.assertEqual(root.token_x_borrowed, Decimal("492e18"))
+        self.assertEqual(L.token_x_borrowed, Decimal("998e18"))
+        self.assertEqual(LL.token_x_borrowed, Decimal("765e18"))
+        self.assertEqual(LR.token_x_borrowed, Decimal("1024e18"))
+        self.assertEqual(LLR.token_x_borrowed, Decimal("53e18"))
+        self.assertEqual(LLRR.token_x_borrowed, Decimal("1701e18"))
 
         # borrowed_y
-        self.assertEqual(root.token_y_borrowed, 254858e6)
-        self.assertEqual(L.token_y_borrowed, 353e6)
-        self.assertEqual(LL.token_y_borrowed, 99763e6)
-        self.assertEqual(LR.token_y_borrowed, 1552e6)
-        self.assertEqual(LLR.token_y_borrowed, 8765e6)
-        self.assertEqual(LLRR.token_y_borrowed, 780531e6)
+        self.assertEqual(root.token_y_borrowed, Decimal("254858e6"))
+        self.assertEqual(L.token_y_borrowed, Decimal("353e6"))
+        self.assertEqual(LL.token_y_borrowed, Decimal("99763e6"))
+        self.assertEqual(LR.token_y_borrowed, Decimal("1552e6"))
+        self.assertEqual(LLR.token_y_borrowed, Decimal("8765e6"))
+        self.assertEqual(LLRR.token_y_borrowed, Decimal("780531e6"))
 
         # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, 5033e18)  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(L.token_x_subtree_borrowed, 4541e18)     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(LL.token_x_subtree_borrowed, 2519e18)    # 765e18 + 53e18 + 701e18
-        self.assertEqual(LR.token_x_subtree_borrowed, 1024e18)
-        self.assertEqual(LLR.token_x_subtree_borrowed, 1754e18)   # 53e18 + 701e18
-        self.assertEqual(LLRR.token_x_subtree_borrowed, 1701e18)  # 701e18
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("5033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(L.token_x_subtree_borrowed, Decimal("4541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(LL.token_x_subtree_borrowed, Decimal("2519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(LR.token_x_subtree_borrowed, Decimal("1024e18"))
+        self.assertEqual(LLR.token_x_subtree_borrowed, Decimal("1754e18"))   # 53e18 + 701e18
+        self.assertEqual(LLRR.token_x_subtree_borrowed, Decimal("1701e18"))  # 701e18
 
         # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, 1145822e6) # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(L.token_y_subtree_borrowed, 890964e6)     # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(LL.token_y_subtree_borrowed, 889059e6)    # 99763e6 + 8765e6 + 779531e6
-        self.assertEqual(LR.token_y_subtree_borrowed, 1552e6)
-        self.assertEqual(LLR.token_y_subtree_borrowed, 789296e6)   # 8765e6 + 779531e6
-        self.assertEqual(LLRR.token_y_subtree_borrowed, 780531e6)  # 779531e6
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("1145822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(L.token_y_subtree_borrowed, Decimal("890964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(LL.token_y_subtree_borrowed, Decimal("889059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(LR.token_y_subtree_borrowed, Decimal("1552e6"))
+        self.assertEqual(LLR.token_y_subtree_borrowed, Decimal("789296e6"))    # 8765e6 + 779531e6
+        self.assertEqual(LLRR.token_y_subtree_borrowed, Decimal("780531e6"))   # 779531e6
 
-        # 3.4) removeTLiq
+        # T32876298273
         # 3.3) addTLiq
-        vm.warp(32876298273) # T32876298273
-        liq_tree.token_x_fee_rate_snapshot += 2352954287417905205553) # 17% APR as Q192.64 T32876298273 - T9214298113
-        liq_tree.token_y_fee_rate_snapshot += 6117681147286553534438) # 44.2% APR as Q192.64 T32876298273 - T9214298113
+        liq_tree.token_x_fee_rate_snapshot += Decimal("2352954287417905205553")  # 17% APR as Q192.64 T32876298273 - T9214298113
+        liq_tree.token_y_fee_rate_snapshot += Decimal("6117681147286553534438")  # 44.2% APR as Q192.64 T32876298273 - T9214298113
 
-        liq_tree.removeTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6) # LLRR, LR
+        # Apply change that requires fee calculation
+        # add_t_liq
+        liq_tree.remove_t_liq(LiqRange(low=3, high=7), Decimal("1000"), Decimal("1000e18"), Decimal("1000e6")) # LLRR, LR
 
         # root
-        # A = 0
-        # m = 324198833
-        #     x: 492e18 * 2352954287417905205553 / 324198833 / 2**64
-        # x sub: 5033e18 * 2352954287417905205553 / 324198833 / 2**64
-        #     y: 254858e6 * 6117681147286553534438 / 324198833 / 2**64
-        # y sub: 1145822e6 * 6117681147286553534438 / 324198833 / 2**64
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 1355310898622008714 + 193574177654021)
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 8354995844553968361 + 1980200886448553)
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 158359374060 + 260707)
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 710728860612 + 1172122)
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("1355504472799662736"))
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("8356976045440416916"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("158359634769"))
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("710730032735"))
 
         # L
-        # 998e18 * 2352954287417905205553 / 324131393 / 2**64
-        # 4541e18 * 2352954287417905205553 / 324131393 / 2**64
-        # 353e6 * 6117681147286553534438 / 324131393 / 2**64
-        # 890964e6 * 6117681147286553534438 / 324131393 / 2**64
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, 2749759536746020654 + 392738261220692)
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, 7001141265402443371 + 1786998441085335)
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, 219386832 + 361)
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, 552484409781 + 911603)
+        self.assertEqual(int(L.token_x_cummulative_earned_per_m_liq), Decimal("2750152275007241348"))
+        self.assertEqual(int(L.token_x_cummulative_earned_per_m_subtree_liq), Decimal("7002928263843528708"))
+        self.assertEqual(int(L.token_y_cummulative_earned_per_m_liq), Decimal("219387194"))
+        self.assertEqual(int(L.token_y_cummulative_earned_per_m_subtree_liq), Decimal("552485321387"))
 
         # LL
-        # 765e18 * 2352954287417905205553 / 324091721 / 2**64
-        # 2519e18 * 2352954287417905205553 / 324091721 / 2**64
-        # 99763e6 * 6117681147286553534438 / 324091721 / 2**64
-        # 889059e6 * 6117681147286553534438 / 324091721 / 2**64
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, 2108110694023652835 + 301083714644757)
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, 4185908685257423082 + 991411604170121)
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, 62011632404 + 102086)
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, 552008141912 + 909766)
+        self.assertEqual(int(LL.token_x_cummulative_earned_per_m_liq), Decimal("2108411777738297593"))
+        self.assertEqual(int(LL.token_x_cummulative_earned_per_m_subtree_liq), Decimal("4186900096861593205"))
+        self.assertEqual(int(LL.token_y_cummulative_earned_per_m_liq), Decimal("62011734491"))
+        self.assertEqual(int(LL.token_y_cummulative_earned_per_m_subtree_liq), Decimal("552009051680"))
 
         # LR
-        # 1024e18 * 2352954287417905205553 / 39672 / 2**64
-        # 1024e18 * 2352954287417905205553 / 39672 / 2**64
-        # 1552e6 * 6117681147286553534438 / 39672 / 2**64
-        # 1552e6 * 6117681147286553534438 / 39672 / 2**64
-        self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, 423621837838722923425 + 3292377527956539412)
-        self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, 423621837838722923425 + 3292377527956539412)
-        self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, 2197359621190 + 12974025)
-        self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, 2197359621190 + 12974025)
+        self.assertEqual(int(LR.token_x_cummulative_earned_per_m_liq), Decimal("426914215366679462837"))
+        self.assertEqual(int(LR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("426914215366679462837"))
+        self.assertEqual(int(LR.token_y_cummulative_earned_per_m_liq), Decimal("2197372595215"))
+        self.assertEqual(int(LR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("2197372595215"))
 
         # LLR
-        # 53e18 * 2352954287417905205553 / 305908639 / 2**64
-        # 1754e18 * 2352954287417905205553 / 305908639 / 2**64
-        # 8765e6 * 6117681147286553534438 / 305908639 / 2**64
-        # 789296e6 * 6117681147286553534438 / 305908639 / 2**64
-        self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, 154733312657952738 + 22099268330799)
-        self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, 2201300334794271053 + 731360691551353)
-        self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, 5772069627 + 9502)
-        self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, 519121437518 + 855687)
+        self.assertEqual(int(LLR.token_x_cummulative_earned_per_m_liq), Decimal("154755411926283539"))
+        self.assertEqual(int(LLR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2202031695485822407"))
+        self.assertEqual(int(LLR.token_y_cummulative_earned_per_m_liq), Decimal("5772079130"))
+        self.assertEqual(int(LLR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("519122293207"))
 
         # LLRR
-        # 1701e18 * 2352954287417905205553 / 296771752 / 2**64
-        # 1701e18 * 2352954287417905205553 / 296771752 / 2**64
-        # 780531e6 * 6117681147286553534438 / 296771752 / 2**64
-        # 780531e6 * 6117681147286553534438 / 296771752 / 2**64
-        self.assertEqual(LLRR.token_x_cummulative_earned_per_m_liq, 2109575308294031901 + 731097873063750)
-        self.assertEqual(LLRR.token_x_cummulative_earned_per_m_liq, 2109575308294031901 + 731097873063750)
-        self.assertEqual(LLRR.token_y_cummulative_earned_per_m_liq, 529154012121 + 872237)
-        self.assertEqual(LLRR.token_y_cummulative_earned_per_m_liq, 529154012121 + 872237)
+        self.assertEqual(int(LLRR.token_x_cummulative_earned_per_m_liq), Decimal("2110306406167095653"))
+        self.assertEqual(int(LLRR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2110306406167095653"))
+        self.assertEqual(int(LLRR.token_y_cummulative_earned_per_m_liq), Decimal("529154884359"))
+        self.assertEqual(int(LLRR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("529154884359"))
 
         # t_liq
-        self.assertEqual(root.t_liq, 4430)
-        self.assertEqual(L.t_liq, 77)
-        self.assertEqual(LL.t_liq, 82734)
-        self.assertEqual(LR.t_liq, 111)
-        self.assertEqual(LLR.t_liq, 5346)
-        self.assertEqual(LLRR.t_liq, 7634865)
+        self.assertEqual(root.t_liq, Decimal("4430"))
+        self.assertEqual(L.t_liq, Decimal("77"))
+        self.assertEqual(LL.t_liq, Decimal("82734"))
+        self.assertEqual(LR.t_liq, Decimal("111"))
+        self.assertEqual(LLR.t_liq, Decimal("5346"))
+        self.assertEqual(LLRR.t_liq, Decimal("7634865"))
 
         # subtree_m_liq
-        self.assertEqual(root.subtree_m_liq, 324198833) # 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(L.subtree_m_liq, 324063953)    # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(LL.subtree_m_liq, 324056493)   # 9082734*4 + 45346*2 + 287634865*1
-        self.assertEqual(LR.subtree_m_liq, 4444)        # 1111*4
-        self.assertEqual(LLR.subtree_m_liq, 287725557)  # 45346*2 + 287634865*1
-        self.assertEqual(LLRR.subtree_m_liq, 287634865) # 287634865*1
+        self.assertEqual(root.subtree_m_liq, Decimal("324198833"))  # 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        self.assertEqual(L.subtree_m_liq, Decimal("324063953"))     # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        self.assertEqual(LL.subtree_m_liq, Decimal("324056493"))    # 9082734*4 + 45346*2 + 287634865*1
+        self.assertEqual(LR.subtree_m_liq, Decimal("4444"))         # 1111*4
+        self.assertEqual(LLR.subtree_m_liq, Decimal("287725557"))   # 45346*2 + 287634865*1
+        self.assertEqual(LLRR.subtree_m_liq, Decimal("287634865"))  # 287634865*1
 
         # borrowed_x
-        self.assertEqual(root.token_x_borrowed, 492e18)
-        self.assertEqual(L.token_x_borrowed, 998e18)
-        self.assertEqual(LL.token_x_borrowed, 765e18)
-        self.assertEqual(LR.token_x_borrowed, 24e18)
-        self.assertEqual(LLR.token_x_borrowed, 53e18)
-        self.assertEqual(LLRR.token_x_borrowed, 701e18)
+        self.assertEqual(root.token_x_borrowed, Decimal("492e18"))
+        self.assertEqual(L.token_x_borrowed, Decimal("998e18"))
+        self.assertEqual(LL.token_x_borrowed, Decimal("765e18"))
+        self.assertEqual(LR.token_x_borrowed, Decimal("24e18"))
+        self.assertEqual(LLR.token_x_borrowed, Decimal("53e18"))
+        self.assertEqual(LLRR.token_x_borrowed, Decimal("701e18"))
 
         # borrowed_y
-        self.assertEqual(root.token_y_borrowed, 254858e6)
-        self.assertEqual(L.token_y_borrowed, 353e6)
-        self.assertEqual(LL.token_y_borrowed, 99763e6)
-        self.assertEqual(LR.token_y_borrowed, 552e6)
-        self.assertEqual(LLR.token_y_borrowed, 8765e6)
-        self.assertEqual(LLRR.token_y_borrowed, 779531e6)
+        self.assertEqual(root.token_y_borrowed, Decimal("254858e6"))
+        self.assertEqual(L.token_y_borrowed, Decimal("353e6"))
+        self.assertEqual(LL.token_y_borrowed, Decimal("99763e6"))
+        self.assertEqual(LR.token_y_borrowed, Decimal("552e6"))
+        self.assertEqual(LLR.token_y_borrowed, Decimal("8765e6"))
+        self.assertEqual(LLRR.token_y_borrowed, Decimal("779531e6"))
 
         # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, 3033e18) # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(L.token_x_subtree_borrowed, 2541e18)    # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(LL.token_x_subtree_borrowed, 1519e18)   # 765e18 + 53e18 + 701e18
-        self.assertEqual(LR.token_x_subtree_borrowed, 24e18)
-        self.assertEqual(LLR.token_x_subtree_borrowed, 754e18)   # 53e18 + 701e18
-        self.assertEqual(LLRR.token_x_subtree_borrowed, 701e18)  # 701e18
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(L.token_x_subtree_borrowed, Decimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(LL.token_x_subtree_borrowed, Decimal("1519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(LR.token_x_subtree_borrowed, Decimal("24e18"))
+        self.assertEqual(LLR.token_x_subtree_borrowed, Decimal("754e18"))    # 53e18 + 701e18
+        self.assertEqual(LLRR.token_x_subtree_borrowed, Decimal("701e18"))  # 701e18
 
         # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, 1143822e6) # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(L.token_y_subtree_borrowed, 888964e6)     # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(LL.token_y_subtree_borrowed, 888059e6)    # 99763e6 + 8765e6 + 779531e6
-        self.assertEqual(LR.token_y_subtree_borrowed, 552e6)
-        self.assertEqual(LLR.token_y_subtree_borrowed, 788296e6)   # 8765e6 + 779531e6
-        self.assertEqual(LLRR.token_y_subtree_borrowed, 779531e6)  # 779531e6
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(L.token_y_subtree_borrowed, Decimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(LL.token_y_subtree_borrowed, Decimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(LR.token_y_subtree_borrowed, Decimal("552e6"))
+        self.assertEqual(LLR.token_y_subtree_borrowed, Decimal("788296e6"))    # 8765e6 + 779531e6
+        self.assertEqual(LLRR.token_y_subtree_borrowed, Decimal("779531e6"))   # 779531e6
+
+'''
+
     }
 
 
@@ -809,13 +785,13 @@ class TestDenseLiquidityTree(TestCase):
         self.assertEqual(RRL.token_y_subtree_borrowed, 789296e6)   # 8765e6 + 779531e6
         self.assertEqual(RRLL.token_y_subtree_borrowed, 780531e6)  # 779531e6
 
-        # 3.4) removeTLiq
+        # 3.4) remove_t_liq
         # 3.3) addTLiq
         vm.warp(32876298273) # T32876298273
         liq_tree.token_x_fee_rate_snapshot += 2352954287417905205553) # 17% APR as Q192.64 T32876298273 - T9214298113
         liq_tree.token_y_fee_rate_snapshot += 6117681147286553534438) # 44.2% APR as Q192.64 T32876298273 - T9214298113
 
-        liq_tree.removeTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6) # RRLL, RL
+        liq_tree.remove_t_liq(LiqRange(8, 12), 1000, 1000e18, 1000e6) # RRLL, RL
 
         # root
         # A = 0
