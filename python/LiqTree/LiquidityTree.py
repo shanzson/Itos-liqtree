@@ -71,6 +71,9 @@ class LiquidityTree:
         self.width = (1 << depth)
         self.nodes = defaultdict(LiqNode)
 
+        self.root_key = (self.width << 24) | self.width
+        self.nodes[self.root_key] = self.root
+
         self.token_x_fee_rate_snapshot: Decimal = Decimal(0)
         self.token_y_fee_rate_snapshot: Decimal = Decimal(0)
 
@@ -102,7 +105,7 @@ class LiquidityTree:
     # region Liquidity Limited Range Methods
 
     def add_m_liq(self, liq_range: LiqRange, liq: Decimal) -> None:
-        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+        low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
         current: int
         node: LiqNode
@@ -177,7 +180,7 @@ class LiquidityTree:
 
             node = self.nodes[current]
 
-            while node != self.root:
+            while current < self.root_key:
                 up, other = LiquidityKey.generic_up(current)
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
@@ -186,7 +189,7 @@ class LiquidityTree:
                 current, node = up, parent
 
     def remove_m_liq(self, liq_range: LiqRange, liq: Decimal) -> None:
-        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+        low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
         current: int
         node: LiqNode
@@ -261,7 +264,7 @@ class LiquidityTree:
 
             node = self.nodes[current]
 
-            while node != self.root:
+            while current < self.root_key:
                 up, other = LiquidityKey.generic_up(current)
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
@@ -270,7 +273,7 @@ class LiquidityTree:
                 current, node = up, parent
 
     def add_t_liq(self, liq_range: LiqRange, liq: Decimal, amount_x: Decimal, amount_y: Decimal) -> None:
-        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+        low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
         current: int
         node: LiqNode
@@ -359,7 +362,7 @@ class LiquidityTree:
 
             node = self.nodes[current]
 
-            while node != self.root:
+            while current < self.root_key:
                 up, other = LiquidityKey.generic_up(current)
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
@@ -369,7 +372,7 @@ class LiquidityTree:
                 current, node = up, parent
 
     def remove_t_liq(self, liq_range: LiqRange, liq: Decimal, amount_x: Decimal, amount_y: Decimal) -> None:
-        low, high, _, stop_range = LiquidityKey.range_bounds(liq_range.low, liq_range.high)
+        low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
         current: int
         node: LiqNode
@@ -458,7 +461,7 @@ class LiquidityTree:
 
             node = self.nodes[current]
 
-            while node != self.root:
+            while current < self.root_key:
                 up, other = LiquidityKey.generic_up(current)
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
@@ -475,7 +478,7 @@ class LiquidityTree:
         node.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
         node.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
 
-        aux_level: Decimal = self.auxiliary_level_m_liq(self, current)
+        aux_level: Decimal = self.auxiliary_level_m_liq(current)
         total_m_liq: Decimal = node.subtree_m_liq + aux_level * Decimal(current >> 24)
 
         if total_m_liq <= 0:
@@ -508,7 +511,7 @@ class LiquidityTree:
             return Decimal(0)
 
         m_liq: Decimal = Decimal(0)
-        while node != self.root:
+        while node_key < self.root_key:
             m_liq += node.m_liq
 
             # move to parent
