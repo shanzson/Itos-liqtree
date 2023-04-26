@@ -258,72 +258,74 @@ class TestDenseLiquidityTree(TestCase):
         self.assertEqual(LR.subtree_m_liq, Decimal("15380"))        # 3845*4
         self.assertEqual(LLR.subtree_m_liq, Decimal("287728291"))   # 45346*2 + 287637599*1
         self.assertEqual(LLRR.subtree_m_liq, Decimal("287637599"))  # 287637599*1
+        
+        # T2876298273
+        # Apply change that requires fee calculation
+        # remove_m_liq
+        
+        liq_tree.token_x_fee_rate_snapshot += Decimal("16463537718422861220174597")    # 978567.9% APR as Q192.64 T2876298273 - T98273
+        liq_tree.token_y_fee_rate_snapshot += Decimal("3715979586694123491881712207")  # 220872233.1% APR as Q192.64 T2876298273 - T98273
+
+        liq_tree.remove_m_liq(LiqRange(low=3, high=7), Decimal("2734"))  # LLRR, LR
+
+        # root
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_liq), Decimal("1354374549844117328"))  # 373601278 + 1354374549470516050
+        self.assertEqual(int(root.token_x_cummulative_earned_per_m_subtree_liq), Decimal("8349223596904894021"))  # 2303115199 + 8349223594601778821
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_liq), Decimal("158351473404"))         # 0 + 158351473403
+        self.assertEqual(int(root.token_y_cummulative_earned_per_m_subtree_liq), Decimal("710693401864"))         # 2 + 710693401861
+
+        # L
+        self.assertEqual(int(L.token_x_cummulative_earned_per_m_liq), Decimal("2747859799935140578"))    # 757991165 + 2747859799177149412
+        self.assertEqual(int(L.token_x_cummulative_earned_per_m_subtree_liq), Decimal("6996304360355904017"))    # 1929915382 + 6996304358425988634
+        self.assertEqual(int(L.token_y_cummulative_earned_per_m_liq), Decimal("219375887"))              # 0 + 219375887
+        self.assertEqual(int(L.token_y_cummulative_earned_per_m_subtree_liq), Decimal("552456845957"))           # 1 + 552456845955
+
+        # LL
+        self.assertEqual(int(LL.token_x_cummulative_earned_per_m_liq), Decimal("2106654304686669588"))   # 581096415 + 2106654304105573173
+        self.assertEqual(int(LL.token_x_cummulative_earned_per_m_subtree_liq), Decimal("4183016848129478568"))   # 1153837196 + 4183016846975641372
+        self.assertEqual(int(LL.token_y_cummulative_earned_per_m_liq), Decimal("62008538706"))           # 0 + 62008538706
+        self.assertEqual(int(LL.token_y_cummulative_earned_per_m_subtree_liq), Decimal("551980602778"))          # 1 + 551980602776
+
+        # LR
+        self.assertEqual(int(LR.token_x_cummulative_earned_per_m_liq), Decimal("423248578107618890129"))     # 148929881804 + 423248577958689008325
+        self.assertEqual(int(LR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("423248578107618890129"))     # 148929881804 + 423248577958689008325
+        self.assertEqual(int(LR.token_y_cummulative_earned_per_m_liq), Decimal("2197219781195"))             # 10 + 2197219781185
+        self.assertEqual(int(LR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("2197219781195"))             # 10 + 2197219781185
+
+        # LLR
+        self.assertEqual(int(LLR.token_x_cummulative_earned_per_m_liq), Decimal("154626415017241477"))       # 42651943 + 154626414974589533
+        self.assertEqual(int(LLR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2199779564584907057"))      # 606784254 + 2199779563978122803
+        self.assertEqual(int(LLR.token_y_cummulative_earned_per_m_liq), Decimal("5771781665"))               # 0 + 5771781665
+        self.assertEqual(int(LLR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("519095539055"))             # 1 + 519095539054
+
+        # LLRR
+        self.assertEqual(int(LLRR.token_x_cummulative_earned_per_m_liq), Decimal("2108117905996538333"))     # 581500584 + 2108117905415037748
+        self.assertEqual(int(LLRR.token_x_cummulative_earned_per_m_subtree_liq), Decimal("2108117905996538333"))     # 581500584 + 2108117905415037748
+        self.assertEqual(int(LLRR.token_y_cummulative_earned_per_m_liq), Decimal("529127613135"))            # 1 + 529127613134
+        self.assertEqual(int(LLRR.token_y_cummulative_earned_per_m_subtree_liq), Decimal("529127613135"))            # 1 + 529127613134
+
+        # m_liq
+        self.assertEqual(root.m_liq, Decimal("8430"))
+        self.assertEqual(L.m_liq, Decimal("377"))
+        self.assertEqual(LL.m_liq, Decimal("9082734"))
+        self.assertEqual(LR.m_liq, Decimal("1111"))
+        self.assertEqual(LLR.m_liq, Decimal("45346"))
+        self.assertEqual(LLRR.m_liq, Decimal("287634865"))
+
+        # subtree_m_liq
+        self.assertEqual(root.subtree_m_liq, Decimal("324198833"))  # 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        self.assertEqual(L.subtree_m_liq, Decimal("324063953"))     # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        self.assertEqual(LL.subtree_m_liq, Decimal("324056493"))    # 9082734*4 + 45346*2 + 287634865*1
+        self.assertEqual(LR.subtree_m_liq, Decimal("4444"))         # 1111*4
+        self.assertEqual(LLR.subtree_m_liq, Decimal("287725557"))   # 45346*2 + 287634865*1
+        self.assertEqual(LLRR.subtree_m_liq, Decimal("287634865"))  # 287634865*1
 
 '''
 
-        # 3.2) removeMLiq
-        vm.warp(2876298273) # T2876298273
-        liq_tree.feeRateSnapshotTokenX.add(16463537718422861220174597)   # 978567.9% APR as Q192.64 T2876298273 - T98273
-        liq_tree.feeRateSnapshotTokenY.add(3715979586694123491881712207) # 220872233.1% APR as Q192.64 T2876298273 - T98273
-
-        liq_tree.removeMLiq(LiqRange(3, 7), 2734) # LLRR, LR
-
-        # root
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 373601278 + 1354374549470516050)         # 1354374549844117328
-        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, 2303115199 + 8349223594601778821) # 8349223596904894020
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 0 + 158351473403)                        # 158351473403
-        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, 2 + 710693401861)                 # 710693401863
-
-        # L
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, 757991165 + 2747859799177149412)         # 2747859799935140577
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, 1929915382 + 6996304358425988634) # 6996304360355904016
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, 0 + 219375887)                           # 219375887
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, 1 + 552456845955)                 # 552456845956
-
-        # LL
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, 581096415 + 2106654304105573173)         # 2106654304686669588
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, 1153837196 + 4183016846975641372) # 4183016848129478568
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, 0 + 62008538706)                         # 62008538706
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, 1 + 551980602776)                 # 551980602777
-
-        # LR
-        self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, 148929881804 + 423248577958689008325)        # 423248578107618890129
-        self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, 148929881804 + 423248577958689008325) # 423248578107618890129
-        self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, 10 + 2197219781185)                          # 2197219781195
-        self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, 10 + 2197219781185)                   # 2197219781195
-
-        # LLR
-        self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, 42651943 + 154626414974589533)          # 154626415017241476
-        self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, 606784254 + 2199779563978122803) # 2199779564584907057
-        self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, 0 + 5771781665)                         # 5771781665
-        self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, 1 + 519095539054)                # 519095539055
-
-        # LLRR
-        self.assertEqual(LLRR.token_x_cummulative_earned_per_m_liq, 581500584 + 2108117905415037748)         # 2108117905996538332
-        self.assertEqual(LLRR.token_x_cummulative_earned_per_m_liq, 581500584 + 2108117905415037748)  # 2108117905996538332
-        self.assertEqual(LLRR.token_y_cummulative_earned_per_m_liq, 1 + 529127613134)                        # 529127613135
-        self.assertEqual(LLRR.token_y_cummulative_earned_per_m_liq, 1 + 529127613134)                 # 529127613135
-
-        # m_liq
-        self.assertEqual(root.m_liq, 8430)
-        self.assertEqual(L.m_liq, 377)
-        self.assertEqual(LL.m_liq, 9082734)
-        self.assertEqual(LR.m_liq, 1111)
-        self.assertEqual(LLR.m_liq, 45346)
-        self.assertEqual(LLRR.m_liq, 287634865)
-
-        # subtree_m_liq
-        self.assertEqual(root.subtree_m_liq, 324198833) # 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(L.subtree_m_liq, 324063953)    # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(LL.subtree_m_liq, 324056493)   # 9082734*4 + 45346*2 + 287634865*1
-        self.assertEqual(LR.subtree_m_liq, 4444)        # 1111*4
-        self.assertEqual(LLR.subtree_m_liq, 287725557)  # 45346*2 + 287634865*1
-        self.assertEqual(LLRR.subtree_m_liq, 287634865) # 287634865*1
-
         # 3.3) addTLiq
         vm.warp(9214298113) # T2876298273
-        liq_tree.feeRateSnapshotTokenX.add(11381610389149375791104)   # 307% APR as Q192.64 T9214298113 - T2876298273
-        liq_tree.feeRateSnapshotTokenY.add(185394198934916215865344)  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
+        liq_tree.token_x_fee_rate_snapshot += 11381610389149375791104)   # 307% APR as Q192.64 T9214298113 - T2876298273
+        liq_tree.token_y_fee_rate_snapshot += 185394198934916215865344)  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
         liq_tree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6) # LLRR, LR
 
@@ -406,8 +408,8 @@ class TestDenseLiquidityTree(TestCase):
         # 3.4) removeTLiq
         # 3.3) addTLiq
         vm.warp(32876298273) # T32876298273
-        liq_tree.feeRateSnapshotTokenX.add(2352954287417905205553) # 17% APR as Q192.64 T32876298273 - T9214298113
-        liq_tree.feeRateSnapshotTokenY.add(6117681147286553534438) # 44.2% APR as Q192.64 T32876298273 - T9214298113
+        liq_tree.token_x_fee_rate_snapshot += 2352954287417905205553) # 17% APR as Q192.64 T32876298273 - T9214298113
+        liq_tree.token_y_fee_rate_snapshot += 6117681147286553534438) # 44.2% APR as Q192.64 T32876298273 - T9214298113
 
         liq_tree.removeTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6) # LLRR, LR
 
@@ -606,8 +608,8 @@ class TestDenseLiquidityTree(TestCase):
 
         # Step 2) Assign different rates for X & Y
         vm.warp(98273) # T98273
-        liq_tree.feeRateSnapshotTokenX.add(4541239648278065)  # 7.9% APR as Q192.64 T98273 - T0
-        liq_tree.feeRateSnapshotTokenY.add(13278814667749784) # 23.1% APR as Q192.64 T98273 - T0
+        liq_tree.token_x_fee_rate_snapshot += 4541239648278065)  # 7.9% APR as Q192.64 T98273 - T0
+        liq_tree.token_y_fee_rate_snapshot += 13278814667749784) # 23.1% APR as Q192.64 T98273 - T0
 
         # Step 3) Apply change that effects the entire tree, to calculate the fees at each node
         # 3.1) add_m_liq
@@ -667,8 +669,8 @@ class TestDenseLiquidityTree(TestCase):
 
         # 3.2) removeMLiq
         vm.warp(2876298273) # T2876298273
-        liq_tree.feeRateSnapshotTokenX.add(16463537718422861220174597)   # 978567.9% APR as Q192.64 T2876298273 - T98273
-        liq_tree.feeRateSnapshotTokenY.add(3715979586694123491881712207) # 220872233.1% APR as Q192.64 T2876298273 - T98273
+        liq_tree.token_x_fee_rate_snapshot += 16463537718422861220174597)   # 978567.9% APR as Q192.64 T2876298273 - T98273
+        liq_tree.token_y_fee_rate_snapshot += 3715979586694123491881712207) # 220872233.1% APR as Q192.64 T2876298273 - T98273
 
         liq_tree.removeMLiq(LiqRange(8, 12), 2734) # RRLL, RL
 
@@ -726,8 +728,8 @@ class TestDenseLiquidityTree(TestCase):
 
         # 3.3) addTLiq
         vm.warp(9214298113) # T2876298273
-        liq_tree.feeRateSnapshotTokenX.add(11381610389149375791104)   # 307% APR as Q192.64 T9214298113 - T2876298273
-        liq_tree.feeRateSnapshotTokenY.add(185394198934916215865344)  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
+        liq_tree.token_x_fee_rate_snapshot += 11381610389149375791104)   # 307% APR as Q192.64 T9214298113 - T2876298273
+        liq_tree.token_y_fee_rate_snapshot += 185394198934916215865344)  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
         liq_tree.addTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6) # RRLL, RL
 
@@ -810,8 +812,8 @@ class TestDenseLiquidityTree(TestCase):
         # 3.4) removeTLiq
         # 3.3) addTLiq
         vm.warp(32876298273) # T32876298273
-        liq_tree.feeRateSnapshotTokenX.add(2352954287417905205553) # 17% APR as Q192.64 T32876298273 - T9214298113
-        liq_tree.feeRateSnapshotTokenY.add(6117681147286553534438) # 44.2% APR as Q192.64 T32876298273 - T9214298113
+        liq_tree.token_x_fee_rate_snapshot += 2352954287417905205553) # 17% APR as Q192.64 T32876298273 - T9214298113
+        liq_tree.token_y_fee_rate_snapshot += 6117681147286553534438) # 44.2% APR as Q192.64 T32876298273 - T9214298113
 
         liq_tree.removeTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6) # RRLL, RL
 
