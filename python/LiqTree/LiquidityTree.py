@@ -474,11 +474,11 @@ class LiquidityTree:
 
     def handle_fee(self, current: int, node: LiqNode):
         token_x_fee_rate_diff: Decimal = self.token_x_fee_rate_snapshot - node.token_x_fee_rate_snapshot
-        token_y_fee_rate_diff: Decimal = self.token_y_fee_rate_snapshot - node.token_y_fee_rate_snapshot
         node.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
+        token_y_fee_rate_diff: Decimal = self.token_y_fee_rate_snapshot - node.token_y_fee_rate_snapshot
         node.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
 
-        aux_level: Decimal = self.auxiliary_level_m_liq(current)
+        aux_level: Decimal = (0 if current == self.root_key else self.auxiliary_level_m_liq(current))
         total_m_liq: Decimal = node.subtree_m_liq + aux_level * Decimal(current >> 24)
 
         if total_m_liq <= 0:
@@ -486,6 +486,7 @@ class LiquidityTree:
 
         node.token_x_cummulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
         node.token_x_cummulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+
         node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
         node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
@@ -506,17 +507,14 @@ class LiquidityTree:
         self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
     def auxiliary_level_m_liq(self, node_key: int) -> Decimal:
-        node: LiqNode = self.nodes[node_key]
-        if node == self.root:
+        if node_key == self.root_key:
             return Decimal(0)
 
         m_liq: Decimal = Decimal(0)
+        node_key, _ = LiquidityKey.generic_up(node_key)
         while node_key < self.root_key:
-            m_liq += node.m_liq
-
-            # move to parent
+            m_liq += self.nodes[node_key].m_liq
             node_key, _ = LiquidityKey.generic_up(node_key)
-            node = self.nodes[node_key]
 
         m_liq += self.root.m_liq
         return m_liq
