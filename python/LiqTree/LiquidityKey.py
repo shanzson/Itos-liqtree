@@ -5,18 +5,18 @@ class LiquidityKey:
 
     @staticmethod
     def right_up(key: int) -> Tuple[int, int]:  # up_key, left_key
-        range_: int = key >> 24;
+        range_: int = key >> 24
         left_raw: int = key ^ range_
         return left_raw + (range_ << 24), left_raw
 
     @staticmethod
     def left_up(key: int) -> Tuple[int, int]:  # up_key, right_key
-        range_ = key >> 24
+        range_: int = key >> 24
         return key + (range_ << 24), key ^ range_
 
     @staticmethod
     def generic_up(key: int) -> Tuple[int, int]:  # up_key, other_key
-        range_ = key >> 24
+        range_: int = key >> 24
         raw_other: int = range_ ^ key
         return (raw_other if raw_other < key else key) + (range_ << 24), raw_other
 
