@@ -243,7 +243,7 @@ class LiquidityTree:
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            node.subtree_m_liq += m_liq_per_tick
+            node.subtree_m_liq -= m_liq_per_tick
 
             while current < stop_range:
                 if LiquidityKey.is_right(current):
@@ -424,7 +424,7 @@ class LiquidityTree:
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            node.t_liq += liq
+            node.t_liq -= liq
             node.token_x_borrowed -= amount_x
             node.token_x_subtree_borrowed -= amount_x
             node.token_y_borrowed -= amount_y
