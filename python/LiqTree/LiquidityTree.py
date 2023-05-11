@@ -66,7 +66,9 @@ class LiqNode:
 
 class LiquidityTree:
     # region Initialization
-    def __init__(self, depth: int):
+    def __init__(self, depth: int, sol_truncation: bool = False):
+        self.sol_truncation = sol_truncation
+
         self.root: LiqNode = LiqNode()
         self.width = (1 << depth)
         self.nodes = defaultdict(LiqNode)
@@ -490,21 +492,12 @@ class LiquidityTree:
         node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
         node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
-    def handle_root_fee(self):
-        token_x_fee_rate_diff: Decimal = self.token_x_fee_rate_snapshot - self.root.token_x_fee_rate_snapshot
-        token_y_fee_rate_diff: Decimal = self.token_y_fee_rate_snapshot - self.root.token_y_fee_rate_snapshot
-        self.root.token_x_fee_rate_snapshot = self.token_x_fee_rate_snapshot
-        self.root.token_y_fee_rate_snapshot = self.token_y_fee_rate_snapshot
+        if self.sol_truncation:
+            node.token_x_cummulative_earned_per_m_liq = Decimal(int(node.token_x_cummulative_earned_per_m_liq))
+            node.token_x_cummulative_earned_per_m_subtree_liq = Decimal(int(node.token_x_cummulative_earned_per_m_subtree_liq))
 
-        total_m_liq: Decimal = self.root.subtree_m_liq
-
-        if total_m_liq <= 0:
-            return
-
-        self.root.token_x_cummulative_earned_per_m_liq += self.root.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        self.root.token_x_cummulative_earned_per_m_subtree_liq += self.root.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        self.root.token_y_cummulative_earned_per_m_liq += self.root.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        self.root.token_y_cummulative_earned_per_m_subtree_liq += self.root.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+            node.token_y_cummulative_earned_per_m_liq = Decimal(int(node.token_y_cummulative_earned_per_m_liq))
+            node.token_y_cummulative_earned_per_m_subtree_liq = Decimal(int(node.token_y_cummulative_earned_per_m_subtree_liq))
 
     def auxiliary_level_m_liq(self, node_key: int) -> Decimal:
         if node_key == self.root_key:
@@ -523,19 +516,19 @@ class LiquidityTree:
     # region Liquidity INF Range Methods
 
     def add_inf_range_m_liq(self, liq: Decimal) -> None:
-        self.handle_root_fee()
+        self.handle_fee(self.root_key, self.root)
 
         self.root.m_liq += liq
         self.root.subtree_m_liq += self.width * liq
 
     def remove_inf_range_m_liq(self, liq: Decimal) -> None:
-        self.handle_root_fee()
+        self.handle_fee(self.root_key, self.root)
 
         self.root.m_liq -= liq
         self.root.subtree_m_liq -= self.width * liq
 
     def add_inf_range_t_liq(self, liq: Decimal, amount_x: Decimal, amount_y: Decimal) -> None:
-        self.handle_root_fee()
+        self.handle_fee(self.root_key, self.root)
 
         self.root.t_liq += liq
         self.root.token_x_borrowed += amount_x
@@ -544,7 +537,7 @@ class LiquidityTree:
         self.root.token_y_subtree_borrowed += amount_y
 
     def remove_inf_range_t_liq(self, liq: Decimal, amount_x: Decimal, amount_y: Decimal) -> None:
-        self.handle_root_fee()
+        self.handle_fee(self.root_key, self.root)
 
         self.root.t_liq -= liq
         self.root.token_x_borrowed -= amount_x
