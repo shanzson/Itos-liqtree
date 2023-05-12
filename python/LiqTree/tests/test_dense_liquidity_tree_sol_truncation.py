@@ -1049,6 +1049,227 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRL.token_y_subtree_borrowed, Decimal("788296e6"))    # 8765e6 + 779531e6
         self.assertEqual(RRLL.token_y_subtree_borrowed, Decimal("779531e6"))   # 779531e6
 
+    def test_left_and_right_leg_stopping_below_peak(self):
+        liq_tree = self.liq_tree
+
+        root: LiqNode = liq_tree.nodes[liq_tree.root_key]
+        L: LiqNode = liq_tree.nodes[(8 << 24) | 16]
+
+        # 1st (1, 4) - subtree below LL
+        LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]
+        LLL: LiqNode = liq_tree.nodes[(2 << 24) | 16]
+        LLR: LiqNode = liq_tree.nodes[(2 << 24) | 18]
+        LLLL: LiqNode = liq_tree.nodes[(1 << 24) | 16]
+        LLLR: LiqNode = liq_tree.nodes[(1 << 24) | 17]
+        LLRL: LiqNode = liq_tree.nodes[(1 << 24) | 18]
+        LLRR: LiqNode = liq_tree.nodes[(1 << 24) | 19]
+
+        # Possible sub-ranges
+        # (1,1), (1,2), (1,3), (1,4)
+        # (2,2), (2,3), (2,4)
+        # (3,3), (3,4)
+        # (4,4)
+
+        # Apply operations over all sub-ranges
+        # We don't want to organize all calls into sections like this, because there could be bugs depending on the order of calls (ie. add_t_liq before remove_t_liq)
+        # As other tests will cover the correct ordering like the example mentioned, we should mix things up. But we DO know add_m_liq is before add_t_liq, and either add must be called before a remove
+        # NOTE: these values are 'random'
+        liq_tree.add_m_liq(LiqRange(low=1, high=1), Decimal("98237498262"))  # LLLL
+        liq_tree.add_m_liq(LiqRange(low=1, high=2), Decimal("932141354"))  # LLL
+        liq_tree.add_m_liq(LiqRange(low=1, high=3), Decimal("151463465"))  # LLL, LLRL
+        liq_tree.add_m_liq(LiqRange(low=1, high=4), Decimal("45754683688356"))  # LL
+        liq_tree.add_m_liq(LiqRange(low=2, high=2), Decimal("245346257245745"))  # LLLR
+        liq_tree.add_m_liq(LiqRange(low=2, high=3), Decimal("243457472"))  # LLLR, LLRL
+        liq_tree.add_m_liq(LiqRange(low=2, high=4), Decimal("2462"))  # LLLR, LLR
+        liq_tree.add_m_liq(LiqRange(low=3, high=3), Decimal("45656756785"))  # LLRL
+        liq_tree.add_m_liq(LiqRange(low=3, high=4), Decimal("554"))  # LLR
+        liq_tree.add_m_liq(LiqRange(low=4, high=4), Decimal("262"))  # LLRR
+
+        liq_tree.add_t_liq(LiqRange(low=1, high=1), Decimal("5645645"), Decimal("4357e18"), Decimal("345345345e6"))  # LLLL
+        liq_tree.add_t_liq(LiqRange(low=1, high=2), Decimal("3456835"), Decimal("293874927834e18"), Decimal("2345346e6"))  # LLL
+        liq_tree.add_t_liq(LiqRange(low=1, high=3), Decimal("56858345635"), Decimal("23452e18"), Decimal("12341235e6"))  # LLL, LLRL
+        liq_tree.add_t_liq(LiqRange(low=1, high=4), Decimal("23453467234"), Decimal("134235e18"), Decimal("34534634e6"))  # LL
+        liq_tree.add_t_liq(LiqRange(low=2, high=2), Decimal("456756745"), Decimal("1233463e18"), Decimal("2341356e6"))  # LLLR
+        liq_tree.add_t_liq(LiqRange(low=2, high=3), Decimal("34534652457"), Decimal("45e18"), Decimal("1324213563456457e6"))  # LLLR, LLRL
+        liq_tree.add_t_liq(LiqRange(low=2, high=4), Decimal("12121345"), Decimal("4567e18"), Decimal("1235146e6"))  # LLLR, LLR
+        liq_tree.add_t_liq(LiqRange(low=3, high=3), Decimal("4564573"), Decimal("4564564e18"), Decimal("6345135e6"))  # LLRL
+        liq_tree.add_t_liq(LiqRange(low=3, high=4), Decimal("3456242"), Decimal("2564587456e18"), Decimal("1234135e6"))  # LLR
+        liq_tree.add_t_liq(LiqRange(low=4, high=4), Decimal("2145245745"), Decimal("76585673e18"), Decimal("4564574e6"))  # LLRR
+
+        # Operations that accumulate fees
+        liq_tree.token_x_fee_rate_snapshot += Decimal("67967856253453452367574")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("23464675683452345234568562")
+        liq_tree.remove_t_liq(LiqRange(low=1, high=1), Decimal("13426354645"), Decimal("4e18"), Decimal("5e6"))  # LLLL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("457568568356234515")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("3464756758679689")
+        liq_tree.remove_t_liq(LiqRange(low=1, high=2), Decimal("245346457"), Decimal("1243234e18"), Decimal("454564e6"))  # LLL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("446476458")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("35656867")
+        liq_tree.remove_t_liq(LiqRange(low=1, high=3), Decimal("2345136457"), Decimal("134345e18"), Decimal("245e6"))  # LLL, LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("32456")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("246")
+        liq_tree.remove_t_liq(LiqRange(low=1, high=4), Decimal("345675686796"), Decimal("4545e18"), Decimal("45745e6"))  # LL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("6796")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("464564756785684")
+        liq_tree.remove_t_liq(LiqRange(low=2, high=2), Decimal("68978907"), Decimal("23454e18"), Decimal("5677e6"))  # LLLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("3454568796798643673")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("3456475784245234553434523453456346")
+        liq_tree.remove_t_liq(LiqRange(low=2, high=3), Decimal("8908978"), Decimal("856454e18"), Decimal("4577865e6"))  # LLLR, LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("4573568356983683682578725")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("234624576468356835688356368368482342")
+        liq_tree.remove_t_liq(LiqRange(low=2, high=4), Decimal("679678"), Decimal("3456457e18"), Decimal("56756756e6"))  # LLLR, LLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("3256457252452572172577252424547457")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("35745675685835626345234624")
+        liq_tree.remove_t_liq(LiqRange(low=3, high=3), Decimal("65756"), Decimal("56756e18"), Decimal("34564567e6"))  # LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("345646856785673572456245")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("2356457568367824623454576788")
+        liq_tree.remove_t_liq(LiqRange(low=3, high=4), Decimal("54444"), Decimal("4564564e18"), Decimal("56756786e6"))  # LLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("456325876883562457")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("5767983835654356214356")
+        liq_tree.remove_t_liq(LiqRange(low=4, high=4), Decimal("443"), Decimal("4564564e18"), Decimal("56754e6"))  # LLRR
+
+        liq_tree.token_x_fee_rate_snapshot += Decimal("3456568679362657567867956")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("35735736783579799798988790078")
+        liq_tree.add_m_liq(LiqRange(low=1, high=1), Decimal("75645"))  # LLLL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("678908690870808")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("56890598759879798769")
+        liq_tree.add_m_liq(LiqRange(low=1, high=2), Decimal("8567567"))  # LLL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("70890900879879467474")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("4678679468674786666")
+        liq_tree.add_m_liq(LiqRange(low=1, high=3), Decimal("456456"))  # LLL, LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("46877777777777777")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("3465675698689467357")
+        liq_tree.add_m_liq(LiqRange(low=1, high=4), Decimal("356767894766"))  # LL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("346745684567943673567")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("5455665565656556556")
+        liq_tree.add_m_liq(LiqRange(low=2, high=2), Decimal("34563457"))  # LLLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("54574562523462347457")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("346468567843652647")
+        liq_tree.add_m_liq(LiqRange(low=2, high=3), Decimal("245346"))  # LLLR, LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("435736487858735734")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("345756856785784")
+        liq_tree.add_m_liq(LiqRange(low=2, high=4), Decimal("35654373573456"))  # LLLR, LLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("9782315978324963149086")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("1977947657153479167908478603")
+        liq_tree.add_m_liq(LiqRange(low=3, high=3), Decimal("24546457452"))  # LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("877907987198867986767967167846785637245673")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("01749857934067931408619045791874695714676")
+        liq_tree.add_m_liq(LiqRange(low=3, high=4), Decimal("356345645745675675685678"))  # LLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("9987698779879879874987786384537456725474327243259947838356837568356725984687365")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("9878678625678156565671567256742164782194785174671462314967193478691843769813476987")
+        liq_tree.add_m_liq(LiqRange(low=4, high=4), Decimal("459789686783566564767"))  # LLRR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("2546456746735")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("2454567346736")
+
+        liq_tree.remove_m_liq(LiqRange(low=1, high=1), Decimal("67967867"))  # LLLL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("7676767327272772272727722727272")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("2727772727272777777777777722727")
+        liq_tree.remove_m_liq(LiqRange(low=1, high=2), Decimal("45635457"))  # LLL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("198759265398245671987469087")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("19746587349687357810349578017946")
+        liq_tree.remove_m_liq(LiqRange(low=1, high=3), Decimal("567567373"))  # LLL, LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("98717986587364907214036834590682")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("9716395673986702964617823679805")
+        liq_tree.remove_m_liq(LiqRange(low=1, high=4), Decimal("4575437856335"))  # LL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("976987080780203980798239742934235")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("6978978987459873981798273497823942")
+        liq_tree.remove_m_liq(LiqRange(low=2, high=2), Decimal("23455745645"))  # LLLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("434522534253453462436234623462346")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("23462345134634623634623462456724566")
+        liq_tree.remove_m_liq(LiqRange(low=2, high=3), Decimal("2345346574"))  # LLLR, LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("79878979876987698798454564564564")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("5645635645634621462476262756245624565")
+        liq_tree.remove_m_liq(LiqRange(low=2, high=4), Decimal("24534646856"))  # LLLR, LLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("24512645624662342346234634631463462246462")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("214664623234616414624646236234234634646232463")
+        liq_tree.remove_m_liq(LiqRange(low=3, high=3), Decimal("47568568564"))  # LLRL
+        liq_tree.token_x_fee_rate_snapshot += Decimal("12221211212244155551555555555555555555555555555")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("155555555555555555555555555555555555555555555555")
+        liq_tree.remove_m_liq(LiqRange(low=3, high=4), Decimal("24545656855"))  # LLR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("9874787246782564286735426553525832786234623")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("67845986765986736798567832459782739845798230")
+        liq_tree.remove_m_liq(LiqRange(low=4, high=4), Decimal("3452464675675"))  # LLRR
+        liq_tree.token_x_fee_rate_snapshot += Decimal("98726348906735986783495701378450983165908231479581324")
+        liq_tree.token_y_fee_rate_snapshot += Decimal("98749857398456981264570398459047569823794785961235")
+
+        # Verify state is correct for all effected nodes (includes L and root)
+        # m_liq
+        self.assertEqual(root.m_liq, Decimal("0"))
+        self.assertEqual(L.m_liq, Decimal("0"))
+        self.assertEqual(LL.m_liq, Decimal("0"))
+        self.assertEqual(LLL.m_liq, Decimal("0"))
+        self.assertEqual(LLR.m_liq, Decimal("77163335364641"))
+        self.assertEqual(LLLL.m_liq, Decimal("0"))
+        self.assertEqual(LLLR.m_liq, Decimal("41634662758839"))
+        self.assertEqual(LLRL.m_liq, Decimal("245323731137021"))
+        self.assertEqual(LLRR.m_liq, Decimal("356345645745673764675050"))
+
+        # t_liq
+        self.assertEqual(root.t_liq, Decimal("0"))
+        self.assertEqual(L.t_liq, Decimal("0"))
+        self.assertEqual(LL.t_liq, Decimal("0"))
+        self.assertEqual(LLL.t_liq, Decimal("0"))
+        self.assertEqual(LLR.t_liq, Decimal("5346"))
+        self.assertEqual(LLLL.t_liq, Decimal("7634865"))
+        self.assertEqual(LLLR.t_liq, Decimal("7634865"))
+        self.assertEqual(LLRL.t_liq, Decimal("7634865"))
+        self.assertEqual(LLRR.t_liq, Decimal("7634865"))
+
+        # subtree_m_liq
+        self.assertEqual(root.subtree_m_liq, Decimal("324198833"))
+        self.assertEqual(L.subtree_m_liq, Decimal("324063953"))
+        self.assertEqual(LL.subtree_m_liq, Decimal("324056493"))
+        self.assertEqual(LLL.subtree_m_liq, Decimal("4444"))
+        self.assertEqual(LLR.subtree_m_liq, Decimal("287725557"))
+        self.assertEqual(LLLL.subtree_m_liq, Decimal("287634865"))
+        self.assertEqual(LLLR.subtree_m_liq, Decimal("287634865"))
+        self.assertEqual(LLRL.subtree_m_liq, Decimal("287634865"))
+        self.assertEqual(LLRR.subtree_m_liq, Decimal("287634865"))
+
+        # borrowed_x
+        self.assertEqual(root.token_x_borrowed, Decimal("492e18"))
+        self.assertEqual(L.token_x_borrowed, Decimal("998e18"))
+        self.assertEqual(LL.token_x_borrowed, Decimal("765e18"))
+        self.assertEqual(LLL.token_x_borrowed, Decimal("24e18"))
+        self.assertEqual(LLR.token_x_borrowed, Decimal("53e18"))
+        self.assertEqual(LLLL.token_x_borrowed, Decimal("701e18"))
+        self.assertEqual(LLLR.token_x_borrowed, Decimal("701e18"))
+        self.assertEqual(LLRL.token_x_borrowed, Decimal("701e18"))
+        self.assertEqual(LLRR.token_x_borrowed, Decimal("701e18"))
+
+        # subtree_borrowed_x
+        self.assertEqual(root.token_x_subtree_borrowed, Decimal("3033e18"))
+        self.assertEqual(L.token_x_subtree_borrowed, Decimal("2541e18"))
+        self.assertEqual(LL.token_x_subtree_borrowed, Decimal("1519e18"))
+        self.assertEqual(LLL.token_x_subtree_borrowed, Decimal("24e18"))
+        self.assertEqual(LLR.token_x_subtree_borrowed, Decimal("754e18"))
+        self.assertEqual(LLLL.token_x_subtree_borrowed, Decimal("701e18"))
+        self.assertEqual(LLLR.token_x_subtree_borrowed, Decimal("701e18"))
+        self.assertEqual(LLRL.token_x_subtree_borrowed, Decimal("701e18"))
+        self.assertEqual(LLRR.token_x_subtree_borrowed, Decimal("701e18"))
+
+        # borrowed_y
+        self.assertEqual(root.token_y_borrowed, Decimal("254858e6"))
+        self.assertEqual(L.token_y_borrowed, Decimal("353e6"))
+        self.assertEqual(LL.token_y_borrowed, Decimal("99763e6"))
+        self.assertEqual(LLL.token_y_borrowed, Decimal("552e6"))
+        self.assertEqual(LLR.token_y_borrowed, Decimal("8765e6"))
+        self.assertEqual(LLLL.token_y_borrowed, Decimal("779531e6"))
+        self.assertEqual(LLLR.token_y_borrowed, Decimal("779531e6"))
+        self.assertEqual(LLRL.token_y_borrowed, Decimal("779531e6"))
+        self.assertEqual(LLRR.token_y_borrowed, Decimal("779531e6"))
+
+        # subtree_borrowed_y
+        self.assertEqual(root.token_y_subtree_borrowed, Decimal("1143822e6"))
+        self.assertEqual(L.token_y_subtree_borrowed, Decimal("888964e6"))
+        self.assertEqual(LL.token_y_subtree_borrowed, Decimal("888059e6"))
+        self.assertEqual(LLL.token_y_subtree_borrowed, Decimal("552e6"))
+        self.assertEqual(LLR.token_y_subtree_borrowed, Decimal("788296e6"))
+        self.assertEqual(LLLL.token_y_subtree_borrowed, Decimal("779531e6"))
+        self.assertEqual(LLLR.token_y_subtree_borrowed, Decimal("779531e6"))
+        self.assertEqual(LLRL.token_y_subtree_borrowed, Decimal("779531e6"))
+        self.assertEqual(LLRR.token_y_subtree_borrowed, Decimal("779531e6"))
+
 
 '''
 
