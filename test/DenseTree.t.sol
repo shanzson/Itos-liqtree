@@ -31,7 +31,7 @@ contract DenseTreeTreeStructureTest is Test {
         LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 16)];
         LiqNode storage LLR = liqTree.nodes[LKey.wrap((2 << 24) | 18)];
         LiqNode storage LRL = liqTree.nodes[LKey.wrap((2 << 24) | 20)];
-        LiqNode storage  LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 17)];
+        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 17)];
         LiqNode storage LRLL = liqTree.nodes[LKey.wrap((1 << 24) | 20)];
 
         // Pre-populate nodes w/o fee calculation
@@ -206,11 +206,11 @@ contract DenseTreeTreeStructureTest is Test {
         //   earn_x_sub  = 997278349210980290827452342352346 * 4564609e18 / 242921596047 / 2**64 = 1015860618510053453450506120.72016150011730453772839221611958
         //
         //   earn_y      = 7978726162930599238079167453467080976862 * 1324213563456457e6 / 242921596047 / 2**64 = 2357793377238426581071757403793.96341043019973158984354448841
-        //   earn_y_sub  = 7978726162930599238079167453467080976862 * 1324213569801592e6 / 242921596047 / 2**64 =
+        //   earn_y_sub  = 7978726162930599238079167453467080976862 * 1324213569801592e6 / 242921596047 / 2**64 = 2357793388536088599903418420664.92708711347544674139375617462
         assertEq(LRL.tokenX.cummulativeEarnedPerMLiq, 10014817880995372310152);
         assertEq(LRL.tokenX.subtreeCummulativeEarnedPerMLiq, 1015860618510053453450506120);
-        assertEq(LRL.tokenY.cummulativeEarnedPerMLiq, 2357793377238426581071757403793); // off by 1207 wtf def wrong
-        //assertEq(int(LRL.tokenY.subtreeCummulativeEarnedPerMLiq);, );
+        assertEq(LRL.tokenY.cummulativeEarnedPerMLiq, 2357793377238426581071757403793);
+        assertEq(LRL.tokenY.subtreeCummulativeEarnedPerMLiq, 2357793388536088599903418420664);
         return;
 
         // LR
