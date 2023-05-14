@@ -1,8 +1,19 @@
-from decimal import Decimal
+import decimal
+from decimal import Decimal, getcontext
 
 
 class UnsignedDecimalIsSignedException(Exception):
     pass
+
+
+# By default Decimal has a limit of 28 places for precision.
+# Which is too small for our calculations.
+# Setting precision to the max allowed,
+# decimal.MAX_PREC (999999999999999999 on a 64-bit machine) causes out of memory errors.
+# Because we're limited to 256 bits in Solidity (well the liquidity tree anyway),
+# we can safely use the max precision for a 256 bit number
+# without worrying about precision errors later. That being 78.
+getcontext().prec = 78
 
 
 class UnsignedDecimal(Decimal):
