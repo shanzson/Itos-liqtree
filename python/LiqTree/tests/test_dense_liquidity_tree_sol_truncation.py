@@ -1389,226 +1389,430 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
         self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("288535999994887906466277673329665978776994301813328609583743064"))       # 1 wei lost
 
-    def test_left_and_right_leg_stopping_below_peak_BROKEN(self):
+    def test_left_and_right_leg_stopping_at_or_above_peak(self):
+        #   Range: (0, 1)
+        #
+        #           LLL(0-1)
+        #          /   \
+        #         /     \
+        #   LLLL(0) LLLR(1)
+
         liq_tree = self.liq_tree
 
+        # 4th (0, 1)
         root: LiqNode = liq_tree.nodes[liq_tree.root_key]
         L: LiqNode = liq_tree.nodes[(8 << 24) | 16]
-
-        # 1st (1, 4) - subtree below LL
         LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]
         LLL: LiqNode = liq_tree.nodes[(2 << 24) | 16]
-        LLR: LiqNode = liq_tree.nodes[(2 << 24) | 18]
         LLLL: LiqNode = liq_tree.nodes[(1 << 24) | 16]
         LLLR: LiqNode = liq_tree.nodes[(1 << 24) | 17]
-        LLRL: LiqNode = liq_tree.nodes[(1 << 24) | 18]
-        LLRR: LiqNode = liq_tree.nodes[(1 << 24) | 19]
 
-        # Possible sub-ranges
-        # (1,1), (1,2), (1,3), (1,4)
-        # (2,2), (2,3), (2,4)
-        # (3,3), (3,4)
-        # (4,4)
+        liq_tree.add_m_liq(LiqRange(low=0, high=1), UnsignedDecimal("8264"))  # LLL
+        liq_tree.add_m_liq(LiqRange(low=0, high=0), UnsignedDecimal("2582"))  # LLLL
+        liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("1111"))  # LLLR
 
-        # Apply operations over all sub-ranges
-        # We don't want to organize all calls into sections like this, because there could be bugs depending on the order of calls (ie. add_t_liq before remove_t_liq)
-        # As other tests will cover the correct ordering like the example mentioned, we should mix things up. But we DO know add_m_liq is before add_t_liq, and either add must be called before a remove
-        # NOTE: these values are 'random'
-        liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("98237498262"))  # LLLL
-        liq_tree.add_m_liq(LiqRange(low=1, high=2), UnsignedDecimal("932141354"))  # LLL
-        liq_tree.add_m_liq(LiqRange(low=1, high=3), UnsignedDecimal("151463465"))  # LLL, LLRL
-        liq_tree.add_m_liq(LiqRange(low=1, high=4), UnsignedDecimal("45754683688356"))  # LL
-        liq_tree.add_m_liq(LiqRange(low=2, high=2), UnsignedDecimal("245346257245745"))  # LLLR
-        liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("243457472"))  # LLLR, LLRL
-        liq_tree.add_m_liq(LiqRange(low=2, high=4), UnsignedDecimal("2462"))  # LLLR, LLR
-        liq_tree.add_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("45656756785"))  # LLRL
-        liq_tree.add_m_liq(LiqRange(low=3, high=4), UnsignedDecimal("554"))  # LLR
-        liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("262"))  # LLRR
+        liq_tree.add_t_liq(LiqRange(low=0, high=1), UnsignedDecimal("726"), UnsignedDecimal("346e18"), UnsignedDecimal("132e6"))  # LLL
+        liq_tree.add_t_liq(LiqRange(low=0, high=0), UnsignedDecimal("245"), UnsignedDecimal("100e18"), UnsignedDecimal("222e6"))  # LLLL
+        liq_tree.add_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("342"), UnsignedDecimal("234e18"), UnsignedDecimal("313e6"))  # LLLR
 
-        liq_tree.add_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("5645645"), UnsignedDecimal("4357e18"), UnsignedDecimal("345345345e6"))  # LLLL
-        liq_tree.add_t_liq(LiqRange(low=1, high=2), UnsignedDecimal("3456835"), UnsignedDecimal("293874927834e18"), UnsignedDecimal("2345346e6"))  # LLL
-        liq_tree.add_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("56858345635"), UnsignedDecimal("23452e18"), UnsignedDecimal("12341235e6"))  # LLL, LLRL
-        liq_tree.add_t_liq(LiqRange(low=1, high=4), UnsignedDecimal("23453467234"), UnsignedDecimal("134235e18"), UnsignedDecimal("34534634e6"))  # LL
-        liq_tree.add_t_liq(LiqRange(low=2, high=2), UnsignedDecimal("456756745"), UnsignedDecimal("1233463e18"), UnsignedDecimal("2341356e6"))  # LLLR
-        liq_tree.add_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("34534652457"), UnsignedDecimal("45e18"), UnsignedDecimal("1324213563456457e6"))  # LLLR, LLRL
-        liq_tree.add_t_liq(LiqRange(low=2, high=4), UnsignedDecimal("12121345"), UnsignedDecimal("4567e18"), UnsignedDecimal("1235146e6"))  # LLLR, LLR
-        liq_tree.add_t_liq(LiqRange(low=3, high=3), UnsignedDecimal("4564573"), UnsignedDecimal("4564564e18"), UnsignedDecimal("6345135e6"))  # LLRL
-        liq_tree.add_t_liq(LiqRange(low=3, high=4), UnsignedDecimal("3456242"), UnsignedDecimal("2564587456e18"), UnsignedDecimal("1234135e6"))  # LLR
-        liq_tree.add_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("2145245745"), UnsignedDecimal("76585673e18"), UnsignedDecimal("4564574e6"))  # LLRR
-
-        # Operations that accumulate fees
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("67967856253453452367574")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("23464675683452345234568562")
-        liq_tree.remove_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("13426354645"), UnsignedDecimal("4e18"), UnsignedDecimal("5e6"))  # LLLL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("457568568356234515")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3464756758679689")
-        liq_tree.remove_t_liq(LiqRange(low=1, high=2), UnsignedDecimal("245346457"), UnsignedDecimal("1243234e18"), UnsignedDecimal("454564e6"))  # LLL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("446476458")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("35656867")
-        liq_tree.remove_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("2345136457"), UnsignedDecimal("134345e18"), UnsignedDecimal("245e6"))  # LLL, LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("32456")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("246")
-        liq_tree.remove_t_liq(LiqRange(low=1, high=4), UnsignedDecimal("345675686796"), UnsignedDecimal("4545e18"), UnsignedDecimal("45745e6"))  # LL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("6796")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("464564756785684")
-        liq_tree.remove_t_liq(LiqRange(low=2, high=2), UnsignedDecimal("68978907"), UnsignedDecimal("23454e18"), UnsignedDecimal("5677e6"))  # LLLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3454568796798643673")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3456475784245234553434523453456346")
-        liq_tree.remove_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("8908978"), UnsignedDecimal("856454e18"), UnsignedDecimal("4577865e6"))  # LLLR, LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("4573568356983683682578725")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("234624576468356835688356368368482342")
-        liq_tree.remove_t_liq(LiqRange(low=2, high=4), UnsignedDecimal("679678"), UnsignedDecimal("3456457e18"), UnsignedDecimal("56756756e6"))  # LLLR, LLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3256457252452572172577252424547457")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("35745675685835626345234624")
-        liq_tree.remove_t_liq(LiqRange(low=3, high=3), UnsignedDecimal("65756"), UnsignedDecimal("56756e18"), UnsignedDecimal("34564567e6"))  # LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("345646856785673572456245")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2356457568367824623454576788")
-        liq_tree.remove_t_liq(LiqRange(low=3, high=4), UnsignedDecimal("54444"), UnsignedDecimal("4564564e18"), UnsignedDecimal("56756786e6"))  # LLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("456325876883562457")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("5767983835654356214356")
-        liq_tree.remove_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("443"), UnsignedDecimal("4564564e18"), UnsignedDecimal("56754e6"))  # LLRR
-
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3456568679362657567867956")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("35735736783579799798988790078")
-        liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("75645"))  # LLLL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("678908690870808")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("56890598759879798769")
-        liq_tree.add_m_liq(LiqRange(low=1, high=2), UnsignedDecimal("8567567"))  # LLL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("70890900879879467474")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("4678679468674786666")
-        liq_tree.add_m_liq(LiqRange(low=1, high=3), UnsignedDecimal("456456"))  # LLL, LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("46877777777777777")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3465675698689467357")
-        liq_tree.add_m_liq(LiqRange(low=1, high=4), UnsignedDecimal("356767894766"))  # LL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("346745684567943673567")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("5455665565656556556")
-        liq_tree.add_m_liq(LiqRange(low=2, high=2), UnsignedDecimal("34563457"))  # LLLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("54574562523462347457")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("346468567843652647")
-        liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("245346"))  # LLLR, LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("435736487858735734")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("345756856785784")
-        liq_tree.add_m_liq(LiqRange(low=2, high=4), UnsignedDecimal("35654373573456"))  # LLLR, LLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9782315978324963149086")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("1977947657153479167908478603")
-        liq_tree.add_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("24546457452"))  # LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("877907987198867986767967167846785637245673")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("01749857934067931408619045791874695714676")
-        liq_tree.add_m_liq(LiqRange(low=3, high=4), UnsignedDecimal("356345645745675675685678"))  # LLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9987698779879879874987786384537456725474327243259947838356837568356725984687365")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("9878678625678156565671567256742164782194785174671462314967193478691843769813476987")
-        liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("459789686783566564767"))  # LLRR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("2546456746735")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2454567346736")
-
-        liq_tree.remove_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("67967867"))  # LLLL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("7676767327272772272727722727272")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2727772727272777777777777722727")
-        liq_tree.remove_m_liq(LiqRange(low=1, high=2), UnsignedDecimal("45635457"))  # LLL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("198759265398245671987469087")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("19746587349687357810349578017946")
-        liq_tree.remove_m_liq(LiqRange(low=1, high=3), UnsignedDecimal("567567373"))  # LLL, LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("98717986587364907214036834590682")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("9716395673986702964617823679805")
-        liq_tree.remove_m_liq(LiqRange(low=1, high=4), UnsignedDecimal("4575437856335"))  # LL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("976987080780203980798239742934235")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("6978978987459873981798273497823942")
-        liq_tree.remove_m_liq(LiqRange(low=2, high=2), UnsignedDecimal("23455745645"))  # LLLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("434522534253453462436234623462346")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("23462345134634623634623462456724566")
-        liq_tree.remove_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("2345346574"))  # LLLR, LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("79878979876987698798454564564564")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("5645635645634621462476262756245624565")
-        liq_tree.remove_m_liq(LiqRange(low=2, high=4), UnsignedDecimal("24534646856"))  # LLLR, LLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("24512645624662342346234634631463462246462")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("214664623234616414624646236234234634646232463")
-        liq_tree.remove_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("47568568564"))  # LLRL
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("12221211212244155551555555555555555555555555555")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("155555555555555555555555555555555555555555555555")
-        liq_tree.remove_m_liq(LiqRange(low=3, high=4), UnsignedDecimal("24545656855"))  # LLR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9874787246782564286735426553525832786234623")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("67845986765986736798567832459782739845798230")
-        liq_tree.remove_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("3452464675675"))  # LLRR
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("98726348906735986783495701378450983165908231479581324")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("98749857398456981264570398459047569823794785961235")
-
-        # Verify state is correct for all effected nodes (includes L and root)
+        # Verify initial tree state
         # m_liq
         self.assertEqual(root.m_liq, UnsignedDecimal("0"))
         self.assertEqual(L.m_liq, UnsignedDecimal("0"))
         self.assertEqual(LL.m_liq, UnsignedDecimal("0"))
-        self.assertEqual(LLL.m_liq, UnsignedDecimal("0"))
-        self.assertEqual(LLR.m_liq, UnsignedDecimal("45755078611755"))
-        self.assertEqual(LLLL.m_liq, UnsignedDecimal("0"))
-        self.assertEqual(LLLR.m_liq, UnsignedDecimal("41634662758839"))
-        self.assertEqual(LLRL.m_liq, UnsignedDecimal("245323731137021"))
-        self.assertEqual(LLRR.m_liq, UnsignedDecimal("356345645745673764675050"))
+        self.assertEqual(LLL.m_liq, UnsignedDecimal("8264"))
+        self.assertEqual(LLLL.m_liq, UnsignedDecimal("2582"))
+        self.assertEqual(LLLR.m_liq, UnsignedDecimal("1111"))
 
         # t_liq
         self.assertEqual(root.t_liq, UnsignedDecimal("0"))
         self.assertEqual(L.t_liq, UnsignedDecimal("0"))
         self.assertEqual(LL.t_liq, UnsignedDecimal("0"))
-        self.assertEqual(LLL.t_liq, UnsignedDecimal("0"))
-        self.assertEqual(LLR.t_liq, UnsignedDecimal("5346"))
-        self.assertEqual(LLLL.t_liq, UnsignedDecimal("7634865"))
-        self.assertEqual(LLLR.t_liq, UnsignedDecimal("7634865"))
-        self.assertEqual(LLRL.t_liq, UnsignedDecimal("7634865"))
-        self.assertEqual(LLRR.t_liq, UnsignedDecimal("7634865"))
+        self.assertEqual(LLL.t_liq, UnsignedDecimal("726"))
+        self.assertEqual(LLLL.t_liq, UnsignedDecimal("245"))
+        self.assertEqual(LLLR.t_liq, UnsignedDecimal("342"))
 
         # subtree_m_liq
-        self.assertEqual(root.subtree_m_liq, UnsignedDecimal("324198833"))
-        self.assertEqual(L.subtree_m_liq, UnsignedDecimal("324063953"))
-        self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("324056493"))
-        self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("4444"))
-        self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("287725557"))
-        self.assertEqual(LLLL.subtree_m_liq, UnsignedDecimal("287634865"))
-        self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("287634865"))
-        self.assertEqual(LLRL.subtree_m_liq, UnsignedDecimal("287634865"))
-        self.assertEqual(LLRR.subtree_m_liq, UnsignedDecimal("287634865"))
+        self.assertEqual(root.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(L.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("20221"))  # 8264*2 + 2582*1 + 1111*1 = 20221
+        self.assertEqual(LLLL.subtree_m_liq, UnsignedDecimal("2582"))
+        self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("1111"))
 
         # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("701e18"))
-        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("701e18"))
-        self.assertEqual(LLRL.token_x_borrowed, UnsignedDecimal("701e18"))
-        self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("701e18"))
+        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("346e18"))
+        self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("234e18"))
 
         # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))
-        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("754e18"))
-        self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
-        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
-        self.assertEqual(LLRL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
-        self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))  # 346e18 + 100e18 + 234e18 = 680e18
+        self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("234e18"))
 
         # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("779531e6"))
-        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("779531e6"))
-        self.assertEqual(LLRL.token_y_borrowed, UnsignedDecimal("779531e6"))
-        self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("779531e6"))
+        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("132e6"))
+        self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("313e6"))
 
         # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))
-        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))
-        self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
-        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
-        self.assertEqual(LLRL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
-        self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))  # 132e6 + 222e6 + 313e6 = 667e6
+        self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("313e6"))
+
+        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("997278349210980290827452342352346")
+        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("7978726162930599238079167453467080976862")
+
+        liq_tree.add_m_liq(LiqRange(low=0, high=1), UnsignedDecimal("1234567"))
+        liq_tree.remove_m_liq(LiqRange(low=0, high=1), UnsignedDecimal("1234567"))
+
+        # LLLR
+        # (not updated)
+        self.assertEqual(LLLR.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLLR.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLLR.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLLR.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("0"))
+
+        # LLLL
+        # (not updated)
+        self.assertEqual(LLLL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLLL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLLL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLLL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("0"))
+
+        # LLL
+        #
+        #   total_m_liq = 20221 + (0 + 0 + 0) * 2 = 20221
+        #
+        #   earn_x      = 997278349210980290827452342352346 * 346e18 / 20221 / 2**64 = 925060501618136152524292214349.283139885351240161578507230288
+        #   earn_x_sub  = 997278349210980290827452342352346 * 680e18 / 20221 / 2**64 = 1818037980058764692822308398143.09981249144174367015429166646
+        #
+        #   earn_y      = 7978726162930599238079167453467080976862 * 132e6 / 20221 / 2**64 = 2823482754602022855424507.24027059608531549133804868998511635
+        #   earn_y_sub  = 7978726162930599238079167453467080976862 * 667e6 / 20221 / 2**64 = 14267143919087494277031411.5853067241583744903218066380308530
+        self.assertEqual(LLL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("925060501618136152524292214349"))
+        self.assertEqual(LLL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1818037980058764692822308398143"))
+        self.assertEqual(LLL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("2823482754602022855424507"))
+        self.assertEqual(LLL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("14267143919087494277031411"))
+
+        # LL
+        #   NOTE: subtree earn is not 'diluted' because liq contributing to total_m_liq along the path to the root is 0.
+        #
+        #   total_m_liq = 20221 + (0 + 0) * 4 = 20221
+        #
+        #   earn_x      = 997278349210980290827452342352346 * 0 / 20221 / 2**64 = 0
+        #   earn_x_sub  = 997278349210980290827452342352346 * 680e18 / 20221 / 2**64 = 1818037980058764692822308398143.09981249144174367015429166646
+        #
+        #   earn_y      = 7978726162930599238079167453467080976862 * 0 / 20221 / 2**64 = 0
+        #   earn_y_sub  = 7978726162930599238079167453467080976862 * 667e6 / 20221 / 2**64 = 14267143919087494277031411.5853067241583744903218066380308530
+        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1818037980058764692822308398143"))
+        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("14267143919087494277031411"))
+
+        # L
+        #   NOTE: subtree earn is not 'diluted' because liq contributing to total_m_liq along the path to the root is 0.
+        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(L.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1818037980058764692822308398143"))
+        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(L.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("14267143919087494277031411"))
+
+        # root
+        #   NOTE: subtree earn is not 'diluted' because liq contributing to total_m_liq along the path to the root is 0.
+        self.assertEqual(root.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1818037980058764692822308398143"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("14267143919087494277031411"))
+
+        # Verify ending tree state
+        # Will be the same as initial state, because any changes to the tree (minus fees) were undone
+        # m_liq
+        self.assertEqual(root.m_liq, UnsignedDecimal("0"))
+        self.assertEqual(L.m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LL.m_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLL.m_liq, UnsignedDecimal("8264"))
+        self.assertEqual(LLLL.m_liq, UnsignedDecimal("2582"))
+        self.assertEqual(LLLR.m_liq, UnsignedDecimal("1111"))
+
+        # t_liq
+        self.assertEqual(root.t_liq, UnsignedDecimal("0"))
+        self.assertEqual(L.t_liq, UnsignedDecimal("0"))
+        self.assertEqual(LL.t_liq, UnsignedDecimal("0"))
+        self.assertEqual(LLL.t_liq, UnsignedDecimal("726"))
+        self.assertEqual(LLLL.t_liq, UnsignedDecimal("245"))
+        self.assertEqual(LLLR.t_liq, UnsignedDecimal("342"))
+
+        # subtree_m_liq
+        self.assertEqual(root.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(L.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("20221"))
+        self.assertEqual(LLLL.subtree_m_liq, UnsignedDecimal("2582"))
+        self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("1111"))
+
+        # borrowed_x
+        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("346e18"))
+        self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("234e18"))
+
+        # subtree_borrowed_x
+        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
+        self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("234e18"))
+
+        # borrowed_y
+        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("132e6"))
+        self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("313e6"))
+
+        # subtree_borrowed_y
+        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
+        self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("313e6"))
+
+    # def test_left_and_right_leg_stopping_below_peak_BROKEN(self):
+    #     liq_tree = self.liq_tree
+    #
+    #     root: LiqNode = liq_tree.nodes[liq_tree.root_key]
+    #     L: LiqNode = liq_tree.nodes[(8 << 24) | 16]
+    #
+    #     # 1st (1, 4) - subtree below LL
+    #     LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]
+    #     LLL: LiqNode = liq_tree.nodes[(2 << 24) | 16]
+    #     LLR: LiqNode = liq_tree.nodes[(2 << 24) | 18]
+    #     LLLL: LiqNode = liq_tree.nodes[(1 << 24) | 16]
+    #     LLLR: LiqNode = liq_tree.nodes[(1 << 24) | 17]
+    #     LLRL: LiqNode = liq_tree.nodes[(1 << 24) | 18]
+    #     LLRR: LiqNode = liq_tree.nodes[(1 << 24) | 19]
+    #
+    #     # Possible sub-ranges
+    #     # (1,1), (1,2), (1,3), (1,4)
+    #     # (2,2), (2,3), (2,4)
+    #     # (3,3), (3,4)
+    #     # (4,4)
+    #
+    #     # Apply operations over all sub-ranges
+    #     # We don't want to organize all calls into sections like this, because there could be bugs depending on the order of calls (ie. add_t_liq before remove_t_liq)
+    #     # As other tests will cover the correct ordering like the example mentioned, we should mix things up. But we DO know add_m_liq is before add_t_liq, and either add must be called before a remove
+    #     # NOTE: these values are 'random'
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("98237498262"))  # LLLL
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=2), UnsignedDecimal("932141354"))  # LLL
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=3), UnsignedDecimal("151463465"))  # LLL, LLRL
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=4), UnsignedDecimal("45754683688356"))  # LL
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=2), UnsignedDecimal("245346257245745"))  # LLLR
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("243457472"))  # LLLR, LLRL
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=4), UnsignedDecimal("2462"))  # LLLR, LLR
+    #     liq_tree.add_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("45656756785"))  # LLRL
+    #     liq_tree.add_m_liq(LiqRange(low=3, high=4), UnsignedDecimal("554"))  # LLR
+    #     liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("262"))  # LLRR
+    #
+    #     liq_tree.add_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("5645645"), UnsignedDecimal("4357e18"), UnsignedDecimal("345345345e6"))  # LLLL
+    #     liq_tree.add_t_liq(LiqRange(low=1, high=2), UnsignedDecimal("3456835"), UnsignedDecimal("293874927834e18"), UnsignedDecimal("2345346e6"))  # LLL
+    #     liq_tree.add_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("56858345635"), UnsignedDecimal("23452e18"), UnsignedDecimal("12341235e6"))  # LLL, LLRL
+    #     liq_tree.add_t_liq(LiqRange(low=1, high=4), UnsignedDecimal("23453467234"), UnsignedDecimal("134235e18"), UnsignedDecimal("34534634e6"))  # LL
+    #     liq_tree.add_t_liq(LiqRange(low=2, high=2), UnsignedDecimal("456756745"), UnsignedDecimal("1233463e18"), UnsignedDecimal("2341356e6"))  # LLLR
+    #     liq_tree.add_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("34534652457"), UnsignedDecimal("45e18"), UnsignedDecimal("1324213563456457e6"))  # LLLR, LLRL
+    #     liq_tree.add_t_liq(LiqRange(low=2, high=4), UnsignedDecimal("12121345"), UnsignedDecimal("4567e18"), UnsignedDecimal("1235146e6"))  # LLLR, LLR
+    #     liq_tree.add_t_liq(LiqRange(low=3, high=3), UnsignedDecimal("4564573"), UnsignedDecimal("4564564e18"), UnsignedDecimal("6345135e6"))  # LLRL
+    #     liq_tree.add_t_liq(LiqRange(low=3, high=4), UnsignedDecimal("3456242"), UnsignedDecimal("2564587456e18"), UnsignedDecimal("1234135e6"))  # LLR
+    #     liq_tree.add_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("2145245745"), UnsignedDecimal("76585673e18"), UnsignedDecimal("4564574e6"))  # LLRR
+    #
+    #     # Operations that accumulate fees
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("67967856253453452367574")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("23464675683452345234568562")
+    #     liq_tree.remove_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("13426354645"), UnsignedDecimal("4e18"), UnsignedDecimal("5e6"))  # LLLL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("457568568356234515")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3464756758679689")
+    #     liq_tree.remove_t_liq(LiqRange(low=1, high=2), UnsignedDecimal("245346457"), UnsignedDecimal("1243234e18"), UnsignedDecimal("454564e6"))  # LLL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("446476458")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("35656867")
+    #     liq_tree.remove_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("2345136457"), UnsignedDecimal("134345e18"), UnsignedDecimal("245e6"))  # LLL, LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("32456")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("246")
+    #     liq_tree.remove_t_liq(LiqRange(low=1, high=4), UnsignedDecimal("345675686796"), UnsignedDecimal("4545e18"), UnsignedDecimal("45745e6"))  # LL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("6796")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("464564756785684")
+    #     liq_tree.remove_t_liq(LiqRange(low=2, high=2), UnsignedDecimal("68978907"), UnsignedDecimal("23454e18"), UnsignedDecimal("5677e6"))  # LLLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3454568796798643673")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3456475784245234553434523453456346")
+    #     liq_tree.remove_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("8908978"), UnsignedDecimal("856454e18"), UnsignedDecimal("4577865e6"))  # LLLR, LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("4573568356983683682578725")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("234624576468356835688356368368482342")
+    #     liq_tree.remove_t_liq(LiqRange(low=2, high=4), UnsignedDecimal("679678"), UnsignedDecimal("3456457e18"), UnsignedDecimal("56756756e6"))  # LLLR, LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3256457252452572172577252424547457")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("35745675685835626345234624")
+    #     liq_tree.remove_t_liq(LiqRange(low=3, high=3), UnsignedDecimal("65756"), UnsignedDecimal("56756e18"), UnsignedDecimal("34564567e6"))  # LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("345646856785673572456245")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2356457568367824623454576788")
+    #     liq_tree.remove_t_liq(LiqRange(low=3, high=4), UnsignedDecimal("54444"), UnsignedDecimal("4564564e18"), UnsignedDecimal("56756786e6"))  # LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("456325876883562457")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("5767983835654356214356")
+    #     liq_tree.remove_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("443"), UnsignedDecimal("4564564e18"), UnsignedDecimal("56754e6"))  # LLRR
+    #
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3456568679362657567867956")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("35735736783579799798988790078")
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("75645"))  # LLLL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("678908690870808")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("56890598759879798769")
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=2), UnsignedDecimal("8567567"))  # LLL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("70890900879879467474")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("4678679468674786666")
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=3), UnsignedDecimal("456456"))  # LLL, LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("46877777777777777")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3465675698689467357")
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=4), UnsignedDecimal("356767894766"))  # LL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("346745684567943673567")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("5455665565656556556")
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=2), UnsignedDecimal("34563457"))  # LLLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("54574562523462347457")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("346468567843652647")
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("245346"))  # LLLR, LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("435736487858735734")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("345756856785784")
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=4), UnsignedDecimal("35654373573456"))  # LLLR, LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9782315978324963149086")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("1977947657153479167908478603")
+    #     liq_tree.add_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("24546457452"))  # LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("877907987198867986767967167846785637245673")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("01749857934067931408619045791874695714676")
+    #     liq_tree.add_m_liq(LiqRange(low=3, high=4), UnsignedDecimal("356345645745675675685678"))  # LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9987698779879879874987786384537456725474327243259947838356837568356725984687365")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("9878678625678156565671567256742164782194785174671462314967193478691843769813476987")
+    #     liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("459789686783566564767"))  # LLRR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("2546456746735")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2454567346736")
+    #
+    #     liq_tree.remove_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("67967867"))  # LLLL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("7676767327272772272727722727272")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2727772727272777777777777722727")
+    #     liq_tree.remove_m_liq(LiqRange(low=1, high=2), UnsignedDecimal("45635457"))  # LLL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("198759265398245671987469087")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("19746587349687357810349578017946")
+    #     liq_tree.remove_m_liq(LiqRange(low=1, high=3), UnsignedDecimal("567567373"))  # LLL, LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("98717986587364907214036834590682")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("9716395673986702964617823679805")
+    #     liq_tree.remove_m_liq(LiqRange(low=1, high=4), UnsignedDecimal("4575437856335"))  # LL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("976987080780203980798239742934235")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("6978978987459873981798273497823942")
+    #     liq_tree.remove_m_liq(LiqRange(low=2, high=2), UnsignedDecimal("23455745645"))  # LLLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("434522534253453462436234623462346")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("23462345134634623634623462456724566")
+    #     liq_tree.remove_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("2345346574"))  # LLLR, LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("79878979876987698798454564564564")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("5645635645634621462476262756245624565")
+    #     liq_tree.remove_m_liq(LiqRange(low=2, high=4), UnsignedDecimal("24534646856"))  # LLLR, LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("24512645624662342346234634631463462246462")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("214664623234616414624646236234234634646232463")
+    #     liq_tree.remove_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("47568568564"))  # LLRL
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("12221211212244155551555555555555555555555555555")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("155555555555555555555555555555555555555555555555")
+    #     liq_tree.remove_m_liq(LiqRange(low=3, high=4), UnsignedDecimal("24545656855"))  # LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9874787246782564286735426553525832786234623")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("67845986765986736798567832459782739845798230")
+    #     liq_tree.remove_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("3452464675675"))  # LLRR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("98726348906735986783495701378450983165908231479581324")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("98749857398456981264570398459047569823794785961235")
+    #
+    #     # Verify state is correct for all effected nodes (includes L and root)
+    #     # m_liq
+    #     self.assertEqual(root.m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(L.m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LL.m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LLL.m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LLR.m_liq, UnsignedDecimal("45755078611755"))
+    #     self.assertEqual(LLLL.m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LLLR.m_liq, UnsignedDecimal("41634662758839"))
+    #     self.assertEqual(LLRL.m_liq, UnsignedDecimal("245323731137021"))
+    #     self.assertEqual(LLRR.m_liq, UnsignedDecimal("356345645745673764675050"))
+    #
+    #     # t_liq
+    #     self.assertEqual(root.t_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(L.t_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LL.t_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LLL.t_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(LLR.t_liq, UnsignedDecimal("5346"))
+    #     self.assertEqual(LLLL.t_liq, UnsignedDecimal("7634865"))
+    #     self.assertEqual(LLLR.t_liq, UnsignedDecimal("7634865"))
+    #     self.assertEqual(LLRL.t_liq, UnsignedDecimal("7634865"))
+    #     self.assertEqual(LLRR.t_liq, UnsignedDecimal("7634865"))
+    #
+    #     # subtree_m_liq
+    #     self.assertEqual(root.subtree_m_liq, UnsignedDecimal("324198833"))
+    #     self.assertEqual(L.subtree_m_liq, UnsignedDecimal("324063953"))
+    #     self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("324056493"))
+    #     self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("4444"))
+    #     self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("287725557"))
+    #     self.assertEqual(LLLL.subtree_m_liq, UnsignedDecimal("287634865"))
+    #     self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("287634865"))
+    #     self.assertEqual(LLRL.subtree_m_liq, UnsignedDecimal("287634865"))
+    #     self.assertEqual(LLRR.subtree_m_liq, UnsignedDecimal("287634865"))
+    #
+    #     # borrowed_x
+    #     self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
+    #     self.assertEqual(L.token_x_borrowed, UnsignedDecimal("998e18"))
+    #     self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("765e18"))
+    #     self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("24e18"))
+    #     self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("53e18"))
+    #     self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRL.token_x_borrowed, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("701e18"))
+    #
+    #     # subtree_borrowed_x
+    #     self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))
+    #     self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))
+    #     self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))
+    #     self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("24e18"))
+    #     self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("754e18"))
+    #     self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+    #
+    #     # borrowed_y
+    #     self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
+    #     self.assertEqual(L.token_y_borrowed, UnsignedDecimal("353e6"))
+    #     self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("99763e6"))
+    #     self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("552e6"))
+    #     self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("8765e6"))
+    #     self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRL.token_y_borrowed, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("779531e6"))
+    #
+    #     # subtree_borrowed_y
+    #     self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))
+    #     self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))
+    #     self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))
+    #     self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("552e6"))
+    #     self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))
+    #     self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
 
 
 '''
