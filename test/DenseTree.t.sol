@@ -23,7 +23,534 @@ contract DenseTreeTreeStructureTest is Test {
         liqTree.init(4);
     }
 
+        function testRootNodeOnly() public {
+            LiqNode storage root = liqTree.nodes[liqTree.root];
+
+            liqTree.addInfRangeMLiq(8430);
+            liqTree.addInfRangeTLiq(4381, 832e18, 928e6);
+
+            liqTree.feeRateSnapshotTokenX.add(113712805933826); // 5.4% APR as Q192.64
+            liqTree.feeRateSnapshotTokenY.add(113712805933826);
+
+            // Verify root state is as expected
+            assertEq(root.mLiq, 8430);
+            assertEq(root.subtreeMLiq, 134880);
+            assertEq(root.tLiq, 4381);
+            assertEq(root.tokenX.borrowed, 832e18);
+            assertEq(root.tokenX.subtreeBorrowed, 832e18);
+            assertEq(root.tokenY.borrowed, 928e6);
+            assertEq(root.tokenY.subtreeBorrowed, 928e6);
+
+            // Testing addInfRangeMLiq
+            liqTree.addInfRangeMLiq(9287);
+
+            // earn_x      = 113712805933826 * 832e18 / 134880 / 2**64 = 38024667284.1612625482053537908689136045718673850859328662514
+            // earn_y      = 113712805933826 * 928e6 / 134880 / 2**64  = 0.0424121288938721774576136638436614805589455443910573866585112692
+            assertEq(root.tokenX.cummulativeEarnedPerMLiq, 38024667284);
+            assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 38024667284);
+            assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
+            assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+
+            assertEq(root.mLiq, 17717);
+            assertEq(root.subtreeMLiq, 283472);
+            assertEq(root.tLiq, 4381);
+            assertEq(root.tokenX.borrowed, 832e18);
+            assertEq(root.tokenX.subtreeBorrowed, 832e18);
+            assertEq(root.tokenY.borrowed, 928e6);
+            assertEq(root.tokenY.subtreeBorrowed, 928e6);
+
+            // Testing removeInfRangeMLiq
+            liqTree.feeRateSnapshotTokenX.add(74672420010376264941568); // 693792000.0% APR as Q192.64 from T22000 - T3600
+            liqTree.feeRateSnapshotTokenY.add(74672420010376264941568);
+
+            liqTree.removeInfRangeMLiq(3682);
+
+            // earn_x      = 74672420010376264941568 * 832e18 / 283472 / 2**64 = 11881018231077496190.0999040469605463678952418581023875373934
+            // earn_y      = 74672420010376264941568 * 928e6 / 283472 / 2**64  = 13251904.9500479765197268160523790709488062313032680476378619
+            assertEq(root.tokenX.cummulativeEarnedPerMLiq, 11881018269102163474);        // 11881018231077496190 + 38024667284 = 11881018269102163474
+            assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 11881018269102163474); // 11881018231077496190 + 38024667284 = 11881018269102163474
+            assertEq(root.tokenY.cummulativeEarnedPerMLiq, 13251904);
+            assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 13251904);
+
+            assertEq(root.mLiq, 14035);
+            assertEq(root.subtreeMLiq, 224560);
+            assertEq(root.tLiq, 4381);
+            assertEq(root.tokenX.borrowed, 832e18);
+            assertEq(root.tokenX.subtreeBorrowed, 832e18);
+            assertEq(root.tokenY.borrowed, 928e6);
+            assertEq(root.tokenY.subtreeBorrowed, 928e6);
+
+            // Testing addInfRangeTLiq
+            liqTree.feeRateSnapshotTokenX.add(6932491854677024);
+            liqTree.feeRateSnapshotTokenY.add(6932491854677024);
+
+            liqTree.addInfRangeTLiq(7287, 9184e18, 7926920e6);
+
+            // earn_x      = 6932491854677024 * 832e18 / 224560 / 2**64 = 1392388963085.50927075184684754182568989829487082029858389739
+            // earn_y      = 6932491854677024 * 928e6 / 224560 / 2**64  = 1.5530492280569141866078291761043440387327135097611022666547915924
+            assertEq(root.tokenX.cummulativeEarnedPerMLiq, 11881019661491126559);        // 11881018269102163474 + 1392388963085 = 11881019661491126559
+            assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 11881019661491126559); // 11881018269102163474 + 1392388963085 = 11881019661491126559
+            assertEq(root.tokenY.cummulativeEarnedPerMLiq, 13251905);
+            assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 13251905);
+
+            assertEq(root.mLiq, 14035);
+            assertEq(root.subtreeMLiq, 224560);
+            assertEq(root.tLiq, 11668);
+            assertEq(root.tokenX.borrowed, 10016e18);
+            assertEq(root.tokenX.subtreeBorrowed, 10016e18);
+            assertEq(root.tokenY.borrowed, 7927848e6);
+            assertEq(root.tokenY.subtreeBorrowed, 7927848e6);
+
+            // Testing removeInfRangeTLiq
+            liqTree.feeRateSnapshotTokenX.add(1055375100301031600000000);
+            liqTree.feeRateSnapshotTokenY.add(1055375100301031600000000);
+            
+            liqTree.removeInfRangeTLiq(4923, 222e18, 786e6);
+
+            // earn_x      = 1055375100301031600000000 * 10016e18 / 224560 / 2**64  = 2551814126505030241953.87164028103035638433335980020216618053
+            // earn_y      = 1055375100301031600000000 * 7927848e6 / 224560 / 2**64 = 2019807759503.25988354767545683493270255599285721099372431609
+            assertEq(root.tokenX.cummulativeEarnedPerMLiq, 2563695146166521368512);        // 2551814126505030241953 + 11881019661491126559 = 2563695146166521368512
+            assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 2563695146166521368512); // 2551814126505030241953 + 11881019661491126559 = 2563695146166521368512
+            assertEq(root.tokenY.cummulativeEarnedPerMLiq, 2019821011408);                 // 2019807759503 + 13251905 = 2019821011408
+            assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 2019821011408);          // 2019807759503 + 13251905 = 2019821011408
+
+            assertEq(root.mLiq, 14035);
+            assertEq(root.subtreeMLiq, 224560);
+            assertEq(root.tLiq, 6745);
+            assertEq(root.tokenX.borrowed, 9794e18);
+            assertEq(root.tokenX.subtreeBorrowed, 9794e18);
+            assertEq(root.tokenY.borrowed, 7927062e6);
+            assertEq(root.tokenY.subtreeBorrowed, 7927062e6);
+    }
+
+    // function testLeafNodeOnly(); public {
+
+    // }
+
+
+    // function testSingleNodeOnly(); public {
+
+    // }
+
+    function testLeftLegOnly() public {
+        LiqNode storage root = liqTree.nodes[liqTree.root];
+        LiqNode storage L = liqTree.nodes[_nodeKey(1, 0, liqTree.offset)];
+        LiqNode storage LL = liqTree.nodes[_nodeKey(2, 0, liqTree.offset)];
+        LiqNode storage LR = liqTree.nodes[_nodeKey(2, 1, liqTree.offset)];
+        LiqNode storage LLR = liqTree.nodes[_nodeKey(3, 1, liqTree.offset)];
+        LiqNode storage LLRR = liqTree.nodes[_nodeKey(4, 3, liqTree.offset)];
+
+        // Step 1); Allocate different mLiq + tLiq values for each node
+        vm.warp(0); // T0
+
+        liqTree.addInfRangeMLiq(8430);              // root (INF);
+        liqTree.addMLiq(LiqRange(0, 7), 377);       // L    (0-7);
+        liqTree.addMLiq(LiqRange(0, 3), 9082734);   // LL   (0-3);
+        liqTree.addMLiq(LiqRange(4, 7), 1111);      // LR   (4-7);
+        liqTree.addMLiq(LiqRange(2, 3), 45346);     // LLR  (2-3);
+        liqTree.addMLiq(LiqRange(3, 3), 287634865); // LLRR   (3);
+
+        liqTree.addInfRangeTLiq(4430, 492e18, 254858e6);            // root
+        liqTree.addTLiq(LiqRange(0, 7), 77, 998e18, 353e6);         // L 
+        liqTree.addTLiq(LiqRange(0, 3), 82734, 765e18, 99763e6);    // LL
+        liqTree.addTLiq(LiqRange(4, 7), 111, 24e18, 552e6);         // LR
+        liqTree.addTLiq(LiqRange(2, 3), 5346, 53e18, 8765e6);       // LLR
+        liqTree.addTLiq(LiqRange(3, 3), 7634865, 701e18, 779531e6); // LLRR
+
+        // mLiq
+        assertEq(root.mLiq, 8430);
+        assertEq(L.mLiq, 377);
+        assertEq(LL.mLiq, 9082734);
+        assertEq(LR.mLiq, 1111);
+        assertEq(LLR.mLiq, 45346);
+        assertEq(LLRR.mLiq, 287634865);
+
+        // tLiq
+        assertEq(root.tLiq, 4430);
+        assertEq(L.tLiq, 77);
+        assertEq(LL.tLiq, 82734);
+        assertEq(LR.tLiq, 111);
+        assertEq(LLR.tLiq, 5346);
+        assertEq(LLRR.tLiq, 7634865);
+
+        // subtreeMLiq
+        assertEq(root.subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(L.subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(LL.subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
+        assertEq(LR.subtreeMLiq, 4444);        // 1111*4
+        assertEq(LLR.subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
+        assertEq(LLRR.subtreeMLiq, 287634865); // 287634865*1
+
+        // borrowedX
+        assertEq(root.tokenX.borrowed, 492e18);
+        assertEq(L.tokenX.borrowed, 998e18);
+        assertEq(LL.tokenX.borrowed, 765e18);
+        assertEq(LR.tokenX.borrowed, 24e18);
+        assertEq(LLR.tokenX.borrowed, 53e18);
+        assertEq(LLRR.tokenX.borrowed, 701e18);
+ 
+        // borrowedY
+        assertEq(root.tokenY.borrowed, 254858e6);
+        assertEq(L.tokenY.borrowed, 353e6);
+        assertEq(LL.tokenY.borrowed, 99763e6);
+        assertEq(LR.tokenY.borrowed, 552e6);
+        assertEq(LLR.tokenY.borrowed, 8765e6);
+        assertEq(LLRR.tokenY.borrowed, 779531e6);
+
+        // subtreeBorrowedX
+        assertEq(root.tokenX.subtreeBorrowed, 3033e18); // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(L.tokenX.subtreeBorrowed, 2541e18);    // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(LL.tokenX.subtreeBorrowed, 1519e18);   // 765e18 + 53e18 + 701e18
+        assertEq(LR.tokenX.subtreeBorrowed, 24e18);
+        assertEq(LLR.tokenX.subtreeBorrowed, 754e18);   // 53e18 + 701e18
+        assertEq(LLRR.tokenX.subtreeBorrowed, 701e18);  // 701e18
+
+        // subtreeBorrowedY
+        assertEq(root.tokenY.subtreeBorrowed, 1143822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(L.tokenY.subtreeBorrowed, 888964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(LL.tokenY.subtreeBorrowed, 888059e6);    // 99763e6 + 8765e6 + 779531e6
+        assertEq(LR.tokenY.subtreeBorrowed, 552e6);
+        assertEq(LLR.tokenY.subtreeBorrowed, 788296e6);   // 8765e6 + 779531e6
+        assertEq(LLRR.tokenY.subtreeBorrowed, 779531e6);  // 779531e6
+
+        // Step 2); Assign different rates for X & Y
+        vm.warp(98273); // T98273
+        liqTree.feeRateSnapshotTokenX.add(4541239648278065);  // 7.9% APR as Q192.64 T98273 - T0
+        liqTree.feeRateSnapshotTokenY.add(13278814667749784); // 23.1% APR as Q192.64 T98273 - T0
+
+        // Step 3); Apply change that effects the entire tree, to calculate the fees at each node
+        // 3.1); addMLiq
+        liqTree.addMLiq(LiqRange(3, 7), 2734); // LLRR, LR
+
+        // root
+        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 373601278);
+        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 2303115199);
+        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 2);
+
+        // L
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 757991165);
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 1929915382);
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // LL
+        assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 581096415);
+        assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 1153837196);
+        assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // LR
+        assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 148929881804);
+        assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 148929881804);
+        assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 10);
+        assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 10);
+
+        // LLR
+        assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 42651943);
+        assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 606784254);
+        assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // LLRR
+        assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 581500584);
+        assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 581500584);
+        assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 1);
+        assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
+
+        // mLiq
+        assertEq(root.mLiq, 8430);
+        assertEq(L.mLiq, 377);
+        assertEq(LL.mLiq, 9082734);
+        assertEq(LR.mLiq, 3845);
+        assertEq(LLR.mLiq, 45346);
+        assertEq(LLRR.mLiq, 287637599);
+
+        // subtreeMLiq
+        assertEq(root.subtreeMLiq, 324212503); // 8430*16 + 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
+        assertEq(L.subtreeMLiq, 324077623);    // 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
+        assertEq(LL.subtreeMLiq, 324059227);   // 9082734*4 + 45346*2 + 287637599*1
+        assertEq(LR.subtreeMLiq, 15380);       // 3845*4
+        assertEq(LLR.subtreeMLiq, 287728291);  // 45346*2 + 287637599*1
+        assertEq(LLRR.subtreeMLiq, 287637599); // 287637599*1
+
+        // 3.2); removeMLiq
+        vm.warp(2876298273); // T2876298273
+        liqTree.feeRateSnapshotTokenX.add(16463537718422861220174597);   // 978567.9% APR as Q192.64 T2876298273 - T98273
+        liqTree.feeRateSnapshotTokenY.add(3715979586694123491881712207); // 220872233.1% APR as Q192.64 T2876298273 - T98273
+
+        liqTree.removeMLiq(LiqRange(3, 7), 2734); // LLRR, LR
+
+        // root
+        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 373601278 + 1354374549470516050);         // 1354374549844117328
+        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 2303115199 + 8349223594601778821); // 8349223596904894020
+        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0 + 158351473403);                        // 158351473403
+        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 2 + 710693401861);                 // 710693401863
+
+        // L
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 757991165 + 2747859799177149412);         // 2747859799935140577
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 1929915382 + 6996304358425988634); // 6996304360355904016
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 0 + 219375887);                           // 219375887
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 552456845955);                 // 552456845956
+
+        // LL
+        assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 581096415 + 2106654304105573173);         // 2106654304686669588
+        assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 1153837196 + 4183016846975641372); // 4183016848129478568
+        assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 0 + 62008538706);                         // 62008538706
+        assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 551980602776);                 // 551980602777
+
+        // LR
+        assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 148929881804 + 423248577958689008325);        // 423248578107618890129
+        assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 148929881804 + 423248577958689008325); // 423248578107618890129
+        assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 10 + 2197219781185);                          // 2197219781195
+        assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 10 + 2197219781185);                   // 2197219781195
+
+        // LLR
+        assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 42651943 + 154626414974589533);          // 154626415017241476
+        assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 606784254 + 2199779563978122803); // 2199779564584907057
+        assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 0 + 5771781665);                         // 5771781665
+        assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 519095539054);                // 519095539055
+
+        // LLRR
+        assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 581500584 + 2108117905415037748);         // 2108117905996538332
+        assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 581500584 + 2108117905415037748);  // 2108117905996538332
+        assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 1 + 529127613134);                        // 529127613135
+        assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 529127613134);                 // 529127613135
+        
+        // mLiq
+        assertEq(root.mLiq, 8430);
+        assertEq(L.mLiq, 377);
+        assertEq(LL.mLiq, 9082734);
+        assertEq(LR.mLiq, 1111);
+        assertEq(LLR.mLiq, 45346);
+        assertEq(LLRR.mLiq, 287634865);
+
+        // subtreeMLiq
+        assertEq(root.subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(L.subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(LL.subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
+        assertEq(LR.subtreeMLiq, 4444);        // 1111*4
+        assertEq(LLR.subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
+        assertEq(LLRR.subtreeMLiq, 287634865); // 287634865*1
+
+        // 3.3); addTLiq
+        vm.warp(9214298113); // T2876298273
+        liqTree.feeRateSnapshotTokenX.add(11381610389149375791104);   // 307% APR as Q192.64 T9214298113 - T2876298273
+        liqTree.feeRateSnapshotTokenY.add(185394198934916215865344);  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
+
+        liqTree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6); // LLRR, LR
+
+        // root
+        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 1354374549844117328 + 936348777891386);         // 1355310898622008714
+        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 8349223596904894020 + 5772247649074341); // 8354995844553968361
+        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 158351473403 + 7900657);                        // 158359374060
+        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 710693401863 + 35458749);                // 710728860612
+
+        // L
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 2747859799935140577 + 1899736810880077);        // 2749759536746020654
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 6996304360355904016 + 4836905046539355); // 7001141265402443371
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 219375887 + 10945);                             // 219386832
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 552456845956 + 27563825);                // 552484409781
+
+        // LL
+        assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 2106654304686669588 + 1456389336983247);        // 2108110694023652835
+        assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 4183016848129478568 + 2891837127944514); // 4185908685257423082
+        assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 62008538706 + 3093698);                         // 62011632404
+        assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 551980602777 + 27539135);                // 552008141912
+
+        // LR
+        assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 423248578107618890129 + 373259731104033296);        // 423621837838722923425
+        assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 423248578107618890129 + 373259731104033296); // 423621837838722923425
+        assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 2197219781195 + 139839995);                         // 2197359621190
+        assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 2197219781195 + 139839995);                  // 2197359621190
+
+        // LLR
+        assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 154626415017241476 + 106897640711262);          // 154733312657952738
+        assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 2199779564584907057 + 1520770209363996); // 2201300334794271053
+        assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 5771781665 + 287962);                           // 5772069627
+        assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 519095539055 + 25898463);                // 519121437518
+
+        // LLRR
+        assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 2108117905996538332 + 1457402297493569);        // 2109575308294031901
+        assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 2108117905996538332 + 1457402297493569); // 2109575308294031901
+        assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 529127613135 + 26398986);                       // 529154012121
+        assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 529127613135 + 26398986);                // 529154012121
+
+        // tLiq
+        assertEq(root.tLiq, 4430);
+        assertEq(L.tLiq, 77);
+        assertEq(LL.tLiq, 82734);
+        assertEq(LR.tLiq, 1111);
+        assertEq(LLR.tLiq, 5346);
+        assertEq(LLRR.tLiq, 7635865);
+
+        // borrowedX
+        assertEq(root.tokenX.borrowed, 492e18);
+        assertEq(L.tokenX.borrowed, 998e18);
+        assertEq(LL.tokenX.borrowed, 765e18);
+        assertEq(LR.tokenX.borrowed, 1024e18);
+        assertEq(LLR.tokenX.borrowed, 53e18);
+        assertEq(LLRR.tokenX.borrowed, 1701e18);
+
+        // borrowedY
+        assertEq(root.tokenY.borrowed, 254858e6);
+        assertEq(L.tokenY.borrowed, 353e6);
+        assertEq(LL.tokenY.borrowed, 99763e6);
+        assertEq(LR.tokenY.borrowed, 1552e6);
+        assertEq(LLR.tokenY.borrowed, 8765e6);
+        assertEq(LLRR.tokenY.borrowed, 780531e6);
+
+        // subtreeBorrowedX
+        assertEq(root.tokenX.subtreeBorrowed, 5033e18);  // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(L.tokenX.subtreeBorrowed, 4541e18);     // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(LL.tokenX.subtreeBorrowed, 2519e18);    // 765e18 + 53e18 + 701e18
+        assertEq(LR.tokenX.subtreeBorrowed, 1024e18);
+        assertEq(LLR.tokenX.subtreeBorrowed, 1754e18);   // 53e18 + 701e18
+        assertEq(LLRR.tokenX.subtreeBorrowed, 1701e18);  // 701e18
+
+        // subtreeBorrowedY
+        assertEq(root.tokenY.subtreeBorrowed, 1145822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(L.tokenY.subtreeBorrowed, 890964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(LL.tokenY.subtreeBorrowed, 889059e6);    // 99763e6 + 8765e6 + 779531e6
+        assertEq(LR.tokenY.subtreeBorrowed, 1552e6);
+        assertEq(LLR.tokenY.subtreeBorrowed, 789296e6);   // 8765e6 + 779531e6
+        assertEq(LLRR.tokenY.subtreeBorrowed, 780531e6);  // 779531e6
+
+        // 3.4); removeTLiq
+        // 3.3); addTLiq
+        vm.warp(32876298273); // T32876298273
+        liqTree.feeRateSnapshotTokenX.add(2352954287417905205553); // 17% APR as Q192.64 T32876298273 - T9214298113
+        liqTree.feeRateSnapshotTokenY.add(6117681147286553534438); // 44.2% APR as Q192.64 T32876298273 - T9214298113
+
+        liqTree.removeTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6); // LLRR, LR
+
+        // root
+        // A = 0
+        // m = 324198833
+        //     x: 492e18 * 2352954287417905205553 / 324198833 / 2**64
+        // x sub: 5033e18 * 2352954287417905205553 / 324198833 / 2**64
+        //     y: 254858e6 * 6117681147286553534438 / 324198833 / 2**64
+        // y sub: 1145822e6 * 6117681147286553534438 / 324198833 / 2**64
+        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 1355310898622008714 + 193574177654021);
+        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 8354995844553968361 + 1980200886448553);
+        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 158359374060 + 260707);
+        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 710728860612 + 1172122);
+
+        // L
+        // 998e18 * 2352954287417905205553 / 324131393 / 2**64
+        // 4541e18 * 2352954287417905205553 / 324131393 / 2**64
+        // 353e6 * 6117681147286553534438 / 324131393 / 2**64
+        // 890964e6 * 6117681147286553534438 / 324131393 / 2**64
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 2749759536746020654 + 392738261220692);
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 7001141265402443371 + 1786998441085335);
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 219386832 + 361);
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 552484409781 + 911603);
+
+        // LL
+        // 765e18 * 2352954287417905205553 / 324091721 / 2**64
+        // 2519e18 * 2352954287417905205553 / 324091721 / 2**64
+        // 99763e6 * 6117681147286553534438 / 324091721 / 2**64
+        // 889059e6 * 6117681147286553534438 / 324091721 / 2**64
+        assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 2108110694023652835 + 301083714644757);
+        assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 4185908685257423082 + 991411604170121);
+        assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 62011632404 + 102086);
+        assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 552008141912 + 909766);
+
+        // LR
+        // 1024e18 * 2352954287417905205553 / 39672 / 2**64
+        // 1024e18 * 2352954287417905205553 / 39672 / 2**64
+        // 1552e6 * 6117681147286553534438 / 39672 / 2**64
+        // 1552e6 * 6117681147286553534438 / 39672 / 2**64
+        assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 423621837838722923425 + 3292377527956539412);
+        assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 423621837838722923425 + 3292377527956539412);
+        assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 2197359621190 + 12974025);
+        assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 2197359621190 + 12974025);
+
+        // LLR
+        // 53e18 * 2352954287417905205553 / 305908639 / 2**64
+        // 1754e18 * 2352954287417905205553 / 305908639 / 2**64
+        // 8765e6 * 6117681147286553534438 / 305908639 / 2**64
+        // 789296e6 * 6117681147286553534438 / 305908639 / 2**64
+        assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 154733312657952738 + 22099268330799);
+        assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 2201300334794271053 + 731360691551353);
+        assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 5772069627 + 9502);
+        assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 519121437518 + 855687);
+
+        // LLRR
+        // 1701e18 * 2352954287417905205553 / 296771752 / 2**64
+        // 1701e18 * 2352954287417905205553 / 296771752 / 2**64
+        // 780531e6 * 6117681147286553534438 / 296771752 / 2**64
+        // 780531e6 * 6117681147286553534438 / 296771752 / 2**64
+        assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 2109575308294031901 + 731097873063750);
+        assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 2109575308294031901 + 731097873063750);
+        assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 529154012121 + 872237);
+        assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 529154012121 + 872237);
+
+        // tLiq
+        assertEq(root.tLiq, 4430);
+        assertEq(L.tLiq, 77);
+        assertEq(LL.tLiq, 82734);
+        assertEq(LR.tLiq, 111);
+        assertEq(LLR.tLiq, 5346);
+        assertEq(LLRR.tLiq, 7634865);
+
+        // subtreeMLiq
+        assertEq(root.subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(L.subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        assertEq(LL.subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
+        assertEq(LR.subtreeMLiq, 4444);        // 1111*4
+        assertEq(LLR.subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
+        assertEq(LLRR.subtreeMLiq, 287634865); // 287634865*1
+
+        // borrowedX
+        assertEq(root.tokenX.borrowed, 492e18);
+        assertEq(L.tokenX.borrowed, 998e18);
+        assertEq(LL.tokenX.borrowed, 765e18);
+        assertEq(LR.tokenX.borrowed, 24e18);
+        assertEq(LLR.tokenX.borrowed, 53e18);
+        assertEq(LLRR.tokenX.borrowed, 701e18);
+
+        // borrowedY
+        assertEq(root.tokenY.borrowed, 254858e6);
+        assertEq(L.tokenY.borrowed, 353e6);
+        assertEq(LL.tokenY.borrowed, 99763e6);
+        assertEq(LR.tokenY.borrowed, 552e6);
+        assertEq(LLR.tokenY.borrowed, 8765e6);
+        assertEq(LLRR.tokenY.borrowed, 779531e6);
+
+        // subtreeBorrowedX
+        assertEq(root.tokenX.subtreeBorrowed, 3033e18); // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(L.tokenX.subtreeBorrowed, 2541e18);    // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        assertEq(LL.tokenX.subtreeBorrowed, 1519e18);   // 765e18 + 53e18 + 701e18
+        assertEq(LR.tokenX.subtreeBorrowed, 24e18);
+        assertEq(LLR.tokenX.subtreeBorrowed, 754e18);   // 53e18 + 701e18
+        assertEq(LLRR.tokenX.subtreeBorrowed, 701e18);  // 701e18
+
+        // subtreeBorrowedY
+        assertEq(root.tokenY.subtreeBorrowed, 1143822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(L.tokenY.subtreeBorrowed, 888964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        assertEq(LL.tokenY.subtreeBorrowed, 888059e6);    // 99763e6 + 8765e6 + 779531e6
+        assertEq(LR.tokenY.subtreeBorrowed, 552e6);
+        assertEq(LLR.tokenY.subtreeBorrowed, 788296e6);   // 8765e6 + 779531e6
+        assertEq(LLRR.tokenY.subtreeBorrowed, 779531e6);  // 779531e6
+    }
+
     function testLeftAndRightLegStoppingBelowPeak() public {
+        //   Range: (1, 4)
+        //
+        //                                  L(0-7)
+        //                             __--  --__
+        //                        __---          ---__
+        //                      /                       \
+        //                   LL(0-3)                     LR(4-7)
+        //                 /   \                         /
+        //               /       \                     /
+        //             /           \                 /
+        //           LLL(0-1)       LLR(2-3)       LRL(4-5)
+        //              \                         /
+        //               \                       /
+        //           LLLR(1)                   LRLL(4)
+
         LiqNode storage root = liqTree.nodes[liqTree.root];
         LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 16)];
         LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 16)];
@@ -211,576 +738,134 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(LRL.tokenX.subtreeCummulativeEarnedPerMLiq, 1015860618510053453450506120);
         assertEq(LRL.tokenY.cummulativeEarnedPerMLiq, 2357793377238426581071757403793);
         assertEq(LRL.tokenY.subtreeCummulativeEarnedPerMLiq, 2357793388536088599903418420664);
-        return;
 
         // LR
-        //   total_mLiq =  + (); *  =
+        //   total_m_liq = 46749525589 + (98237498262 + 432) * 4 = 439699520365
         //
-        //   earn_x      = 997278349210980290827452342352346 *  / 583038259951221 / 2**64 =
-        //   earn_x_sub  = 997278349210980290827452342352346 *  / 583038259951221 / 2**64 =
+        //   earn_x      = 997278349210980290827452342352346 * 23452e18 / 439699520365 / 2**64 = 2883504023897755903335799.02165969971328846599101621918354759
+        //   earn_x_sub  = 997278349210980290827452342352346 * 4588061e18 / 439699520365 / 2**64 = 564117872905865676599639663.786245246727357690738865154506505
         //
-        //   earn_y      = 7978726162930599238079167453467080976862 *  /  / 2**64 =
-        //   earn_y_sub  = 7978726162930599238079167453467080976862 *  /  / 2**64 =
-        // assertEq(int(LR.tokenX.cummulativeEarnedPerMLiq);, );
-        // assertEq(int(LR.tokenX.subtreeCummulativeEarnedPerMLiq);, );
-        // assertEq(int(LR.tokenY.cummulativeEarnedPerMLiq);, );
-        // assertEq(int(LR.tokenY.subtreeCummulativeEarnedPerMLiq);, );
+        //   earn_y      = 7978726162930599238079167453467080976862 * 12341235e6 / 439699520365 / 2**64 = 12139937971620398360316.5575159331335181718549141795773004218
+        //   earn_y_sub  = 7978726162930599238079167453467080976862 * 1324213582142827e6 / 439699520365 / 2**64 = 1302614426221619876588878010887.22237028229312127108609228047
+        assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 2883504023897755903335799);
+        assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 564117872905865676599639663);
+        assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 12139937971620398360316);
+        assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 1302614426221619876588878010887);
 
         // L
         // Borrows have not changed. Results should be the same!
-        // assertEq(int(L.tokenX.cummulativeEarnedPerMLiq);, 404005403049228369014);
-        // assertEq(int(L.tokenX.subtreeCummulativeEarnedPerMLiq);, 27250279648794479314672290100);  // F! Why did I need to add 3 wei?
-        // assertEq(int(L.tokenY.cummulativeEarnedPerMLiq);, 256194846273571639740);
-        // assertEq(int(L.tokenY.subtreeCummulativeEarnedPerMLiq);, 982369673901053899051127131);
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 404005403049228369014);
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 27250279648794479314672290097);
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 256194846273571639740);
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 982369673901053899051127131);
 
-
-        // 3); Trigger fee update for remaining nodes by updating the range (1,4); LLL, LLLR
+        // 3) Trigger fee update for remaining nodes by updating the range (1,3) LLLR, LLL
         //    For this last one, also update the rates to increment accumulated fees in L
-        //    While previous step does not, ensuring we test that nothing should have accumulated.
+        //    While previous step does not, meaning we also tested that nothing should have accumulated.
+        //
+        //    For un-accumulated nodes
+        //    x_rate = 1299872175673458264503459867290698790836486158597987785659078908345634635 + 997278349210980290827452342352346 = 1299872175673458264503459867290698790837483436947198765949906360687986981
+        //    y_rate = 2343465798346782378468923640892347692347899237846866000000345345346276876786 + 7978726162930599238079167453467080976862 = 2343465798346782378468923640892347700326625400777465238079512798813357853648
+        liqTree.feeRateSnapshotTokenX.add(1299872175673458264503459867290698790836486158597987785659078908345634635);
+        liqTree.feeRateSnapshotTokenY.add(2343465798346782378468923640892347692347899237846866000000345345346276876786);
 
-        // 4); Confirm root fees are correct (although behavior leading to this state should have been previously tested at L);
+        // TODO: Arithmetic over/underflow after this line!
+        return;
+        liqTree.addTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);     // LLLR, LLL
+        liqTree.removeTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);  // LLLR, LLL
 
+        // LLLR
+        //   total_m_liq = 2462 + (45754683688356 + 932141354 + 98237498262 + 432) * 1 = 45853853330866
+        //
+        //   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4567e18 / 45853853330866 / 2**64 = 7018367402089271512449831285542283070529383839730059006659936.130773551243944000002576389036236651338347389250
+        //   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4567e18 / 45853853330866 / 2**64 = 7018367402089271512449831285542283070529383839730059006659936.130773551243944000002576389036236651338347389250
+        //
+        //   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1235146e6 / 45853853330866 / 2**64 = 3422010642480475838452596727805190892411656925119587969.85330
+        //   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1235146e6 / 45853853330866 / 2**64 = 3422010642480475838452596727805190892411656925119587969.85330
+        assertEq(LLLR.tokenX.cummulativeEarnedPerMLiq, 7018367402089271512449831285542283070529383839730059006659936);
+        assertEq(LLLR.tokenX.subtreeCummulativeEarnedPerMLiq, 7018367402089271512449831285542283070529383839730059006659936);
+        assertEq(LLLR.tokenY.cummulativeEarnedPerMLiq, 3422010642480475838452596727805190892411656925119587969);
+        assertEq(LLLR.tokenY.subtreeCummulativeEarnedPerMLiq, 3422010642480475838452596727805190892411656925119587969);
+
+        // LLL
+        //   total_m_liq = 91509367379174 + (932141354 + 98237498262 + 432) * 2 = 91707706659270
+        //
+        //   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 134235e18 / 91707706659270 / 2**64 = 103143261248603614450474086559218941021145887312254123476968651.5651280159520663266949783703392275566984071552
+        //   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 138802e18 / 91707706659270 / 2**64 = 106652444949742458322752666313500260376333232396286339977280163.7020367182193817579462613160489102195765062015
+        //
+        //   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 34534634e6 / 91707706659270 / 2**64 = 47839642068767865474791702768817452956001093815727619460.5120
+        //   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 35769780e6 / 91707706659270 / 2**64 = 49550647390054037320994765830325323627188543696392945355.2695
+        assertEq(LLL.tokenX.cummulativeEarnedPerMLiq, 103143261248603614450474086559218941021145887312254123476968651);
+        assertEq(LLL.tokenX.subtreeCummulativeEarnedPerMLiq, 106652444949742458322752666313500260376333232396286339977280163);
+        assertEq(LLL.tokenY.cummulativeEarnedPerMLiq,  47839642068767865474791702768817452956001093815727619460);
+        assertEq(LLL.tokenY.subtreeCummulativeEarnedPerMLiq, 49550647390054037320994765830325323627188543696392945355);
+
+        // LL
+        //   Note: LL previously accumulated fees, so we use the new rate as provided. Then add to the previously accumulated fees.
+        //         The results SHOULD be the same as if the two rates were added, and accumulated once.
+        //         However, that is not the case. Due to decimal truncation that happens over two transactions. See below.
+        //
+        //   total_m_liq = 582205610436080 + (98237498262 + 432) * 4 = 582598560430856
+        //
+        //   Expected in 1 transaction
+        //   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293874927834e18 / 582598560430856 / 2**64 = 35544634549344534575302731950184064775098096623320842527740739153078.75082067380701457525147559485733770210963
+        //   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293876300099e18 / 582598560430856 / 2**64 = 35544800526953748684785622304061478291909912715982970794626727543515.67837110616273194884758309091127470639015
+        //
+        //   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 2345346e6 / 582598560430856 / 2**64 = 511418473421538198191409430001729877691494201326333679.0963768041829950138557552907316220422703628558848163908
+        //   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 40456482e6 / 582598560430856 / 2**64 = 8821808067741790988384310101577867302175515556793408995.669016189358355860561774047790233928773909697150300378
+        //
+        //   Expected in 2 transactions
+        //   earn_x      = 1299872175673458264503459867290698790836486158597987785659078908345634635 * 293874927834e18 / 582598560430856 / 2**64 = 35544634549344534575302731950184064775070826330802801290388838911975.84352896184235223547894605797930653522893
+        //   earn_x_sub  = 1299872175673458264503459867290698790836486158597987785659078908345634635 * 293876300099e18 / 582598560430856 / 2**64 = 35544800526953748684785622304061478291882642296124811643546854739934.66882205416518379027248890016297306691608
+        //
+        //   earn_y      = 2343465798346782378468923640892347692347899237846866000000345345346276876786 * 2345346e6 / 582598560430856 / 2**64 = 511418473421538198191409430001729875950283402784680332.652365
+        //   earn_y_sub  = 2343465798346782378468923640892347692347899237846866000000345345346276876786 * 40456482e6 / 582598560430856 / 2**64 = 8821808067741790988384310101577867272140176067692003548.17772
+        //
+        //   acc_x       = 35544634549344534575302731950184064775070826330802801290388838911975 + 27270292518041237351900241102 = 35544634549344534575302731950184064775098096623320842527740739153077
+        //   acc_x_sub   = 35544800526953748684785622304061478291882642296124811643546854739934 + 27270419858159151079872803581 = 35544800526953748684785622304061478291909912715982970794626727543515
+        //
+        //   acc_y       = 511418473421538198191409430001729875950283402784680332 + 1741210798541653346 = 511418473421538198191409430001729877691494201326333678
+        //   acc_y_sub   = 8821808067741790988384310101577867272140176067692003548 + 30035339489101405447 = 8821808067741790988384310101577867302175515556793408995
+        assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 35544634549344534575302731950184064775098096623320842527740739153077);          // 1 wei lost
+        assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 35544800526953748684785622304061478291909912715982970794626727543515);
+        assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 511418473421538198191409430001729877691494201326333678);                        // 1 wei lost
+        assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 8821808067741790988384310101577867302175515556793408995);
+
+        // L
+        //   Note: (same situation as LL above)
+        //
+        //   total_m_liq = 583038259947765 + (432) * 8 = 583038259951221
+        //
+        //   Expected in 1 transaction
+        //   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4357e18 / 583038259951221 / 2**64 = 526588572449127820710280925096499286631826368408350578683678.8949320786875222752967719865098507132989325023672
+        //   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293880892517e18 / 583038259951221 / 2**64 = 35518549382741014580801587134532851665736731679050016244983472266163.77158207946190817820623319059828307670852
+        //
+        //   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 345345345e6 / 583038259951221 / 2**64 = 75248084430347809841211701855286934435441672114601405440.36959084052843872095985545406590238625971175786589905
+        //   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1324213967944654e6 / 583038259951221 / 2**64 = 288535999996598223755002019090052510701800094598545473522203908.3456298612650105591841256935791299290626023275
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 526588572449127820710280925096499286631826368408350578683678);
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 35518549382741014580801587134532851665736731679050016244983472266163);
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 75248084430347809841211701855286934435441672114601405439);                 // 1 wei lost
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 288535999996598223755002019090052510701800094598545473522203907);   // 1 wei lost
+
+        // 4) Confirm root fees are correct (although behavior leading to this state should have been previously tested at L and LL
+        //   total_m_liq = 583038259954677
+        //
+        //   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 0 / 583038259954677 / 2**64 = 0
+        //   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293880892517e18 / 583038259954677 / 2**64 = 35518549382530475899041156539352565759624323835558718083224151423775.00522789294925623241122948225991829258658
+        //
+        //   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 0 / 583038259954677 / 2**64 = 0
+        //   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1324213967944654e6 / 583038259954677 / 2**64 = 288535999994887906466277673329665978776994301813328609583743065.1742475963990666755167810305856663430573507628
+        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 35518549382530475899041156539352565759624323835558718083224151423774);  // 1 wei lost
+        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 288535999994887906466277673329665978776994301813328609583743064);       // 1 wei lost
     }
 
 
 
     // BELOW WAS BEFORE PYTHON
 
-//     function testRootNodeOnly() public {
-//         LiqNode storage root = liqTree.nodes[liqTree.root];
-
-//         vm.warp(0); // T0
-//         liqTree.addInfRangeMLiq(8430); // Step 1
-//         liqTree.addInfRangeTLiq(4381, 832e18, 928e6); // Step 2
-
-//         vm.warp(60 * 60); // T3600 (1hr);
-//         liqTree.feeRateSnapshotTokenX.add(113712805933826); // 5.4% APR as Q192.64
-//         liqTree.feeRateSnapshotTokenY.add(113712805933826);
-
-//         // Verify root state is as expected
-//         assertEq(root.mLiq, 8430);
-//         assertEq(root.subtreeMLiq, 134880);
-//         assertEq(root.tLiq, 4381);
-//         assertEq(root.tokenX.borrowed, 832e18);
-//         assertEq(root.tokenX.subtreeBorrowed, 832e18);
-//         assertEq(root.tokenY.borrowed, 928e6);
-//         assertEq(root.tokenY.subtreeBorrowed, 928e6);
-
-//         // Testing 4 methods addInfRangeMLiq, removeInfRangeMLiq, addInfRangeTLiq, removeInfRangeTLiq
-//         // Assert tree structure and fee calculations after each operation
-//         liqTree.addInfRangeMLiq(9287);
-
-//         assertEq(root.tokenX.cummulativeEarnedPerMLiq, 38024667284);
-//         assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 38024667284);
-//         assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
-//         assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 0);
-
-//         assertEq(root.mLiq, 17717);
-//         assertEq(root.subtreeMLiq, 283472);
-//         assertEq(root.tLiq, 4381);
-//         assertEq(root.tokenX.borrowed, 832e18);
-//         assertEq(root.tokenX.subtreeBorrowed, 832e18);
-//         assertEq(root.tokenY.borrowed, 928e6);
-//         assertEq(root.tokenY.subtreeBorrowed, 928e6);
-
-//         vm.warp(22000); // T22000
-//         liqTree.feeRateSnapshotTokenX.add(74672420010376264941568); // 693792000.0% APR as Q192.64 from T22000 - T3600
-//         liqTree.feeRateSnapshotTokenY.add(74672420010376264941568);
-
-//         liqTree.removeInfRangeMLiq(3682);
-
-//         /* 
-//                       1188101861132416784
-//             Expected: 11881018269102162284
-//               Actual: 11881018269102163474
-//       */
-
-//         // 11881018231077494784
-//         // 11881018269102162068
-
-//         // In code the rates are correct, both 74672420010376264941568
-//         // x num 62127453448633052431384576000000000000000000 (correct);
-//         // y num 69296005769629173865775104000000 (correct);
-//         // x earn as Q192.64 is 219166102643763942933991985099057402494 (off by +42933991985099057402494);
-//         // y earn as Q192.64 is 244454499102659782503298752 (ending 782503298752 should be 8e11);
-//         // x earn as token is 11881018231077496190 (real 1.18810182310774961900999040469605463678530107851649688655015 × 10^19);
-//         // y earn as token is 13251904 (real 1.32519049500479765197268160192844987932403455488383769989013 × 10^7);
-//         // X total 11881018269102163474 (off by 0);
-//         // Y total 13251904 (off by +1 if we round up);
-//         assertEq(root.tokenX.cummulativeEarnedPerMLiq, 11881018269102163474);
-//         assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 11881018269102163474);
-//         assertEq(root.tokenY.cummulativeEarnedPerMLiq, 13251904);
-//         assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 13251904);
-
-//         assertEq(root.mLiq, 14035);
-//         assertEq(root.subtreeMLiq, 224560);
-//         assertEq(root.tLiq, 4381);
-//         assertEq(root.tokenX.borrowed, 832e18);
-//         assertEq(root.tokenX.subtreeBorrowed, 832e18);
-//         assertEq(root.tokenY.borrowed, 928e6);
-//         assertEq(root.tokenY.subtreeBorrowed, 928e6);
-
-//         vm.warp(37002); // T37002
-//         liqTree.feeRateSnapshotTokenX.add(6932491854677024); // 7.9% APR as Q192.64 T37002 - T22000
-//         liqTree.feeRateSnapshotTokenY.add(6932491854677024);
-
-//         liqTree.addInfRangeTLiq(7287, 9184e18, 7926920e6);
-
-//         assertEq(root.tokenX.cummulativeEarnedPerMLiq, 11881019661491126559); // fix rounding, add 1
-//         assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 11881019661491126559);
-//         assertEq(root.tokenY.cummulativeEarnedPerMLiq, 13251905); // fix rounding, add 1
-//         assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 13251905);
-
-//         assertEq(root.mLiq, 14035);
-//         assertEq(root.subtreeMLiq, 224560);
-//         assertEq(root.tLiq, 11668);
-//         assertEq(root.tokenX.borrowed, 10016e18);
-//         assertEq(root.tokenX.subtreeBorrowed, 10016e18);
-//         assertEq(root.tokenY.borrowed, 7927848e6);
-//         assertEq(root.tokenY.subtreeBorrowed, 7927848e6);
-
-//         vm.warp(57212); // T57212
-//         liqTree.feeRateSnapshotTokenX.add(1055375100301031600000000); // 11.1% APR as Q192.64 TT57212 - T37002
-//         liqTree.feeRateSnapshotTokenY.add(1055375100301031600000000);
-        
-//         liqTree.removeInfRangeTLiq(4923, 222e18, 786e6);
-
-//         /*
-//             x-rate 1055375100301031600000000 (correct);
-//             x num 10570637004615132505600000000000000000000000000 (correct);
-//             x Q.64 47072662115314982657641610260064125400783 (47072662115314980000000000000000000000000 is correct);
-//             x token 2551814126505030241953 (2.55181412650503024195387164028103035638433335980020216618053 × 10^21 is correct); // need to round up 1
-//             y-rate 1055375100301031600000000
-//             y num 8366853378171332767996800000000000000 (correct);
-//             y Q.64 37258876817649326540776629853936 (3.7258876817649324e+31 is correct);
-//             y token 2019807759503 (2.01980775950325988354767545683493270255599285721099372431609 × 10^12 is correct);
-//   */
-
-    //     assertEq(root.tokenX.cummulativeEarnedPerMLiq, 2563695146166521368512);
-    //     assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 2563695146166521368512);
-    //     assertEq(root.tokenY.cummulativeEarnedPerMLiq, 2019821011408);
-    //     assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 2019821011408);
-
-    //     assertEq(root.mLiq, 14035);
-    //     assertEq(root.subtreeMLiq, 224560);
-    //     assertEq(root.tLiq, 6745);
-    //     assertEq(root.tokenX.borrowed, 9794e18);
-    //     assertEq(root.tokenX.subtreeBorrowed, 9794e18);
-    //     assertEq(root.tokenY.borrowed, 7927062e6);
-    //     assertEq(root.tokenY.subtreeBorrowed, 7927062e6);
-    // }
-
-    // function testLeafNodeOnly(); public {
-
-    // }
-
-
-    // function testSingleNodeOnly(); public {
-
-    // }
-
-    // function testLeftLegOnly() public {
-    //     LiqNode storage root = liqTree.nodes[liqTree.root];
-    //     LiqNode storage L = liqTree.nodes[_nodeKey(1, 0, liqTree.offset)];
-    //     LiqNode storage LL = liqTree.nodes[_nodeKey(2, 0, liqTree.offset)];
-    //     LiqNode storage LR = liqTree.nodes[_nodeKey(2, 1, liqTree.offset)];
-    //     LiqNode storage LLR = liqTree.nodes[_nodeKey(3, 1, liqTree.offset)];
-    //     LiqNode storage LLRR = liqTree.nodes[_nodeKey(4, 3, liqTree.offset)];
-
-    //     // Step 1); Allocate different mLiq + tLiq values for each node
-    //     vm.warp(0); // T0
-
-    //     liqTree.addInfRangeMLiq(8430);              // root (INF);
-    //     liqTree.addMLiq(LiqRange(0, 7), 377);       // L    (0-7);
-    //     liqTree.addMLiq(LiqRange(0, 3), 9082734);   // LL   (0-3);
-    //     liqTree.addMLiq(LiqRange(4, 7), 1111);      // LR   (4-7);
-    //     liqTree.addMLiq(LiqRange(2, 3), 45346);     // LLR  (2-3);
-    //     liqTree.addMLiq(LiqRange(3, 3), 287634865); // LLRR   (3);
-
-    //     liqTree.addInfRangeTLiq(4430, 492e18, 254858e6);            // root
-    //     liqTree.addTLiq(LiqRange(0, 7), 77, 998e18, 353e6);         // L 
-    //     liqTree.addTLiq(LiqRange(0, 3), 82734, 765e18, 99763e6);    // LL
-    //     liqTree.addTLiq(LiqRange(4, 7), 111, 24e18, 552e6);         // LR
-    //     liqTree.addTLiq(LiqRange(2, 3), 5346, 53e18, 8765e6);       // LLR
-    //     liqTree.addTLiq(LiqRange(3, 3), 7634865, 701e18, 779531e6); // LLRR
-
-    //     // mLiq
-    //     assertEq(root.mLiq, 8430);
-    //     assertEq(L.mLiq, 377);
-    //     assertEq(LL.mLiq, 9082734);
-    //     assertEq(LR.mLiq, 1111);
-    //     assertEq(LLR.mLiq, 45346);
-    //     assertEq(LLRR.mLiq, 287634865);
-
-    //     // tLiq
-    //     assertEq(root.tLiq, 4430);
-    //     assertEq(L.tLiq, 77);
-    //     assertEq(LL.tLiq, 82734);
-    //     assertEq(LR.tLiq, 111);
-    //     assertEq(LLR.tLiq, 5346);
-    //     assertEq(LLRR.tLiq, 7634865);
-
-    //     // subtreeMLiq
-    //     assertEq(root.subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-    //     assertEq(L.subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-    //     assertEq(LL.subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
-    //     assertEq(LR.subtreeMLiq, 4444);        // 1111*4
-    //     assertEq(LLR.subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
-    //     assertEq(LLRR.subtreeMLiq, 287634865); // 287634865*1
-
-    //     // borrowedX
-    //     assertEq(root.tokenX.borrowed, 492e18);
-    //     assertEq(L.tokenX.borrowed, 998e18);
-    //     assertEq(LL.tokenX.borrowed, 765e18);
-    //     assertEq(LR.tokenX.borrowed, 24e18);
-    //     assertEq(LLR.tokenX.borrowed, 53e18);
-    //     assertEq(LLRR.tokenX.borrowed, 701e18);
- 
-    //     // borrowedY
-    //     assertEq(root.tokenY.borrowed, 254858e6);
-    //     assertEq(L.tokenY.borrowed, 353e6);
-    //     assertEq(LL.tokenY.borrowed, 99763e6);
-    //     assertEq(LR.tokenY.borrowed, 552e6);
-    //     assertEq(LLR.tokenY.borrowed, 8765e6);
-    //     assertEq(LLRR.tokenY.borrowed, 779531e6);
-
-    //     // subtreeBorrowedX
-    //     assertEq(root.tokenX.subtreeBorrowed, 3033e18); // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-    //     assertEq(L.tokenX.subtreeBorrowed, 2541e18);    // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-    //     assertEq(LL.tokenX.subtreeBorrowed, 1519e18);   // 765e18 + 53e18 + 701e18
-    //     assertEq(LR.tokenX.subtreeBorrowed, 24e18);
-    //     assertEq(LLR.tokenX.subtreeBorrowed, 754e18);   // 53e18 + 701e18
-    //     assertEq(LLRR.tokenX.subtreeBorrowed, 701e18);  // 701e18
-
-    //     // subtreeBorrowedY
-    //     assertEq(root.tokenY.subtreeBorrowed, 1143822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-    //     assertEq(L.tokenY.subtreeBorrowed, 888964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-    //     assertEq(LL.tokenY.subtreeBorrowed, 888059e6);    // 99763e6 + 8765e6 + 779531e6
-    //     assertEq(LR.tokenY.subtreeBorrowed, 552e6);
-    //     assertEq(LLR.tokenY.subtreeBorrowed, 788296e6);   // 8765e6 + 779531e6
-    //     assertEq(LLRR.tokenY.subtreeBorrowed, 779531e6);  // 779531e6
-
-    //     // Step 2); Assign different rates for X & Y
-    //     vm.warp(98273); // T98273
-    //     liqTree.feeRateSnapshotTokenX.add(4541239648278065);  // 7.9% APR as Q192.64 T98273 - T0
-    //     liqTree.feeRateSnapshotTokenY.add(13278814667749784); // 23.1% APR as Q192.64 T98273 - T0
-
-    //     // Step 3); Apply change that effects the entire tree, to calculate the fees at each node
-    //     // 3.1); addMLiq
-    //     liqTree.addMLiq(LiqRange(3, 7), 2734); // LLRR, LR
-
-    //     // root
-    //     assertEq(root.tokenX.cummulativeEarnedPerMLiq, 373601278);
-    //     assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 2303115199);
-    //     assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
-    //     assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 2);
-
-    //     // L
-    //     assertEq(L.tokenX.cummulativeEarnedPerMLiq, 757991165);
-    //     assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 1929915382);
-    //     assertEq(L.tokenY.cummulativeEarnedPerMLiq, 0);
-    //     assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
-
-    //     // LL
-    //     assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 581096415);
-    //     assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 1153837196);
-    //     assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 0);
-    //     assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
-
-    //     // LR
-    //     assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 148929881804);
-    //     assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 148929881804);
-    //     assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 10);
-    //     assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 10);
-
-    //     // LLR
-    //     assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 42651943);
-    //     assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 606784254);
-    //     assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 0);
-    //     assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
-
-    //     // LLRR
-    //     assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 581500584);
-    //     assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 581500584);
-    //     assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 1);
-    //     assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 1);
-
-    //     // mLiq
-    //     assertEq(root.mLiq, 8430);
-    //     assertEq(L.mLiq, 377);
-    //     assertEq(LL.mLiq, 9082734);
-    //     assertEq(LR.mLiq, 3845);
-    //     assertEq(LLR.mLiq, 45346);
-    //     assertEq(LLRR.mLiq, 287637599);
-
-    //     // subtreeMLiq
-    //     assertEq(root.subtreeMLiq, 324212503); // 8430*16 + 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
-    //     assertEq(L.subtreeMLiq, 324077623);    // 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
-    //     assertEq(LL.subtreeMLiq, 324059227);   // 9082734*4 + 45346*2 + 287637599*1
-    //     assertEq(LR.subtreeMLiq, 15380);       // 3845*4
-    //     assertEq(LLR.subtreeMLiq, 287728291);  // 45346*2 + 287637599*1
-    //     assertEq(LLRR.subtreeMLiq, 287637599); // 287637599*1
-
-    //     // 3.2); removeMLiq
-    //     vm.warp(2876298273); // T2876298273
-    //     liqTree.feeRateSnapshotTokenX.add(16463537718422861220174597);   // 978567.9% APR as Q192.64 T2876298273 - T98273
-    //     liqTree.feeRateSnapshotTokenY.add(3715979586694123491881712207); // 220872233.1% APR as Q192.64 T2876298273 - T98273
-
-    //     liqTree.removeMLiq(LiqRange(3, 7), 2734); // LLRR, LR
-
-    //     // root
-    //     assertEq(root.tokenX.cummulativeEarnedPerMLiq, 373601278 + 1354374549470516050);         // 1354374549844117328
-    //     assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 2303115199 + 8349223594601778821); // 8349223596904894020
-    //     assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0 + 158351473403);                        // 158351473403
-    //     assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 2 + 710693401861);                 // 710693401863
-
-    //     // L
-    //     assertEq(L.tokenX.cummulativeEarnedPerMLiq, 757991165 + 2747859799177149412);         // 2747859799935140577
-    //     assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 1929915382 + 6996304358425988634); // 6996304360355904016
-    //     assertEq(L.tokenY.cummulativeEarnedPerMLiq, 0 + 219375887);                           // 219375887
-    //     assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 552456845955);                 // 552456845956
-
-    //     // LL
-    //     assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 581096415 + 2106654304105573173);         // 2106654304686669588
-    //     assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 1153837196 + 4183016846975641372); // 4183016848129478568
-    //     assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 0 + 62008538706);                         // 62008538706
-    //     assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 551980602776);                 // 551980602777
-
-    //     // LR
-    //     assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 148929881804 + 423248577958689008325);        // 423248578107618890129
-    //     assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 148929881804 + 423248577958689008325); // 423248578107618890129
-    //     assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 10 + 2197219781185);                          // 2197219781195
-    //     assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 10 + 2197219781185);                   // 2197219781195
-
-    //     // LLR
-    //     assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 42651943 + 154626414974589533);          // 154626415017241476
-    //     assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 606784254 + 2199779563978122803); // 2199779564584907057
-    //     assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 0 + 5771781665);                         // 5771781665
-    //     assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 519095539054);                // 519095539055
-
-    //     // LLRR
-    //     assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 581500584 + 2108117905415037748);         // 2108117905996538332
-    //     assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 581500584 + 2108117905415037748);  // 2108117905996538332
-    //     assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 1 + 529127613134);                        // 529127613135
-    //     assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 1 + 529127613134);                 // 529127613135
-        
-    //     // mLiq
-    //     assertEq(root.mLiq, 8430);
-    //     assertEq(L.mLiq, 377);
-    //     assertEq(LL.mLiq, 9082734);
-    //     assertEq(LR.mLiq, 1111);
-    //     assertEq(LLR.mLiq, 45346);
-    //     assertEq(LLRR.mLiq, 287634865);
-
-    //     // subtreeMLiq
-    //     assertEq(root.subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-    //     assertEq(L.subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-    //     assertEq(LL.subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
-    //     assertEq(LR.subtreeMLiq, 4444);        // 1111*4
-    //     assertEq(LLR.subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
-    //     assertEq(LLRR.subtreeMLiq, 287634865); // 287634865*1
-
-    //     // 3.3); addTLiq
-    //     vm.warp(9214298113); // T2876298273
-    //     liqTree.feeRateSnapshotTokenX.add(11381610389149375791104);   // 307% APR as Q192.64 T9214298113 - T2876298273
-    //     liqTree.feeRateSnapshotTokenY.add(185394198934916215865344);  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
-
-    //     liqTree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6); // LLRR, LR
-
-    //     // root
-    //     assertEq(root.tokenX.cummulativeEarnedPerMLiq, 1354374549844117328 + 936348777891386);         // 1355310898622008714
-    //     assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 8349223596904894020 + 5772247649074341); // 8354995844553968361
-    //     assertEq(root.tokenY.cummulativeEarnedPerMLiq, 158351473403 + 7900657);                        // 158359374060
-    //     assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 710693401863 + 35458749);                // 710728860612
-
-    //     // L
-    //     assertEq(L.tokenX.cummulativeEarnedPerMLiq, 2747859799935140577 + 1899736810880077);        // 2749759536746020654
-    //     assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 6996304360355904016 + 4836905046539355); // 7001141265402443371
-    //     assertEq(L.tokenY.cummulativeEarnedPerMLiq, 219375887 + 10945);                             // 219386832
-    //     assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 552456845956 + 27563825);                // 552484409781
-
-    //     // LL
-    //     assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 2106654304686669588 + 1456389336983247);        // 2108110694023652835
-    //     assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 4183016848129478568 + 2891837127944514); // 4185908685257423082
-    //     assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 62008538706 + 3093698);                         // 62011632404
-    //     assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 551980602777 + 27539135);                // 552008141912
-
-    //     // LR
-    //     assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 423248578107618890129 + 373259731104033296);        // 423621837838722923425
-    //     assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 423248578107618890129 + 373259731104033296); // 423621837838722923425
-    //     assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 2197219781195 + 139839995);                         // 2197359621190
-    //     assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 2197219781195 + 139839995);                  // 2197359621190
-
-    //     // LLR
-    //     assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 154626415017241476 + 106897640711262);          // 154733312657952738
-    //     assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 2199779564584907057 + 1520770209363996); // 2201300334794271053
-    //     assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 5771781665 + 287962);                           // 5772069627
-    //     assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 519095539055 + 25898463);                // 519121437518
-
-    //     // LLRR
-    //     assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 2108117905996538332 + 1457402297493569);        // 2109575308294031901
-    //     assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 2108117905996538332 + 1457402297493569); // 2109575308294031901
-    //     assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 529127613135 + 26398986);                       // 529154012121
-    //     assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 529127613135 + 26398986);                // 529154012121
-
-    //     // tLiq
-    //     assertEq(root.tLiq, 4430);
-    //     assertEq(L.tLiq, 77);
-    //     assertEq(LL.tLiq, 82734);
-    //     assertEq(LR.tLiq, 1111);
-    //     assertEq(LLR.tLiq, 5346);
-    //     assertEq(LLRR.tLiq, 7635865);
-
-    //     // borrowedX
-    //     assertEq(root.tokenX.borrowed, 492e18);
-    //     assertEq(L.tokenX.borrowed, 998e18);
-    //     assertEq(LL.tokenX.borrowed, 765e18);
-    //     assertEq(LR.tokenX.borrowed, 1024e18);
-    //     assertEq(LLR.tokenX.borrowed, 53e18);
-    //     assertEq(LLRR.tokenX.borrowed, 1701e18);
-
-    //     // borrowedY
-    //     assertEq(root.tokenY.borrowed, 254858e6);
-    //     assertEq(L.tokenY.borrowed, 353e6);
-    //     assertEq(LL.tokenY.borrowed, 99763e6);
-    //     assertEq(LR.tokenY.borrowed, 1552e6);
-    //     assertEq(LLR.tokenY.borrowed, 8765e6);
-    //     assertEq(LLRR.tokenY.borrowed, 780531e6);
-
-    //     // subtreeBorrowedX
-    //     assertEq(root.tokenX.subtreeBorrowed, 5033e18);  // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-    //     assertEq(L.tokenX.subtreeBorrowed, 4541e18);     // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-    //     assertEq(LL.tokenX.subtreeBorrowed, 2519e18);    // 765e18 + 53e18 + 701e18
-    //     assertEq(LR.tokenX.subtreeBorrowed, 1024e18);
-    //     assertEq(LLR.tokenX.subtreeBorrowed, 1754e18);   // 53e18 + 701e18
-    //     assertEq(LLRR.tokenX.subtreeBorrowed, 1701e18);  // 701e18
-
-    //     // subtreeBorrowedY
-    //     assertEq(root.tokenY.subtreeBorrowed, 1145822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-    //     assertEq(L.tokenY.subtreeBorrowed, 890964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-    //     assertEq(LL.tokenY.subtreeBorrowed, 889059e6);    // 99763e6 + 8765e6 + 779531e6
-    //     assertEq(LR.tokenY.subtreeBorrowed, 1552e6);
-    //     assertEq(LLR.tokenY.subtreeBorrowed, 789296e6);   // 8765e6 + 779531e6
-    //     assertEq(LLRR.tokenY.subtreeBorrowed, 780531e6);  // 779531e6
-
-    //     // 3.4); removeTLiq
-    //     // 3.3); addTLiq
-    //     vm.warp(32876298273); // T32876298273
-    //     liqTree.feeRateSnapshotTokenX.add(2352954287417905205553); // 17% APR as Q192.64 T32876298273 - T9214298113
-    //     liqTree.feeRateSnapshotTokenY.add(6117681147286553534438); // 44.2% APR as Q192.64 T32876298273 - T9214298113
-
-    //     liqTree.removeTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6); // LLRR, LR
-
-    //     // root
-    //     // A = 0
-    //     // m = 324198833
-    //     //     x: 492e18 * 2352954287417905205553 / 324198833 / 2**64
-    //     // x sub: 5033e18 * 2352954287417905205553 / 324198833 / 2**64
-    //     //     y: 254858e6 * 6117681147286553534438 / 324198833 / 2**64
-    //     // y sub: 1145822e6 * 6117681147286553534438 / 324198833 / 2**64
-    //     assertEq(root.tokenX.cummulativeEarnedPerMLiq, 1355310898622008714 + 193574177654021);
-    //     assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 8354995844553968361 + 1980200886448553);
-    //     assertEq(root.tokenY.cummulativeEarnedPerMLiq, 158359374060 + 260707);
-    //     assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 710728860612 + 1172122);
-
-    //     // L
-    //     // 998e18 * 2352954287417905205553 / 324131393 / 2**64
-    //     // 4541e18 * 2352954287417905205553 / 324131393 / 2**64
-    //     // 353e6 * 6117681147286553534438 / 324131393 / 2**64
-    //     // 890964e6 * 6117681147286553534438 / 324131393 / 2**64
-    //     assertEq(L.tokenX.cummulativeEarnedPerMLiq, 2749759536746020654 + 392738261220692);
-    //     assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 7001141265402443371 + 1786998441085335);
-    //     assertEq(L.tokenY.cummulativeEarnedPerMLiq, 219386832 + 361);
-    //     assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 552484409781 + 911603);
-
-    //     // LL
-    //     // 765e18 * 2352954287417905205553 / 324091721 / 2**64
-    //     // 2519e18 * 2352954287417905205553 / 324091721 / 2**64
-    //     // 99763e6 * 6117681147286553534438 / 324091721 / 2**64
-    //     // 889059e6 * 6117681147286553534438 / 324091721 / 2**64
-    //     assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 2108110694023652835 + 301083714644757);
-    //     assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 4185908685257423082 + 991411604170121);
-    //     assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 62011632404 + 102086);
-    //     assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 552008141912 + 909766);
-
-    //     // LR
-    //     // 1024e18 * 2352954287417905205553 / 39672 / 2**64
-    //     // 1024e18 * 2352954287417905205553 / 39672 / 2**64
-    //     // 1552e6 * 6117681147286553534438 / 39672 / 2**64
-    //     // 1552e6 * 6117681147286553534438 / 39672 / 2**64
-    //     assertEq(LR.tokenX.cummulativeEarnedPerMLiq, 423621837838722923425 + 3292377527956539412);
-    //     assertEq(LR.tokenX.subtreeCummulativeEarnedPerMLiq, 423621837838722923425 + 3292377527956539412);
-    //     assertEq(LR.tokenY.cummulativeEarnedPerMLiq, 2197359621190 + 12974025);
-    //     assertEq(LR.tokenY.subtreeCummulativeEarnedPerMLiq, 2197359621190 + 12974025);
-
-    //     // LLR
-    //     // 53e18 * 2352954287417905205553 / 305908639 / 2**64
-    //     // 1754e18 * 2352954287417905205553 / 305908639 / 2**64
-    //     // 8765e6 * 6117681147286553534438 / 305908639 / 2**64
-    //     // 789296e6 * 6117681147286553534438 / 305908639 / 2**64
-    //     assertEq(LLR.tokenX.cummulativeEarnedPerMLiq, 154733312657952738 + 22099268330799);
-    //     assertEq(LLR.tokenX.subtreeCummulativeEarnedPerMLiq, 2201300334794271053 + 731360691551353);
-    //     assertEq(LLR.tokenY.cummulativeEarnedPerMLiq, 5772069627 + 9502);
-    //     assertEq(LLR.tokenY.subtreeCummulativeEarnedPerMLiq, 519121437518 + 855687);
-
-    //     // LLRR
-    //     // 1701e18 * 2352954287417905205553 / 296771752 / 2**64
-    //     // 1701e18 * 2352954287417905205553 / 296771752 / 2**64
-    //     // 780531e6 * 6117681147286553534438 / 296771752 / 2**64
-    //     // 780531e6 * 6117681147286553534438 / 296771752 / 2**64
-    //     assertEq(LLRR.tokenX.cummulativeEarnedPerMLiq, 2109575308294031901 + 731097873063750);
-    //     assertEq(LLRR.tokenX.subtreeCummulativeEarnedPerMLiq, 2109575308294031901 + 731097873063750);
-    //     assertEq(LLRR.tokenY.cummulativeEarnedPerMLiq, 529154012121 + 872237);
-    //     assertEq(LLRR.tokenY.subtreeCummulativeEarnedPerMLiq, 529154012121 + 872237);
-
-    //     // tLiq
-    //     assertEq(root.tLiq, 4430);
-    //     assertEq(L.tLiq, 77);
-    //     assertEq(LL.tLiq, 82734);
-    //     assertEq(LR.tLiq, 111);
-    //     assertEq(LLR.tLiq, 5346);
-    //     assertEq(LLRR.tLiq, 7634865);
-
-    //     // subtreeMLiq
-    //     assertEq(root.subtreeMLiq, 324198833); // 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-    //     assertEq(L.subtreeMLiq, 324063953);    // 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-    //     assertEq(LL.subtreeMLiq, 324056493);   // 9082734*4 + 45346*2 + 287634865*1
-    //     assertEq(LR.subtreeMLiq, 4444);        // 1111*4
-    //     assertEq(LLR.subtreeMLiq, 287725557);  // 45346*2 + 287634865*1
-    //     assertEq(LLRR.subtreeMLiq, 287634865); // 287634865*1
-
-    //     // borrowedX
-    //     assertEq(root.tokenX.borrowed, 492e18);
-    //     assertEq(L.tokenX.borrowed, 998e18);
-    //     assertEq(LL.tokenX.borrowed, 765e18);
-    //     assertEq(LR.tokenX.borrowed, 24e18);
-    //     assertEq(LLR.tokenX.borrowed, 53e18);
-    //     assertEq(LLRR.tokenX.borrowed, 701e18);
-
-    //     // borrowedY
-    //     assertEq(root.tokenY.borrowed, 254858e6);
-    //     assertEq(L.tokenY.borrowed, 353e6);
-    //     assertEq(LL.tokenY.borrowed, 99763e6);
-    //     assertEq(LR.tokenY.borrowed, 552e6);
-    //     assertEq(LLR.tokenY.borrowed, 8765e6);
-    //     assertEq(LLRR.tokenY.borrowed, 779531e6);
-
-    //     // subtreeBorrowedX
-    //     assertEq(root.tokenX.subtreeBorrowed, 3033e18); // 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-    //     assertEq(L.tokenX.subtreeBorrowed, 2541e18);    // 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-    //     assertEq(LL.tokenX.subtreeBorrowed, 1519e18);   // 765e18 + 53e18 + 701e18
-    //     assertEq(LR.tokenX.subtreeBorrowed, 24e18);
-    //     assertEq(LLR.tokenX.subtreeBorrowed, 754e18);   // 53e18 + 701e18
-    //     assertEq(LLRR.tokenX.subtreeBorrowed, 701e18);  // 701e18
-
-    //     // subtreeBorrowedY
-    //     assertEq(root.tokenY.subtreeBorrowed, 1143822e6); // 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-    //     assertEq(L.tokenY.subtreeBorrowed, 888964e6);     // 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-    //     assertEq(LL.tokenY.subtreeBorrowed, 888059e6);    // 99763e6 + 8765e6 + 779531e6
-    //     assertEq(LR.tokenY.subtreeBorrowed, 552e6);
-    //     assertEq(LLR.tokenY.subtreeBorrowed, 788296e6);   // 8765e6 + 779531e6
-    //     assertEq(LLRR.tokenY.subtreeBorrowed, 779531e6);  // 779531e6
-    // }
+/*
 
 
     // function testRightLegOnly() public {
