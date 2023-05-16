@@ -1593,6 +1593,58 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("222e6"))
         self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("313e6"))
 
+    def test_complete_tree(self):
+        '''
+        We've done enough testing to capture all enumerated cases of tree structure, etc.
+        Now we trust python to yield correct results. And compare these directly to solidity. They should match.
+
+        In this test, we first add m_liq and t_liq to each node individually. Then we apply the eight methods:
+            add_m_liq, remove_m_liq, add_t_liq, remove_t_liq, add_inf_m_liq, remove_inf_m_liq, add_inf_t_liq, remove_inf_t_liq
+        while accumulating fees.
+
+        Entered values for liq, and borrow have no significance here, except for being different from one another.
+        We will cover all possible ranges.
+            ex. (0, 0), (0, 1), (0, 2), ... etc.
+        '''
+
+        root: LiqNode = liq_tree.nodes[liq_tree.root_key]
+
+        L: LiqNode = liq_tree.nodes[(8 << 24) | 16]
+        R: LiqNode = liq_tree.nodes[(8 << 24) | 24]
+
+        LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]
+        LR: LiqNode = liq_tree.nodes[(4 << 24) | 20]
+        RL: LiqNode = liq_tree.nodes[(4 << 24) | 24]
+        RR: LiqNode = liq_tree.nodes[(4 << 24) | 28]
+
+        LLL: LiqNode = liq_tree.nodes[(2 << 24) | 16]
+        LLR: LiqNode = liq_tree.nodes[(2 << 24) | 18]
+        LRL: LiqNode = liq_tree.nodes[(2 << 24) | 20]
+        LRR: LiqNode = liq_tree.nodes[(2 << 24) | 22]
+        RLL: LiqNode = liq_tree.nodes[(2 << 24) | 24]
+        RLR: LiqNode = liq_tree.nodes[(2 << 24) | 26]
+        RRL: LiqNode = liq_tree.nodes[(2 << 24) | 28]
+        RRR: LiqNode = liq_tree.nodes[(2 << 24) | 30]
+
+        LLLL: LiqNode = liq_tree.nodes[(1 << 24) | 16]
+        LLLR: LiqNode = liq_tree.nodes[(1 << 24) | 17]
+        LLRL: LiqNode = liq_tree.nodes[(1 << 24) | 18]
+        LLRR: LiqNode = liq_tree.nodes[(1 << 24) | 19]
+        LRLL: LiqNode = liq_tree.nodes[(1 << 24) | 20]
+        LRLR: LiqNode = liq_tree.nodes[(1 << 24) | 21]
+        LRRL: LiqNode = liq_tree.nodes[(1 << 24) | 22]
+        LRRR: LiqNode = liq_tree.nodes[(1 << 24) | 23]
+        RLLL: LiqNode = liq_tree.nodes[(1 << 24) | 24]
+        RLLR: LiqNode = liq_tree.nodes[(1 << 24) | 25]
+        RLRL: LiqNode = liq_tree.nodes[(1 << 24) | 26]
+        RLRR: LiqNode = liq_tree.nodes[(1 << 24) | 27]
+        RRLL: LiqNode = liq_tree.nodes[(1 << 24) | 28]
+        RRLR: LiqNode = liq_tree.nodes[(1 << 24) | 29]
+        RRRL: LiqNode = liq_tree.nodes[(1 << 24) | 30]
+        RRRR: LiqNode = liq_tree.nodes[(1 << 24) | 31]
+
+        pass
+
     # def test_left_and_right_leg_stopping_below_peak_BROKEN(self):
     #     liq_tree = self.liq_tree
     #
@@ -1816,14 +1868,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
 
 '''
-
-    function testLeftAndRightLegBelowPeak() public {
-
-    }
-
-    function testLeftAndRightLegAtOrHigherThanPeak() public {
-
-    }
 
     function testLeftAndRightLegSameDistanceToStop() public {
 
