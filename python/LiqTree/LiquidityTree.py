@@ -257,6 +257,9 @@ class LiquidityTree:
             node.m_liq -= liq
             node.subtree_m_liq -= m_liq_per_tick
 
+            if node.t_liq > node.m_liq:
+                raise LiqTreeExceptionTLiqExceedsMLiq()
+
             # right propagate
             current, _ = LiquidityKey.right_up(current)
             node = self.nodes[current]
@@ -272,6 +275,9 @@ class LiquidityTree:
 
                     node.m_liq -= liq
                     node.subtree_m_liq -= liq * UnsignedDecimal(current >> 24)
+
+                    if node.t_liq > node.m_liq:
+                        raise LiqTreeExceptionTLiqExceedsMLiq()
 
                 # right propagate
                 up, left = LiquidityKey.right_up(current)
@@ -290,6 +296,9 @@ class LiquidityTree:
             node.m_liq -= liq
             node.subtree_m_liq -= m_liq_per_tick
 
+            if node.t_liq > node.m_liq:
+                raise LiqTreeExceptionTLiqExceedsMLiq()
+
             # left propagate
             current, _ = LiquidityKey.left_up(current)
             node = self.nodes[current]
@@ -305,6 +314,9 @@ class LiquidityTree:
 
                     node.m_liq -= liq
                     node.subtree_m_liq -= liq * UnsignedDecimal(current >> 24)
+
+                    if node.t_liq > node.m_liq:
+                        raise LiqTreeExceptionTLiqExceedsMLiq()
 
                 # left propogate
                 up, right = LiquidityKey.left_up(current)
