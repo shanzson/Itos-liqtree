@@ -1346,10 +1346,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #    While previous step does not, meaning we also tested that nothing should have accumulated.
         #
         #    For un-accumulated nodes
-        #    x_rate = 1299872175673458264503459867290698790836486158597987785659078908345634635 + 997278349210980290827452342352346 = 1299872175673458264503459867290698790837483436947198765949906360687986981
-        #    y_rate = 2343465798346782378468923640892347692347899237846866000000345345346276876786 + 7978726162930599238079167453467080976862 = 2343465798346782378468923640892347700326625400777465238079512798813357853648
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("1299872175673458264503459867290698790836486158597987785659078908345634635")
-        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2343465798346782378468923640892347692347899237846866000000345345346276876786")
+        #    x_rate = 129987217567345826 + 997278349210980290827452342352346 = 997278349210980420814669909698172
+        #    y_rate = 234346579834678237846892 + 7978726162930599238079167453467080976862 = 7978726162930599472425747288145318823754
+        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("129987217567345826")
+        liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("234346579834678237846892")
 
         liq_tree.add_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))     # LLLR, LLL
         liq_tree.remove_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))  # LLLR, LLL
@@ -1357,28 +1357,28 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         # LLLR
         #   total_m_liq = 2462 + (45754683688356 + 932141354 + 98237498262 + 432) * 1 = 45853853330866
         #
-        #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4567e18 / 45853853330866 / 2**64 = 7018367402089271512449831285542283070529383839730059006659936.130773551243944000002576389036236651338347389250
-        #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4567e18 / 45853853330866 / 2**64 = 7018367402089271512449831285542283070529383839730059006659936.130773551243944000002576389036236651338347389250
+        #   earn_x      = 997278349210980420814669909698172 * 4567e18 / 45853853330866 / 2**64 = 5384580105567269319768.51254007088771506177689554397322456673
+        #   earn_x_sub  = 997278349210980420814669909698172 * 4567e18 / 45853853330866 / 2**64 = 5384580105567269319768.51254007088771506177689554397322456673
         #
-        #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1235146e6 / 45853853330866 / 2**64 = 3422010642480475838452596727805190892411656925119587969.85330
-        #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1235146e6 / 45853853330866 / 2**64 = 3422010642480475838452596727805190892411656925119587969.85330
-        self.assertEqual(LLLR.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("7018367402089271512449831285542283070529383839730059006659936"))
-        self.assertEqual(LLLR.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("7018367402089271512449831285542283070529383839730059006659936"))
-        self.assertEqual(LLLR.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("3422010642480475838452596727805190892411656925119587969"))
-        self.assertEqual(LLLR.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("3422010642480475838452596727805190892411656925119587969"))
+        #   earn_y      = 7978726162930599472425747288145318823754 * 1235146e6 / 45853853330866 / 2**64 = 11650814730151920570.8396639745369843707702302526968216514839
+        #   earn_y_sub  = 7978726162930599472425747288145318823754 * 1235146e6 / 45853853330866 / 2**64 = 11650814730151920570.8396639745369843707702302526968216514839
+        self.assertEqual(LLLR.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("5384580105567269319768"))
+        self.assertEqual(LLLR.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("5384580105567269319768"))
+        self.assertEqual(LLLR.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("11650814730151920570"))
+        self.assertEqual(LLLR.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("11650814730151920570"))
 
         # LLL
         #   total_m_liq = 91509367379174 + (932141354 + 98237498262 + 432) * 2 = 91707706659270
         #
-        #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 134235e18 / 91707706659270 / 2**64 = 103143261248603614450474086559218941021145887312254123476968651.5651280159520663266949783703392275566984071552
-        #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 138802e18 / 91707706659270 / 2**64 = 106652444949742458322752666313500260376333232396286339977280163.7020367182193817579462613160489102195765062015
+        #   earn_x      = 997278349210980420814669909698172 * 134235e18 / 91707706659270 / 2**64 = 79132812622096209716370.5876318860028597239769562864471324430
+        #   earn_x_sub  = 997278349210980420814669909698172 * 138802e18 / 91707706659270 / 2**64 = 81825102674952122032641.7871976834727823250825007372997718729
         #
-        #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 34534634e6 / 91707706659270 / 2**64 = 47839642068767865474791702768817452956001093815727619460.5120
-        #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 35769780e6 / 91707706659270 / 2**64 = 49550647390054037320994765830325323627188543696392945355.2695
-        self.assertEqual(LLL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("103143261248603614450474086559218941021145887312254123476968651"))
-        self.assertEqual(LLL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("106652444949742458322752666313500260376333232396286339977280163"))
-        self.assertEqual(LLL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("47839642068767865474791702768817452956001093815727619460"))
-        self.assertEqual(LLL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("49550647390054037320994765830325323627188543696392945355"))
+        #   earn_y      = 7978726162930599472425747288145318823754 * 34534634e6 / 91707706659270 / 2**64 = 162878162791446141833.294568661856722588591983837787778442557
+        #   earn_y_sub  = 7978726162930599472425747288145318823754 * 35769780e6 / 91707706659270 / 2**64 = 168703570156678491951.753228258608716065007834501481165880576
+        self.assertEqual(LLL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("79132812622096209716370"))
+        self.assertEqual(LLL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("81825102674952122032641"))
+        self.assertEqual(LLL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("162878162791446141833"))
+        self.assertEqual(LLL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("168703570156678491951"))
 
         # LL
         #   Note: LL previously accumulated fees, so we use the new rate as provided. Then add to the previously accumulated fees.
@@ -1395,21 +1395,21 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 40456482e6 / 582598560430856 / 2**64 = 8821808067741790988384310101577867302175515556793408995.669016189358355860561774047790233928773909697150300378
         #
         #   Expected in 2 transactions
-        #   earn_x      = 1299872175673458264503459867290698790836486158597987785659078908345634635 * 293874927834e18 / 582598560430856 / 2**64 = 35544634549344534575302731950184064775070826330802801290388838911975.84352896184235223547894605797930653522893
-        #   earn_x_sub  = 1299872175673458264503459867290698790836486158597987785659078908345634635 * 293876300099e18 / 582598560430856 / 2**64 = 35544800526953748684785622304061478291882642296124811643546854739934.66882205416518379027248890016297306691608
+        #   earn_x      = 129987217567345826 * 293874927834e18 / 582598560430856 / 2**64 = 3554463454934.45344521569040863374143258749172847837137687025
+        #   earn_x_sub  = 129987217567345826 * 293876300099e18 / 582598560430856 / 2**64 = 3554480052695.37485616392194040566938030042839994115185549318
         #
-        #   earn_y      = 2343465798346782378468923640892347692347899237846866000000345345346276876786 * 2345346e6 / 582598560430856 / 2**64 = 511418473421538198191409430001729875950283402784680332.652365
-        #   earn_y_sub  = 2343465798346782378468923640892347692347899237846866000000345345346276876786 * 40456482e6 / 582598560430856 / 2**64 = 8821808067741790988384310101577867272140176067692003548.17772
+        #   earn_y      = 234346579834678237846892 * 2345346e6 / 582598560430856 / 2**64 = 51.141847342153819819140863544368355730624773075228977719082842282
+        #   earn_y_sub  = 234346579834678237846892 * 40456482e6 / 582598560430856 / 2**64 = 882.18080677417909883842963957010802883055121959492790529434721584
         #
-        #   acc_x       = 35544634549344534575302731950184064775070826330802801290388838911975 + 27270292518041237351900241102 = 35544634549344534575302731950184064775098096623320842527740739153077
-        #   acc_x_sub   = 35544800526953748684785622304061478291882642296124811643546854739934 + 27270419858159151079872803581 = 35544800526953748684785622304061478291909912715982970794626727543515
+        #   acc_x       = 3554463454934 + 27270292518041237351900241102 = 27270292518041240906363696036
+        #   acc_x_sub   = 3554480052695 + 27270419858159151079872803581 = 27270419858159154634352856276
         #
-        #   acc_y       = 511418473421538198191409430001729875950283402784680332 + 1741210798541653346 = 511418473421538198191409430001729877691494201326333678
-        #   acc_y_sub   = 8821808067741790988384310101577867272140176067692003548 + 30035339489101405447 = 8821808067741790988384310101577867302175515556793408995
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("35544634549344534575302731950184064775098096623320842527740739153077"))          # 1 wei lost
-        self.assertEqual(LL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("35544800526953748684785622304061478291909912715982970794626727543515"))
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("511418473421538198191409430001729877691494201326333678"))                        # 1 wei lost
-        self.assertEqual(LL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("8821808067741790988384310101577867302175515556793408995"))
+        #   acc_y       = 51 + 1741210798541653346 = 1741210798541653397
+        #   acc_y_sub   = 882 + 30035339489101405447 = 30035339489101406329
+        self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("27270292518041240906363696036"))          # 1 wei lost
+        self.assertEqual(LL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("27270419858159154634352856276"))
+        self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("1741210798541653397"))                        # 1 wei lost
+        self.assertEqual(LL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("30035339489101406329"))
 
         # L
         #   Note: (same situation as LL above)
@@ -1422,23 +1422,361 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 345345345e6 / 583038259951221 / 2**64 = 75248084430347809841211701855286934435441672114601405440.36959084052843872095985545406590238625971175786589905
         #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1324213967944654e6 / 583038259951221 / 2**64 = 288535999996598223755002019090052510701800094598545473522203908.3456298612650105591841256935791299290626023275
-        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("526588572449127820710280925096499286631826368408350578683678"))
-        self.assertEqual(L.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("35518549382741014580801587134532851665736731679050016244983472266163"))
-        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("75248084430347809841211701855286934435441672114601405439"))                 # 1 wei lost
-        self.assertEqual(L.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("288535999996598223755002019090052510701800094598545473522203907"))  # 1 wei lost
+        #
+        # --
+        #   earn_x      = 129987217567345826 * 4357e18 / 583038259951221 / 2**64 = 52658.857244912781888589346071378112785850967017095980665781805581
+        #   acc_x       = 52658 + 404005403049228369014 = 404005403049228421672
+        #   earn_x_sub  = 129987217567345826 * 293880892517e18 / 583038259951221 / 2**64 = 3551854938274.10144577461323882349951197727139690881248462550
+        #   acc_x_sub   = 3551854938274 + 27250279648794479314672290097 = 27250279648794482866527228371
+        #
+        #   earn_y      = 234346579834678237846892 * 345345345e6 / 583038259951221 / 2**64 = 7524.8084430347809841211584947169489394855931019950463150426607553
+        #   acc_y       = 7524 + 256194846273571639740 = 256194846273571647264
+        #   earn_y_sub  = 234346579834678237846892 * 1324213967944654e6 / 583038259951221 / 2**64 = 28853599999.6598223755001570810194889233587464872923634206316
+        #   acc_y_sub   = 28853599999 + 982369673901053899051127131 = 982369673901053927904727130
+        self.assertEqual(L.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("404005403049228421672"))
+        self.assertEqual(L.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("27250279648794482866527228371"))
+        self.assertEqual(L.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("256194846273571647264"))                 # 1 wei lost
+        self.assertEqual(L.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673901053927904727130"))  # 1 wei lost
 
         # 4) Confirm root fees are correct (although behavior leading to this state should have been previously tested at L and LL
         #   total_m_liq = 583038259954677
         #
-        #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 0 / 583038259954677 / 2**64 = 0
-        #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293880892517e18 / 583038259954677 / 2**64 = 35518549382530475899041156539352565759624323835558718083224151423775.00522789294925623241122948225991829258658
+        #   earn_x      = 997278349210980420814669909698172 * 0 / 583038259954677 / 2**64 = 0
+        #   earn_x_sub  = 997278349210980420814669909698172 * 293880892517e18 / 583038259954677 / 2**64 = 27250279648632954930995939801.6330981070932019410874863041294
         #
-        #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 0 / 583038259954677 / 2**64 = 0
-        #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1324213967944654e6 / 583038259954677 / 2**64 = 288535999994887906466277673329665978776994301813328609583743065.1742475963990666755167810305856663430573507628
+        #   earn_y      = 7978726162930599472425747288145318823754 * 0 / 583038259954677 / 2**64 = 0
+        #   earn_y_sub  = 7978726162930599472425747288145318823754 * 1324213967944654e6 / 583038259954677 / 2**64 = 982369673895230863062865876.398682260578858069936100777250356
         self.assertEqual(root.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
-        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("35518549382530475899041156539352565759624323835558718083224151423774"))  # 1 wei lost
+        self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("27250279648632954930995939801"))
         self.assertEqual(root.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
-        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("288535999994887906466277673329665978776994301813328609583743064"))       # 1 wei lost
+        self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673895230863062865875"))       # 1 wei lost
+
+
+    # def test_left_and_right_leg_stopping_below_peak(self):
+    #     #   Range: (1, 4)
+    #     #
+    #     #                                  L(0-7)
+    #     #                             __--  --__
+    #     #                        __---          ---__
+    #     #                      /                       \
+    #     #                   LL(0-3)                     LR(4-7)
+    #     #                 /   \                         /
+    #     #               /       \                     /
+    #     #             /           \                 /
+    #     #           LLL(0-1)       LLR(2-3)       LRL(4-5)
+    #     #              \                         /
+    #     #               \                       /
+    #     #           LLLR(1)                   LRLL(4)
+    #
+    #     liq_tree = self.liq_tree
+    #
+    #     # 1st (1, 4)
+    #     root: LiqNode = liq_tree.nodes[liq_tree.root_key]
+    #     L: LiqNode = liq_tree.nodes[(8 << 24) | 16]
+    #     LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]
+    #     LR: LiqNode = liq_tree.nodes[(4 << 24) | 20]
+    #     LLL: LiqNode = liq_tree.nodes[(2 << 24) | 16]
+    #     LLR: LiqNode = liq_tree.nodes[(2 << 24) | 18]
+    #     LRL: LiqNode = liq_tree.nodes[(2 << 24) | 20]
+    #     LLLR: LiqNode = liq_tree.nodes[(1 << 24) | 17]
+    #     LRLL: LiqNode = liq_tree.nodes[(1 << 24) | 20]
+    #
+    #     # Pre-populate nodes w/o fee calculation
+    #     liq_tree.add_inf_range_m_liq(UnsignedDecimal("432"))
+    #     liq_tree.add_m_liq(LiqRange(low=0, high=7), UnsignedDecimal("98237498262"))      # L
+    #     liq_tree.add_m_liq(LiqRange(low=0, high=3), UnsignedDecimal("932141354"))        # LL
+    #     liq_tree.add_m_liq(LiqRange(low=4, high=7), UnsignedDecimal("151463465"))        # LR
+    #     liq_tree.add_m_liq(LiqRange(low=0, high=1), UnsignedDecimal("45754683688356"))   # LLL
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("245346257245745"))  # LLR
+    #     liq_tree.add_m_liq(LiqRange(low=4, high=5), UnsignedDecimal("243457472"))        # LRL
+    #     liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("2462"))             # LLLR
+    #     liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))      # LRLL
+    #
+    #     liq_tree.add_t_liq(LiqRange(low=0, high=7), UnsignedDecimal("5645645"), UnsignedDecimal("4357e18"), UnsignedDecimal("345345345e6"))        # L
+    #     liq_tree.add_t_liq(LiqRange(low=0, high=3), UnsignedDecimal("3456835"), UnsignedDecimal("293874927834e18"), UnsignedDecimal("2345346e6"))  # LL
+    #     liq_tree.add_t_liq(LiqRange(low=4, high=7), UnsignedDecimal("51463465"), UnsignedDecimal("23452e18"), UnsignedDecimal("12341235e6"))       # LR
+    #     liq_tree.add_t_liq(LiqRange(low=0, high=1), UnsignedDecimal("23453467234"), UnsignedDecimal("134235e18"), UnsignedDecimal("34534634e6"))   # LLL
+    #     liq_tree.add_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("456756745"), UnsignedDecimal("1233463e18"), UnsignedDecimal("2341356e6"))     # LLR
+    #     liq_tree.add_t_liq(LiqRange(low=4, high=5), UnsignedDecimal("3457472"), UnsignedDecimal("45e18"), UnsignedDecimal("1324213563456457e6"))   # LRL
+    #     liq_tree.add_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("262"), UnsignedDecimal("4567e18"), UnsignedDecimal("1235146e6"))              # LLLR
+    #     liq_tree.add_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("4564573"), UnsignedDecimal("4564564e18"), UnsignedDecimal("6345135e6"))       # LRLL
+    #
+    #     # Verify initial state
+    #     # m_liq
+    #     self.assertEqual(root.m_liq, UnsignedDecimal("432"))
+    #     self.assertEqual(L.m_liq, UnsignedDecimal("98237498262"))
+    #     self.assertEqual(LL.m_liq, UnsignedDecimal("932141354"))
+    #     self.assertEqual(LR.m_liq, UnsignedDecimal("151463465"))
+    #     self.assertEqual(LLL.m_liq, UnsignedDecimal("45754683688356"))
+    #     self.assertEqual(LLR.m_liq, UnsignedDecimal("245346257245745"))
+    #     self.assertEqual(LRL.m_liq, UnsignedDecimal("243457472"))
+    #     self.assertEqual(LLLR.m_liq, UnsignedDecimal("2462"))
+    #     self.assertEqual(LRLL.m_liq, UnsignedDecimal("45656756785"))
+    #
+    #     # t_liq
+    #     self.assertEqual(root.t_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(L.t_liq, UnsignedDecimal("5645645"))
+    #     self.assertEqual(LL.t_liq, UnsignedDecimal("3456835"))
+    #     self.assertEqual(LR.t_liq, UnsignedDecimal("51463465"))
+    #     self.assertEqual(LLL.t_liq, UnsignedDecimal("23453467234"))
+    #     self.assertEqual(LLR.t_liq, UnsignedDecimal("456756745"))
+    #     self.assertEqual(LRL.t_liq, UnsignedDecimal("3457472"))
+    #     self.assertEqual(LLLR.t_liq, UnsignedDecimal("262"))
+    #     self.assertEqual(LRLL.t_liq, UnsignedDecimal("4564573"))
+    #
+    #     # subtree_m_liq
+    #     self.assertEqual(root.subtree_m_liq, UnsignedDecimal("583038259954677"))  # 432*16 + 98237498262*8 + 932141354*4 + 151463465*4 + 45754683688356*2 + 245346257245745*2 + 243457472*2 + 2462*1 + 45656756785*1 = 583038259954677
+    #     self.assertEqual(L.subtree_m_liq, UnsignedDecimal("583038259947765"))     # 98237498262*8 + 932141354*4 + 151463465*4 + 45754683688356*2 + 245346257245745*2 + 243457472*2 + 2462*1 + 45656756785*1 = 583038259947765
+    #     self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("582205610436080"))    # 932141354*4 + 45754683688356*2 + 245346257245745*2 + 2462*1 = 582205610436080
+    #     self.assertEqual(LR.subtree_m_liq, UnsignedDecimal("46749525589"))        # 151463465*4 + 243457472*2 + 45656756785*1 = 46749525589
+    #     self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("91509367379174"))    # 45754683688356*2 + 2462*1 = 91509367379174
+    #     self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("490692514491490"))   # 245346257245745*2 = 490692514491490
+    #     self.assertEqual(LRL.subtree_m_liq, UnsignedDecimal("46143671729"))       # 243457472*2 + 45656756785*1 = 46143671729
+    #     self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("2462"))             # 2462*1 = 2462
+    #     self.assertEqual(LRLL.subtree_m_liq, UnsignedDecimal("45656756785"))      # 45656756785*1 = 45656756785
+    #
+    #     # borrowed_x
+    #     self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
+    #     self.assertEqual(L.token_x_borrowed, UnsignedDecimal("4357e18"))
+    #     self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("293874927834e18"))
+    #     self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("23452e18"))
+    #     self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("134235e18"))
+    #     self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("1233463e18"))
+    #     self.assertEqual(LRL.token_x_borrowed, UnsignedDecimal("45e18"))
+    #     self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("4567e18"))
+    #     self.assertEqual(LRLL.token_x_borrowed, UnsignedDecimal("4564564e18"))
+    #
+    #     # subtree_borrowed_x
+    #     self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+    #     self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("293880892517e18"))     # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+    #     self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("293876300099e18"))    # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
+    #     self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("4588061e18"))         # 23452e18 + 45e18 + 4564564e18 = 4588061e18
+    #     self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("138802e18"))         # 134235e18 + 4567e18 = 138802e18
+    #     self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("1233463e18"))        # 1233463e18
+    #     self.assertEqual(LRL.token_x_subtree_borrowed, UnsignedDecimal("4564609e18"))        # 45e18 + 4564564e18 = 4564609e18
+    #     self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("4567e18"))          # 4567e18
+    #     self.assertEqual(LRLL.token_x_subtree_borrowed, UnsignedDecimal("4564564e18"))       # 4564564e18
+    #
+    #     # borrowed_y
+    #     self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
+    #     self.assertEqual(L.token_y_borrowed, UnsignedDecimal("345345345e6"))
+    #     self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("2345346e6"))
+    #     self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("12341235e6"))
+    #     self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("34534634e6"))
+    #     self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("2341356e6"))
+    #     self.assertEqual(LRL.token_y_borrowed, UnsignedDecimal("1324213563456457e6"))
+    #     self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("1235146e6"))
+    #     self.assertEqual(LRLL.token_y_borrowed, UnsignedDecimal("6345135e6"))
+    #
+    #     # subtree_borrowed_y
+    #     self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+    #     self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("1324213967944654e6"))     # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+    #     self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("40456482e6"))            # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
+    #     self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("1324213582142827e6"))    # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
+    #     self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("35769780e6"))           # 34534634e6 + 1235146e6 = 35769780e6
+    #     self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("2341356e6"))            # 2341356e6
+    #     self.assertEqual(LRL.token_y_subtree_borrowed, UnsignedDecimal("1324213569801592e6"))   # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
+    #     self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("1235146e6"))           # 1235146e6
+    #     self.assertEqual(LRLL.token_y_subtree_borrowed, UnsignedDecimal("6345135e6"))           # 6345135e6
+    #
+    #     # Test fees while targeting (1, 4)
+    #     # 1) Trigger fee update through path L->LL->LLR by updating LLR
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("997278349210980290827452342352346")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("7978726162930599238079167453467080976862")
+    #
+    #     liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("564011300817682367503451461"))     # LLR
+    #     liq_tree.remove_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("564011300817682367503451461"))  # LLR
+    #
+    #     # LLR
+    #     #
+    #     #   total_m_liq = 490692514491490 + (932141354 + 98237498262 + 432) * 2 = 490890853771586
+    #     #
+    #     #   earn_x      = 997278349210980290827452342352346 * 1233463e18 / 490890853771586 / 2**64 = 135843184601648135054031.953000417177564160084206701934727792
+    #     #   earn_x_sub  = 997278349210980290827452342352346 * 1233463e18 / 490890853771586 / 2**64 = 135843184601648135054031.953000417177564160084206701934727792
+    #     #
+    #     #   earn_y      = 7978726162930599238079167453467080976862 * 2341356e6 / 490890853771586 / 2**64 = 2062986327173371860.88896572844074868101158495986576204342125
+    #     #   earn_y_sub  = 7978726162930599238079167453467080976862 * 2341356e6 / 490890853771586 / 2**64 = 2062986327173371860.88896572844074868101158495986576204342125
+    #     self.assertEqual(LLR.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("135843184601648135054031"))
+    #     self.assertEqual(LLR.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("135843184601648135054031"))
+    #     self.assertEqual(LLR.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("2062986327173371860"))
+    #     self.assertEqual(LLR.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("2062986327173371860"))
+    #
+    #     # LL
+    #     #
+    #     #   total_m_liq = 582205610436080 + (98237498262 + 432) * 4 = 582598560430856
+    #     #
+    #     #   earn_x      = 997278349210980290827452342352346 * 293874927834e18 / 582598560430856 / 2**64 = 27270292518041237351900241102.9072917119646623397725295368780
+    #     #   earn_x_sub  = 997278349210980290827452342352346 * 293876300099e18 / 582598560430856 / 2**64 = 27270419858159151079872803581.0095490519975481585750941907483
+    #     #
+    #     #   earn_y      = 7978726162930599238079167453467080976862 * 2345346e6 / 582598560430856 / 2**64 = 1741210798541653346.44401134728453048205241418030400364012179
+    #     #   earn_y_sub  = 7978726162930599238079167453467080976862 * 40456482e6 / 582598560430856 / 2**64 = 30035339489101405447.4912908710324004754969276780541880790817
+    #     self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("27270292518041237351900241102"))
+    #     self.assertEqual(LL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("27270419858159151079872803581"))
+    #     self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("1741210798541653346"))
+    #     self.assertEqual(LL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("30035339489101405447"))
+    #
+    #     # L
+    #     #
+    #     #   total_m_liq = 583038259947765 + (432) * 8 = 583038259951221
+    #     #
+    #     #   earn_x      = 997278349210980290827452342352346 * 4357e18 / 583038259951221 / 2**64 = 404005403049228369014.124610642017839196445240663620779618212
+    #     #   earn_x_sub  = 997278349210980290827452342352346 * 293880892517e18 / 583038259951221 / 2**64 = 27250279648794479314672290097.5284183991019310121509607727857
+    #     #
+    #     #   earn_y      = 7978726162930599238079167453467080976862 * 345345345e6 / 583038259951221 / 2**64 = 256194846273571639740.673516172246801895282064962841499611008
+    #     #   earn_y_sub  = 7978726162930599238079167453467080976862 * 1324213967944654e6 / 583038259951221 / 2**64 = 982369673901053899051127131.509115296130579701967553185312315
+    #     self.assertEqual(L.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("404005403049228369014"))
+    #     self.assertEqual(L.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("27250279648794479314672290097"))
+    #     self.assertEqual(L.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("256194846273571639740"))
+    #     self.assertEqual(L.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673901053899051127131"))
+    #
+    #     # 2) Trigger fee update through path L->LR->LRL->LRLL by updating LRLL
+    #     liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))     # LRLL
+    #     liq_tree.remove_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))  # LRLL
+    #
+    #     # LRLL
+    #     #   total_m_liq = 45656756785 + (243457472 + 151463465 + 98237498262 + 432) * 1 = 144289176416
+    #     #
+    #     #   earn_x      = 997278349210980290827452342352346 * 4564564e18 / 144289176416 / 2**64 = 1710260298962014449572659226.45857973175650767716107059096213
+    #     #   earn_x_sub  = 997278349210980290827452342352346 * 4564564e18 / 144289176416 / 2**64 = 1710260298962014449572659226.45857973175650767716107059096213
+    #     #
+    #     #   earn_y      = 7978726162930599238079167453467080976862 * 6345135e6 / 144289176416 / 2**64 = 19020457094450723823822.1304935642458081127558849886746302550
+    #     #   earn_y_sub  = 7978726162930599238079167453467080976862 * 6345135e6 / 144289176416 / 2**64 = 19020457094450723823822.1304935642458081127558849886746302550
+    #     self.assertEqual(LRLL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("1710260298962014449572659226"))
+    #     self.assertEqual(LRLL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1710260298962014449572659226"))
+    #     self.assertEqual(LRLL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("19020457094450723823822"))
+    #     self.assertEqual(LRLL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("19020457094450723823822"))
+    #
+    #     # LRL
+    #     #   total_m_liq = 46143671729 + (151463465 + 98237498262 + 432) * 2 = 242921596047
+    #     #
+    #     #   earn_x      = 997278349210980290827452342352346 * 45e18 / 242921596047 / 2**64 = 10014817880995372310152.4742715985679179265308809095477236672
+    #     #   earn_x_sub  = 997278349210980290827452342352346 * 4564609e18 / 242921596047 / 2**64 = 1015860618510053453450506120.72016150011730453772839221611958
+    #     #
+    #     #   earn_y      = 7978726162930599238079167453467080976862 * 1324213563456457e6 / 242921596047 / 2**64 = 2357793377238426581071757403793.96341043019973158984354448841
+    #     #   earn_y_sub  = 7978726162930599238079167453467080976862 * 1324213569801592e6 / 242921596047 / 2**64 = 2357793388536088599903418420664.92708711347544674139375617462
+    #     self.assertEqual(LRL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("10014817880995372310152"))
+    #     self.assertEqual(LRL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1015860618510053453450506120"))
+    #     self.assertEqual(LRL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("2357793377238426581071757403793"))
+    #     self.assertEqual(LRL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("2357793388536088599903418420664"))
+    #
+    #     # LR
+    #     #   total_m_liq = 46749525589 + (98237498262 + 432) * 4 = 439699520365
+    #     #
+    #     #   earn_x      = 997278349210980290827452342352346 * 23452e18 / 439699520365 / 2**64 = 2883504023897755903335799.02165969971328846599101621918354759
+    #     #   earn_x_sub  = 997278349210980290827452342352346 * 4588061e18 / 439699520365 / 2**64 = 564117872905865676599639663.786245246727357690738865154506505
+    #     #
+    #     #   earn_y      = 7978726162930599238079167453467080976862 * 12341235e6 / 439699520365 / 2**64 = 12139937971620398360316.5575159331335181718549141795773004218
+    #     #   earn_y_sub  = 7978726162930599238079167453467080976862 * 1324213582142827e6 / 439699520365 / 2**64 = 1302614426221619876588878010887.22237028229312127108609228047
+    #     self.assertEqual(LR.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("2883504023897755903335799"))
+    #     self.assertEqual(LR.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("564117872905865676599639663"))
+    #     self.assertEqual(LR.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("12139937971620398360316"))
+    #     self.assertEqual(LR.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("1302614426221619876588878010887"))
+    #
+    #     # L
+    #     # Borrows have not changed. Results should be the same!
+    #     self.assertEqual(L.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("404005403049228369014"))
+    #     self.assertEqual(L.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("27250279648794479314672290097"))
+    #     self.assertEqual(L.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("256194846273571639740"))
+    #     self.assertEqual(L.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673901053899051127131"))
+    #
+    #     # 3) Trigger fee update for remaining nodes by updating the range (1,3) LLLR, LLL
+    #     #    For this last one, also update the rates to increment accumulated fees in L
+    #     #    While previous step does not, meaning we also tested that nothing should have accumulated.
+    #     #
+    #     #    For un-accumulated nodes
+    #     #    x_rate = 1299872175673458264503459867290698790836486158597987785659078908345634635 + 997278349210980290827452342352346 = 1299872175673458264503459867290698790837483436947198765949906360687986981
+    #     #    y_rate = 2343465798346782378468923640892347692347899237846866000000345345346276876786 + 7978726162930599238079167453467080976862 = 2343465798346782378468923640892347700326625400777465238079512798813357853648
+    #     liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("1299872175673458264503459867290698790836486158597987785659078908345634635")
+    #     liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2343465798346782378468923640892347692347899237846866000000345345346276876786")
+    #
+    #     liq_tree.add_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))     # LLLR, LLL
+    #     liq_tree.remove_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))  # LLLR, LLL
+    #
+    #     # LLLR
+    #     #   total_m_liq = 2462 + (45754683688356 + 932141354 + 98237498262 + 432) * 1 = 45853853330866
+    #     #
+    #     #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4567e18 / 45853853330866 / 2**64 = 7018367402089271512449831285542283070529383839730059006659936.130773551243944000002576389036236651338347389250
+    #     #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4567e18 / 45853853330866 / 2**64 = 7018367402089271512449831285542283070529383839730059006659936.130773551243944000002576389036236651338347389250
+    #     #
+    #     #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1235146e6 / 45853853330866 / 2**64 = 3422010642480475838452596727805190892411656925119587969.85330
+    #     #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1235146e6 / 45853853330866 / 2**64 = 3422010642480475838452596727805190892411656925119587969.85330
+    #     self.assertEqual(LLLR.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("7018367402089271512449831285542283070529383839730059006659936"))
+    #     self.assertEqual(LLLR.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("7018367402089271512449831285542283070529383839730059006659936"))
+    #     self.assertEqual(LLLR.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("3422010642480475838452596727805190892411656925119587969"))
+    #     self.assertEqual(LLLR.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("3422010642480475838452596727805190892411656925119587969"))
+    #
+    #     # LLL
+    #     #   total_m_liq = 91509367379174 + (932141354 + 98237498262 + 432) * 2 = 91707706659270
+    #     #
+    #     #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 134235e18 / 91707706659270 / 2**64 = 103143261248603614450474086559218941021145887312254123476968651.5651280159520663266949783703392275566984071552
+    #     #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 138802e18 / 91707706659270 / 2**64 = 106652444949742458322752666313500260376333232396286339977280163.7020367182193817579462613160489102195765062015
+    #     #
+    #     #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 34534634e6 / 91707706659270 / 2**64 = 47839642068767865474791702768817452956001093815727619460.5120
+    #     #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 35769780e6 / 91707706659270 / 2**64 = 49550647390054037320994765830325323627188543696392945355.2695
+    #     self.assertEqual(LLL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("103143261248603614450474086559218941021145887312254123476968651"))
+    #     self.assertEqual(LLL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("106652444949742458322752666313500260376333232396286339977280163"))
+    #     self.assertEqual(LLL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("47839642068767865474791702768817452956001093815727619460"))
+    #     self.assertEqual(LLL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("49550647390054037320994765830325323627188543696392945355"))
+    #
+    #     # LL
+    #     #   Note: LL previously accumulated fees, so we use the new rate as provided. Then add to the previously accumulated fees.
+    #     #         The results SHOULD be the same as if the two rates were added, and accumulated once.
+    #     #         However, that is not the case. Due to decimal truncation that happens over two transactions. See below.
+    #     #
+    #     #   total_m_liq = 582205610436080 + (98237498262 + 432) * 4 = 582598560430856
+    #     #
+    #     #   Expected in 1 transaction
+    #     #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293874927834e18 / 582598560430856 / 2**64 = 35544634549344534575302731950184064775098096623320842527740739153078.75082067380701457525147559485733770210963
+    #     #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293876300099e18 / 582598560430856 / 2**64 = 35544800526953748684785622304061478291909912715982970794626727543515.67837110616273194884758309091127470639015
+    #     #
+    #     #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 2345346e6 / 582598560430856 / 2**64 = 511418473421538198191409430001729877691494201326333679.0963768041829950138557552907316220422703628558848163908
+    #     #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 40456482e6 / 582598560430856 / 2**64 = 8821808067741790988384310101577867302175515556793408995.669016189358355860561774047790233928773909697150300378
+    #     #
+    #     #   Expected in 2 transactions
+    #     #   earn_x      = 1299872175673458264503459867290698790836486158597987785659078908345634635 * 293874927834e18 / 582598560430856 / 2**64 = 35544634549344534575302731950184064775070826330802801290388838911975.84352896184235223547894605797930653522893
+    #     #   earn_x_sub  = 1299872175673458264503459867290698790836486158597987785659078908345634635 * 293876300099e18 / 582598560430856 / 2**64 = 35544800526953748684785622304061478291882642296124811643546854739934.66882205416518379027248890016297306691608
+    #     #
+    #     #   earn_y      = 2343465798346782378468923640892347692347899237846866000000345345346276876786 * 2345346e6 / 582598560430856 / 2**64 = 511418473421538198191409430001729875950283402784680332.652365
+    #     #   earn_y_sub  = 2343465798346782378468923640892347692347899237846866000000345345346276876786 * 40456482e6 / 582598560430856 / 2**64 = 8821808067741790988384310101577867272140176067692003548.17772
+    #     #
+    #     #   acc_x       = 35544634549344534575302731950184064775070826330802801290388838911975 + 27270292518041237351900241102 = 35544634549344534575302731950184064775098096623320842527740739153077
+    #     #   acc_x_sub   = 35544800526953748684785622304061478291882642296124811643546854739934 + 27270419858159151079872803581 = 35544800526953748684785622304061478291909912715982970794626727543515
+    #     #
+    #     #   acc_y       = 511418473421538198191409430001729875950283402784680332 + 1741210798541653346 = 511418473421538198191409430001729877691494201326333678
+    #     #   acc_y_sub   = 8821808067741790988384310101577867272140176067692003548 + 30035339489101405447 = 8821808067741790988384310101577867302175515556793408995
+    #     self.assertEqual(LL.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("35544634549344534575302731950184064775098096623320842527740739153077"))          # 1 wei lost
+    #     self.assertEqual(LL.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("35544800526953748684785622304061478291909912715982970794626727543515"))
+    #     self.assertEqual(LL.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("511418473421538198191409430001729877691494201326333678"))                        # 1 wei lost
+    #     self.assertEqual(LL.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("8821808067741790988384310101577867302175515556793408995"))
+    #
+    #     # L
+    #     #   Note: (same situation as LL above)
+    #     #
+    #     #   total_m_liq = 583038259947765 + (432) * 8 = 583038259951221
+    #     #
+    #     #   Expected in 1 transaction
+    #     #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 4357e18 / 583038259951221 / 2**64 = 526588572449127820710280925096499286631826368408350578683678.8949320786875222752967719865098507132989325023672
+    #     #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293880892517e18 / 583038259951221 / 2**64 = 35518549382741014580801587134532851665736731679050016244983472266163.77158207946190817820623319059828307670852
+    #     #
+    #     #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 345345345e6 / 583038259951221 / 2**64 = 75248084430347809841211701855286934435441672114601405440.36959084052843872095985545406590238625971175786589905
+    #     #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1324213967944654e6 / 583038259951221 / 2**64 = 288535999996598223755002019090052510701800094598545473522203908.3456298612650105591841256935791299290626023275
+    #     self.assertEqual(L.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("526588572449127820710280925096499286631826368408350578683678"))
+    #     self.assertEqual(L.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("35518549382741014580801587134532851665736731679050016244983472266163"))
+    #     self.assertEqual(L.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("75248084430347809841211701855286934435441672114601405439"))                 # 1 wei lost
+    #     self.assertEqual(L.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("288535999996598223755002019090052510701800094598545473522203907"))  # 1 wei lost
+    #
+    #     # 4) Confirm root fees are correct (although behavior leading to this state should have been previously tested at L and LL
+    #     #   total_m_liq = 583038259954677
+    #     #
+    #     #   earn_x      = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 0 / 583038259954677 / 2**64 = 0
+    #     #   earn_x_sub  = 1299872175673458264503459867290698790837483436947198765949906360687986981 * 293880892517e18 / 583038259954677 / 2**64 = 35518549382530475899041156539352565759624323835558718083224151423775.00522789294925623241122948225991829258658
+    #     #
+    #     #   earn_y      = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 0 / 583038259954677 / 2**64 = 0
+    #     #   earn_y_sub  = 2343465798346782378468923640892347700326625400777465238079512798813357853648 * 1324213967944654e6 / 583038259954677 / 2**64 = 288535999994887906466277673329665978776994301813328609583743065.1742475963990666755167810305856663430573507628
+    #     self.assertEqual(root.token_x_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(root.token_x_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("35518549382530475899041156539352565759624323835558718083224151423774"))  # 1 wei lost
+    #     self.assertEqual(root.token_y_cummulative_earned_per_m_liq, UnsignedDecimal("0"))
+    #     self.assertEqual(root.token_y_cummulative_earned_per_m_subtree_liq, UnsignedDecimal("288535999994887906466277673329665978776994301813328609583743064"))       # 1 wei lost
 
     def test_left_and_right_leg_stopping_at_or_above_peak(self):
         #   Range: (0, 1)
