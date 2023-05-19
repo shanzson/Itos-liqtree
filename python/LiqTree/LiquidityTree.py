@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from LiqTree.UnsignedDecimal import UnsignedDecimal
 
 from LiqTree.LiquidityKey import LiquidityKey
+from LiqTree.ILiquidity import ILiquidity
 
 
 #  Liquidity Tree
@@ -88,7 +89,7 @@ class LiqNode:
     # right = None
 
 
-class LiquidityTree:
+class LiquidityTree(ILiquidity):
     # region Initialization
     def __init__(self, depth: int, sol_truncation: bool = False):
         self.sol_truncation = sol_truncation
