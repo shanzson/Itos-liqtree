@@ -2,7 +2,6 @@
 pragma solidity ^0.8.18;
 
 import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
-import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 
 /**
  *  Liquidity Tree
@@ -33,7 +32,6 @@ import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 /// But the change should not be insanely difficult.
 
 
-
 import { console } from "forge-std/console.sol";
 
 
@@ -62,8 +60,8 @@ struct LiqTree {
     mapping(LKey => LiqNode) nodes;
     LKey root; // maxRange << 24 + maxRange;
     uint24 offset; // This is also the maximum range allowed in this tree.
-    FeeRateSnapshot feeRateSnapshotTokenX;
-    FeeRateSnapshot feeRateSnapshotTokenY;
+    uint256 feeRateSnapshotTokenX;
+    uint256 feeRateSnapshotTokenY;
 }
 
 
@@ -71,7 +69,6 @@ library LiqTreeImpl {
     using LKeyImpl for LKey;
     using LiqNodeImpl for LiqNode;
     using LiqTreeIntLib for uint24;
-    using FeeRateSnapshotImpl for FeeRateSnapshot;
 
     /****************************
      * Initialization Functions *
@@ -642,9 +639,9 @@ library LiqTreeImpl {
     function addInfRangeMLiq(LiqTree storage self, uint128 liq) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
         rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
         rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
         // TODO: determine if we need to check for overflow
@@ -666,9 +663,9 @@ library LiqTreeImpl {
     function removeInfRangeMLiq(LiqTree storage self, uint128 liq) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
         rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
         rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
         // TODO: determine if we need to check for overflow
@@ -692,9 +689,9 @@ library LiqTreeImpl {
 
         // TODO (urlaubaitos) adjust for fee accounting
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
         rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
         rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
         // TODO: determine if we need to check for overflow
@@ -719,9 +716,9 @@ library LiqTreeImpl {
     function removeInfRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(rootNode.tokenX.feeRateSnapshot);
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
         rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(rootNode.tokenY.feeRateSnapshot);
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
         rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
         // TODO: determine if we need to check for overflow
@@ -746,9 +743,9 @@ library LiqTreeImpl {
     function _handleFee(LiqTree storage self, LKey current, LiqNode storage node) internal {
         (uint24 rangeWidth,) = current.explode();
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX.diff(node.tokenX.feeRateSnapshot);
+        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - node.tokenX.feeRateSnapshot;
         node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY.diff(node.tokenY.feeRateSnapshot);
+        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - node.tokenY.feeRateSnapshot;
         node.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
         // TODO: determine if we need to check for overflow

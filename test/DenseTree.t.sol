@@ -4,7 +4,6 @@ pragma solidity ^0.8.18;
 import { console } from "forge-std/console.sol";
 import { Test } from "forge-std/Test.sol";
 
-import { FeeRateSnapshot, FeeRateSnapshotImpl } from "src/FeeRateSnapshot.sol";
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
 
 /**
@@ -15,7 +14,6 @@ contract DenseTreeTreeStructureTest is Test {
     LiqTree public liqTree;
     using LiqTreeImpl for LiqTree;
     using LKeyImpl for LKey;
-    using FeeRateSnapshotImpl for FeeRateSnapshot;
     
     function setUp() public {
         // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15];);. 
@@ -29,8 +27,8 @@ contract DenseTreeTreeStructureTest is Test {
         liqTree.addInfRangeMLiq(8430);
         liqTree.addInfRangeTLiq(4381, 832e18, 928e6);
 
-        liqTree.feeRateSnapshotTokenY.add(113712805933826);  // 5.4% APR as Q192.64 = 0.054 * 3600 / (365 * 24 * 60 * 60) * 2^64 = 113712805933826
-        liqTree.feeRateSnapshotTokenX.add(113712805933826);
+        liqTree.feeRateSnapshotTokenY += 113712805933826;  // 5.4% APR as Q192.64 = 0.054 * 3600 / (365 * 24 * 60 * 60) * 2^64 = 113712805933826
+        liqTree.feeRateSnapshotTokenX += 113712805933826;
 
         // Verify root state is as expected
         assertEq(root.mLiq, 8430);
@@ -60,8 +58,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(root.tokenY.subtreeBorrowed, 928e6);
 
         // Testing remove_inf_range_mLiq
-        liqTree.feeRateSnapshotTokenY.add(74672420010376264941568);
-        liqTree.feeRateSnapshotTokenX.add(74672420010376264941568);
+        liqTree.feeRateSnapshotTokenY += 74672420010376264941568;
+        liqTree.feeRateSnapshotTokenX += 74672420010376264941568;
 
         liqTree.removeInfRangeMLiq(3682);
 
@@ -81,8 +79,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(root.tokenY.subtreeBorrowed, 928e6);
 
         // Testing add_inf_range_tLiq
-        liqTree.feeRateSnapshotTokenY.add(6932491854677024);
-        liqTree.feeRateSnapshotTokenX.add(6932491854677024);
+        liqTree.feeRateSnapshotTokenY += 6932491854677024;
+        liqTree.feeRateSnapshotTokenX += 6932491854677024;
 
         liqTree.addInfRangeTLiq(7287, 9184e18, 7926920e6);
 
@@ -102,8 +100,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(root.tokenY.subtreeBorrowed, 7927848e6);
 
         // Testing remove_inf_range_tLiq
-        liqTree.feeRateSnapshotTokenY.add(1055375100301031600000000);
-        liqTree.feeRateSnapshotTokenX.add(1055375100301031600000000);
+        liqTree.feeRateSnapshotTokenY += 1055375100301031600000000;
+        liqTree.feeRateSnapshotTokenX += 1055375100301031600000000;
 
         liqTree.removeInfRangeTLiq(4923, 222e18, 786e6);
 
@@ -207,8 +205,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(LLRR.tokenY.subtreeBorrowed, 779531e6);
 
         // T98273
-        liqTree.feeRateSnapshotTokenX.add(4541239648278065);
-        liqTree.feeRateSnapshotTokenY.add(13278814667749784);
+        liqTree.feeRateSnapshotTokenX += 4541239648278065;
+        liqTree.feeRateSnapshotTokenY += 13278814667749784;
 
         // Apply change that requires fee calculation
         // addMLiq
@@ -267,8 +265,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(LLRR.subtreeMLiq, 287637599);
 
         // T2876298273
-        liqTree.feeRateSnapshotTokenX.add(16463537718422861220174597);
-        liqTree.feeRateSnapshotTokenY.add(3715979586694123491881712207);
+        liqTree.feeRateSnapshotTokenX += 16463537718422861220174597;
+        liqTree.feeRateSnapshotTokenY += 3715979586694123491881712207;
 
         // Apply change that requires fee calculation
         // remove_mLiq
@@ -327,8 +325,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(LLRR.subtreeMLiq, 287634865);
 
         // T9214298113
-        liqTree.feeRateSnapshotTokenX.add(11381610389149375791104);
-        liqTree.feeRateSnapshotTokenY.add(185394198934916215865344);
+        liqTree.feeRateSnapshotTokenX += 11381610389149375791104;
+        liqTree.feeRateSnapshotTokenY += 185394198934916215865344;
 
         // Apply change that requires fee calculation
         // addTLiq
@@ -412,8 +410,8 @@ contract DenseTreeTreeStructureTest is Test {
 
         // T32876298273
         // 3.3) addTLiq
-        liqTree.feeRateSnapshotTokenX.add(2352954287417905205553);
-        liqTree.feeRateSnapshotTokenY.add(6117681147286553534438);
+        liqTree.feeRateSnapshotTokenX += 2352954287417905205553;
+        liqTree.feeRateSnapshotTokenY += 6117681147286553534438;
 
         // Apply change that requires fee calculation
         // addTLiq
@@ -585,8 +583,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(RRLL.tokenY.subtreeBorrowed, 779531e6);   // 779531e6
 
         // T98273
-        liqTree.feeRateSnapshotTokenX.add(4541239648278065);   // 7.9% APR as Q192.64 T98273 - T0
-        liqTree.feeRateSnapshotTokenY.add(13278814667749784);  // 23.1% APR as Q192.64 T98273 - T0
+        liqTree.feeRateSnapshotTokenX += 4541239648278065;   // 7.9% APR as Q192.64 T98273 - T0
+        liqTree.feeRateSnapshotTokenY += 13278814667749784;  // 23.1% APR as Q192.64 T98273 - T0
 
         // Apply change that requires fee calculation
         // addMLiq
@@ -688,8 +686,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(RRLL.subtreeMLiq, 287637599);  // 287637599*1
 
         // T2876298273
-        liqTree.feeRateSnapshotTokenX.add(16463537718422861220174597);    // 978567.9% APR as Q192.64 T2876298273 - T98273
-        liqTree.feeRateSnapshotTokenY.add(3715979586694123491881712207);  // 220872233.1% APR as Q192.64 T2876298273 - T98273
+        liqTree.feeRateSnapshotTokenX += 16463537718422861220174597;    // 978567.9% APR as Q192.64 T2876298273 - T98273
+        liqTree.feeRateSnapshotTokenY += 3715979586694123491881712207;  // 220872233.1% APR as Q192.64 T2876298273 - T98273
 
         // Apply change that requires fee calculation
         // remove_mLiq
@@ -790,8 +788,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(RRLL.subtreeMLiq, 287634865);
 
         // T9214298113
-        liqTree.feeRateSnapshotTokenX.add(11381610389149375791104);   // 307% APR as Q192.64 T9214298113 - T2876298273
-        liqTree.feeRateSnapshotTokenY.add(185394198934916215865344);  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
+        liqTree.feeRateSnapshotTokenX += 11381610389149375791104;   // 307% APR as Q192.64 T9214298113 - T2876298273
+        liqTree.feeRateSnapshotTokenY += 185394198934916215865344;  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
         // Apply change that requires fee calculation
         // addTLiq
@@ -917,8 +915,8 @@ contract DenseTreeTreeStructureTest is Test {
 
         // T32876298273
         // 3.3) addTLiq
-        liqTree.feeRateSnapshotTokenX.add(2352954287417905205553);  // 17% APR as Q192.64 T32876298273 - T9214298113
-        liqTree.feeRateSnapshotTokenY.add(6117681147286553534438);  // 44.2% APR as Q192.64 T32876298273 - T9214298113
+        liqTree.feeRateSnapshotTokenX += 2352954287417905205553;  // 17% APR as Q192.64 T32876298273 - T9214298113
+        liqTree.feeRateSnapshotTokenY += 6117681147286553534438;  // 44.2% APR as Q192.64 T32876298273 - T9214298113
 
         // Apply change that requires fee calculation
         // removeTLiq
@@ -1179,8 +1177,8 @@ contract DenseTreeTreeStructureTest is Test {
 
         // Test fees while targeting (1, 4)
         // 1) Trigger fee update through path L->LL->LLR by updating LLR
-        liqTree.feeRateSnapshotTokenX.add(997278349210980290827452342352346);
-        liqTree.feeRateSnapshotTokenY.add(7978726162930599238079167453467080976862);
+        liqTree.feeRateSnapshotTokenX += 997278349210980290827452342352346;
+        liqTree.feeRateSnapshotTokenY += 7978726162930599238079167453467080976862;
 
         liqTree.addMLiq(LiqRange(2, 3), 564011300817682367503451461);     // LLR
         liqTree.removeMLiq(LiqRange(2, 3), 564011300817682367503451461);  // LLR
@@ -1284,8 +1282,8 @@ contract DenseTreeTreeStructureTest is Test {
         //    For un-accumulated nodes
         //    x_rate = 129987217567345826 + 997278349210980290827452342352346 = 997278349210980420814669909698172
         //    y_rate = 234346579834678237846892 + 7978726162930599238079167453467080976862 = 7978726162930599472425747288145318823754
-        liqTree.feeRateSnapshotTokenX.add(129987217567345826);
-        liqTree.feeRateSnapshotTokenY.add(234346579834678237846892);
+        liqTree.feeRateSnapshotTokenX += 129987217567345826;
+        liqTree.feeRateSnapshotTokenY += 234346579834678237846892;
 
         liqTree.addTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);     // LLLR, LLL
         liqTree.removeTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);  // LLLR, LLL
@@ -1462,8 +1460,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(LLLL.tokenY.subtreeBorrowed, 222e6);
         assertEq(LLLR.tokenY.subtreeBorrowed, 313e6);
 
-        liqTree.feeRateSnapshotTokenX.add(997278349210980290827452342352346);
-        liqTree.feeRateSnapshotTokenY.add(7978726162930599238079167453467080976862);
+        liqTree.feeRateSnapshotTokenX += 997278349210980290827452342352346;
+        liqTree.feeRateSnapshotTokenY += 7978726162930599238079167453467080976862;
 
         liqTree.addMLiq(LiqRange(0, 1), 1234567);
         liqTree.removeMLiq(LiqRange(0, 1), 1234567);
@@ -1622,8 +1620,8 @@ contract DenseTreeTreeStructureTest is Test {
     //     LiqNode storage RRRR = liqTree.nodes[LKey.wrap((1 << 24) | 31)];
 
     //     // Start with an accumulated rate for each token before modifying tree state -----------------------------------------
-    //     liqTree.feeRateSnapshotTokenX.add(34541239648278065);
-    //     liqTree.feeRateSnapshotTokenY.add(713278814667749784);
+    //     liqTree.feeRateSnapshotTokenX += 34541239648278065;
+    //     liqTree.feeRateSnapshotTokenY += 713278814667749784;
 
     //     // Add mLiq + tLiq to all nodes ------------------------------------------------------------------------------------
     //     liqTree.addInfRangeMLiq(837205720);  // root
@@ -1697,443 +1695,443 @@ contract DenseTreeTreeStructureTest is Test {
     //     // Ranges that start with 0 -------------------------------------------------------------------------------------
 
     //     // LiqRange(0, 0)
-    //     liqTree.feeRateSnapshotTokenX.add(283564826358762378954279863);
-    //     liqTree.feeRateSnapshotTokenY.add(2753476253583645873647859364);
+    //     liqTree.feeRateSnapshotTokenX += 283564826358762378954279863;
+    //     liqTree.feeRateSnapshotTokenY += 2753476253583645873647859364;
     //     liqTree.addMLiq(LiqRange(0, 0), 234534567456);
-    //     liqTree.feeRateSnapshotTokenX.add(245457456745342);
-    //     liqTree.feeRateSnapshotTokenY.add(2345356747467456743);
+    //     liqTree.feeRateSnapshotTokenX += 245457456745342;
+    //     liqTree.feeRateSnapshotTokenY += 2345356747467456743;
     //     liqTree.removeMLiq(LiqRange(0, 0), 2453464574674);
-    //     liqTree.feeRateSnapshotTokenX.add(456456756586578);
-    //     liqTree.feeRateSnapshotTokenY.add(5634564564356435);
+    //     liqTree.feeRateSnapshotTokenX += 456456756586578;
+    //     liqTree.feeRateSnapshotTokenY += 5634564564356435;
     //     liqTree.addTLiq(LiqRange(0, 0), 3564575678567, 35664576857e18, 3565685685672375e6);
-    //     liqTree.feeRateSnapshotTokenX.add(34575687568567345);
-    //     liqTree.feeRateSnapshotTokenY.add(345654675678567345);
+    //     liqTree.feeRateSnapshotTokenX += 34575687568567345;
+    //     liqTree.feeRateSnapshotTokenY += 345654675678567345;
     //     liqTree.removeTLiq(LiqRange(0, 0), 3564575678567,3564575678567e18, 3565467683463e6);
 
     //     // LiqRange(0, 1)
-    //     liqTree.feeRateSnapshotTokenX.add(78567456345);
-    //     liqTree.feeRateSnapshotTokenY.add(234535756856785673);
+    //     liqTree.feeRateSnapshotTokenX += 78567456345;
+    //     liqTree.feeRateSnapshotTokenY += 234535756856785673;
     //     liqTree.addMLiq(LiqRange(0, 1), 253464575685786);
-    //     liqTree.feeRateSnapshotTokenX.add(67968435);
-    //     liqTree.feeRateSnapshotTokenY.add(2454575685679);
+    //     liqTree.feeRateSnapshotTokenX += 67968435;
+    //     liqTree.feeRateSnapshotTokenY += 2454575685679;
     //     liqTree.removeMLiq(LiqRange(0, 1), 234535645756867);
-    //     liqTree.feeRateSnapshotTokenX.add(2345356568);
-    //     liqTree.feeRateSnapshotTokenY.add(678678456);
+    //     liqTree.feeRateSnapshotTokenX += 2345356568;
+    //     liqTree.feeRateSnapshotTokenY += 678678456;
     //     liqTree.addTLiq(LiqRange(0, 1), 23476, 24543634e18, 34535674564e5);
-    //     liqTree.feeRateSnapshotTokenX.add(2345357645);
-    //     liqTree.feeRateSnapshotTokenY.add(243253453);
+    //     liqTree.feeRateSnapshotTokenX += 2345357645;
+    //     liqTree.feeRateSnapshotTokenY += 243253453;
     //     liqTree.removeTLiq(LiqRange(0, 1), 13476, 45646745674e18, 23453457457e6);
 
     //     // LiqRange(0, 2)
-    //     liqTree.feeRateSnapshotTokenX.add(6735468234823);
-    //     liqTree.feeRateSnapshotTokenY.add(56456456);
+    //     liqTree.feeRateSnapshotTokenX += 6735468234823;
+    //     liqTree.feeRateSnapshotTokenY += 56456456;
     //     liqTree.addMLiq(LiqRange(0, 2), 23453456457);
-    //     liqTree.feeRateSnapshotTokenX.add(245346457457456);
-    //     liqTree.feeRateSnapshotTokenY.add(2345346456474);
+    //     liqTree.feeRateSnapshotTokenX += 245346457457456;
+    //     liqTree.feeRateSnapshotTokenY += 2345346456474;
     //     liqTree.removeMLiq(LiqRange(0, 2), 2345346);
-    //     liqTree.feeRateSnapshotTokenX.add(2345457);
-    //     liqTree.feeRateSnapshotTokenY.add(457645745745643);
+    //     liqTree.feeRateSnapshotTokenX += 2345457;
+    //     liqTree.feeRateSnapshotTokenY += 457645745745643;
     //     liqTree.addTLiq(LiqRange(0, 2), 645674564, 34545745745e18, 6745357452734e6);
-    //     liqTree.feeRateSnapshotTokenX.add(22345457456745);
-    //     liqTree.feeRateSnapshotTokenY.add(345645754723);
+    //     liqTree.feeRateSnapshotTokenX += 22345457456745;
+    //     liqTree.feeRateSnapshotTokenY += 345645754723;
     //     liqTree.removeTLiq(LiqRange(0, 2), 87623487623, 7623467823e18, 524315237816e6);
 
     //     // LiqRange(0, 3)
-    //     liqTree.feeRateSnapshotTokenX.add(53452634236874);
-    //     liqTree.feeRateSnapshotTokenY.add(4564574574546345);
+    //     liqTree.feeRateSnapshotTokenX += 53452634236874;
+    //     liqTree.feeRateSnapshotTokenY += 4564574574546345;
     //     liqTree.addMLiq(LiqRange(0, 3), 234534634567);
-    //     liqTree.feeRateSnapshotTokenX.add(45645753);
-    //     liqTree.feeRateSnapshotTokenY.add(245345346);
+    //     liqTree.feeRateSnapshotTokenX += 45645753;
+    //     liqTree.feeRateSnapshotTokenY += 245345346;
     //     liqTree.removeMLiq(LiqRange(0, 3), 678567856875);
-    //     liqTree.feeRateSnapshotTokenX.add(45645634);
-    //     liqTree.feeRateSnapshotTokenY.add(45647456785);
+    //     liqTree.feeRateSnapshotTokenX += 45645634;
+    //     liqTree.feeRateSnapshotTokenY += 45647456785;
     //     liqTree.addTLiq(LiqRange(0, 3), 356456457, 23464574e18, 234534567e6);
-    //     liqTree.feeRateSnapshotTokenX.add(35645374);
-    //     liqTree.feeRateSnapshotTokenY.add(2356456454645);
+    //     liqTree.feeRateSnapshotTokenX += 35645374;
+    //     liqTree.feeRateSnapshotTokenY += 2356456454645;
     //     liqTree.removeTLiq(LiqRange(0, 3), 45645747568, 8672538476e18, 2456456435e6);
 
     //     // LiqRange(0, 4)
-    //     liqTree.feeRateSnapshotTokenX.add(2342454);
-    //     liqTree.feeRateSnapshotTokenY.add(45645745);
+    //     liqTree.feeRateSnapshotTokenX += 2342454;
+    //     liqTree.feeRateSnapshotTokenY += 45645745;
     //     liqTree.addMLiq(LiqRange(0, 4), 32452345);
-    //     liqTree.feeRateSnapshotTokenX.add(934765);
-    //     liqTree.feeRateSnapshotTokenY.add(24534534);
+    //     liqTree.feeRateSnapshotTokenX += 934765;
+    //     liqTree.feeRateSnapshotTokenY += 24534534;
     //     liqTree.removeMLiq(LiqRange(0, 4), 456456);
-    //     liqTree.feeRateSnapshotTokenX.add(245);
-    //     liqTree.feeRateSnapshotTokenY.add(2345);
+    //     liqTree.feeRateSnapshotTokenX += 245;
+    //     liqTree.feeRateSnapshotTokenY += 2345;
     //     liqTree.addTLiq(LiqRange(0, 4), 476574, 346356355e18, 45357467456e6);
-    //     liqTree.feeRateSnapshotTokenX.add(245234);
-    //     liqTree.feeRateSnapshotTokenY.add(24634642);
+    //     liqTree.feeRateSnapshotTokenX += 245234;
+    //     liqTree.feeRateSnapshotTokenY += 24634642;
     //     liqTree.removeTLiq(LiqRange(0, 4), 2245346456, 87637465238746e18, 834527836e6);
 
     //     // LiqRange(0, 5)
-    //     liqTree.feeRateSnapshotTokenX.add(76354826342);
-    //     liqTree.feeRateSnapshotTokenY.add(45645);
+    //     liqTree.feeRateSnapshotTokenX += 76354826342;
+    //     liqTree.feeRateSnapshotTokenY += 45645;
     //     liqTree.addMLiq(LiqRange(0, 5), 345345);
-    //     liqTree.feeRateSnapshotTokenX.add(674567);
-    //     liqTree.feeRateSnapshotTokenY.add(456346);
+    //     liqTree.feeRateSnapshotTokenX += 674567;
+    //     liqTree.feeRateSnapshotTokenY += 456346;
     //     liqTree.removeMLiq(LiqRange(0, 5), 34646);
-    //     liqTree.feeRateSnapshotTokenX.add(34634);
-    //     liqTree.feeRateSnapshotTokenY.add(234534534);
+    //     liqTree.feeRateSnapshotTokenX += 34634;
+    //     liqTree.feeRateSnapshotTokenY += 234534534;
     //     liqTree.addTLiq(LiqRange(0, 5), 656454, 3574573e18, 245435745e6);
-    //     liqTree.feeRateSnapshotTokenX.add(345453);
-    //     liqTree.feeRateSnapshotTokenY.add(453634);
+    //     liqTree.feeRateSnapshotTokenX += 345453;
+    //     liqTree.feeRateSnapshotTokenY += 453634;
     //     liqTree.removeTLiq(LiqRange(0, 5), 45346346, 324564564e18, 3434645e6);
 
     //     // LiqRange(0, 6)
-    //     liqTree.feeRateSnapshotTokenX.add(678456456);
-    //     liqTree.feeRateSnapshotTokenY.add(24352356457);
+    //     liqTree.feeRateSnapshotTokenX += 678456456;
+    //     liqTree.feeRateSnapshotTokenY += 24352356457;
     //     liqTree.addMLiq(LiqRange(0, 6), 234534534);
-    //     liqTree.feeRateSnapshotTokenX.add(45756756);
-    //     liqTree.feeRateSnapshotTokenY.add(2345345);
+    //     liqTree.feeRateSnapshotTokenX += 45756756;
+    //     liqTree.feeRateSnapshotTokenY += 2345345;
     //     liqTree.removeMLiq(LiqRange(0, 6), 456);
-    //     liqTree.feeRateSnapshotTokenX.add(24);
-    //     liqTree.feeRateSnapshotTokenY.add(245346);
+    //     liqTree.feeRateSnapshotTokenX += 24;
+    //     liqTree.feeRateSnapshotTokenY += 245346;
     //     liqTree.addTLiq(LiqRange(0, 6), 4545, 456457e18, 3456467e6);
-    //     liqTree.feeRateSnapshotTokenX.add(24534);
-    //     liqTree.feeRateSnapshotTokenY.add(4745645);
+    //     liqTree.feeRateSnapshotTokenX += 24534;
+    //     liqTree.feeRateSnapshotTokenY += 4745645;
     //     liqTree.removeTLiq(LiqRange(0, 6), 34534534, 47253765e18, 7856856e6);
 
     //     // LiqRange(0, 7)
-    //     liqTree.feeRateSnapshotTokenX.add(76238467283764);
-    //     liqTree.feeRateSnapshotTokenY.add(23453563456734567);
+    //     liqTree.feeRateSnapshotTokenX += 76238467283764;
+    //     liqTree.feeRateSnapshotTokenY += 23453563456734567;
     //     liqTree.addMLiq(LiqRange(0, 7), 345236634634);
-    //     liqTree.feeRateSnapshotTokenX.add(3246457467);
-    //     liqTree.feeRateSnapshotTokenY.add(3453453456);
+    //     liqTree.feeRateSnapshotTokenX += 3246457467;
+    //     liqTree.feeRateSnapshotTokenY += 3453453456;
     //     liqTree.removeMLiq(LiqRange(0, 7), 342345);
-    //     liqTree.feeRateSnapshotTokenX.add(45746756);
-    //     liqTree.feeRateSnapshotTokenY.add(5685685678);
+    //     liqTree.feeRateSnapshotTokenX += 45746756;
+    //     liqTree.feeRateSnapshotTokenY += 5685685678;
     //     liqTree.addTLiq(LiqRange(0, 7), 6796786, 46745674e18, 7567567e6);
-    //     liqTree.feeRateSnapshotTokenX.add(5345346);
-    //     liqTree.feeRateSnapshotTokenY.add(575685656);
+    //     liqTree.feeRateSnapshotTokenX += 5345346;
+    //     liqTree.feeRateSnapshotTokenY += 575685656;
     //     liqTree.removeTLiq(LiqRange(0, 7), 345345345, 456457457e18, 4564564564e6);
 
     //     // LiqRange(0, 8)
-    //     liqTree.feeRateSnapshotTokenX.add(2342453);
-    //     liqTree.feeRateSnapshotTokenY.add(5675675);
+    //     liqTree.feeRateSnapshotTokenX += 2342453;
+    //     liqTree.feeRateSnapshotTokenY += 5675675;
     //     liqTree.addMLiq(LiqRange(0, 8), 45345345);
-    //     liqTree.feeRateSnapshotTokenX.add(56756756);
-    //     liqTree.feeRateSnapshotTokenY.add(34534534);
+    //     liqTree.feeRateSnapshotTokenX += 56756756;
+    //     liqTree.feeRateSnapshotTokenY += 34534534;
     //     liqTree.removeMLiq(LiqRange(0, 8), 5675675);
-    //     liqTree.feeRateSnapshotTokenX.add(345345);
-    //     liqTree.feeRateSnapshotTokenY.add(34534534);
+    //     liqTree.feeRateSnapshotTokenX += 345345;
+    //     liqTree.feeRateSnapshotTokenY += 34534534;
     //     liqTree.addTLiq(LiqRange(0, 8), 45646756, 2343456e18, 34354534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(3453);
-    //     liqTree.feeRateSnapshotTokenY.add(675675);
+    //     liqTree.feeRateSnapshotTokenX += 3453;
+    //     liqTree.feeRateSnapshotTokenY += 675675;
     //     liqTree.removeTLiq(LiqRange(0, 8), 534534, 5645645e18, 42342343e6);
 
     //     // LiqRange(0, 9)
-    //     liqTree.feeRateSnapshotTokenX.add(345345);
-    //     liqTree.feeRateSnapshotTokenY.add(445656);
+    //     liqTree.feeRateSnapshotTokenX += 345345;
+    //     liqTree.feeRateSnapshotTokenY += 445656;
     //     liqTree.addMLiq(LiqRange(0, 9), 345345);
-    //     liqTree.feeRateSnapshotTokenX.add(2345235);
-    //     liqTree.feeRateSnapshotTokenY.add(34534534);
+    //     liqTree.feeRateSnapshotTokenX += 2345235;
+    //     liqTree.feeRateSnapshotTokenY += 34534534;
     //     liqTree.removeMLiq(LiqRange(0, 9), 556456);
-    //     liqTree.feeRateSnapshotTokenX.add(56756743);
-    //     liqTree.feeRateSnapshotTokenY.add(345345345);
+    //     liqTree.feeRateSnapshotTokenX += 56756743;
+    //     liqTree.feeRateSnapshotTokenY += 345345345;
     //     liqTree.addTLiq(LiqRange(0, 9), 56756756, 345345345345e18, 45645645e6);
-    //     liqTree.feeRateSnapshotTokenX.add(4564564);
-    //     liqTree.feeRateSnapshotTokenY.add(54564);
+    //     liqTree.feeRateSnapshotTokenX += 4564564;
+    //     liqTree.feeRateSnapshotTokenY += 54564;
     //     liqTree.removeTLiq(LiqRange(0, 9), 345345, 3634534e18, 5675675e6);
 
     //     // LiqRange(0, 10)
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(2454353);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 2454353;
     //     liqTree.addMLiq(LiqRange(0, 10), 345345);
-    //     liqTree.feeRateSnapshotTokenX.add(34234);
-    //     liqTree.feeRateSnapshotTokenY.add(34234);
+    //     liqTree.feeRateSnapshotTokenX += 34234;
+    //     liqTree.feeRateSnapshotTokenY += 34234;
     //     liqTree.removeMLiq(LiqRange(0, 10), 564564);
-    //     liqTree.feeRateSnapshotTokenX.add(34534);
-    //     liqTree.feeRateSnapshotTokenY.add(3453);
+    //     liqTree.feeRateSnapshotTokenX += 34534;
+    //     liqTree.feeRateSnapshotTokenY += 3453;
     //     liqTree.addTLiq(LiqRange(0, 10), 4745674, 345345e18, 3453453e6);
-    //     liqTree.feeRateSnapshotTokenX.add(34534);
-    //     liqTree.feeRateSnapshotTokenY.add(245234);
+    //     liqTree.feeRateSnapshotTokenX += 34534;
+    //     liqTree.feeRateSnapshotTokenY += 245234;
     //     liqTree.removeTLiq(LiqRange(0, 10), 345345, 4564564e18, 78675e6);
 
     //     // LiqRange(0, 11)
-    //     liqTree.feeRateSnapshotTokenX.add(345634);
-    //     liqTree.feeRateSnapshotTokenY.add(56756);
+    //     liqTree.feeRateSnapshotTokenX += 345634;
+    //     liqTree.feeRateSnapshotTokenY += 56756;
     //     liqTree.addMLiq(LiqRange(0, 11), 345345345);
-    //     liqTree.feeRateSnapshotTokenX.add(567457346);
-    //     liqTree.feeRateSnapshotTokenY.add(454);
+    //     liqTree.feeRateSnapshotTokenX += 567457346;
+    //     liqTree.feeRateSnapshotTokenY += 454;
     //     liqTree.removeMLiq(LiqRange(0, 11), 56456);
-    //     liqTree.feeRateSnapshotTokenX.add(34543564674);
-    //     liqTree.feeRateSnapshotTokenY.add(3453453);
+    //     liqTree.feeRateSnapshotTokenX += 34543564674;
+    //     liqTree.feeRateSnapshotTokenY += 3453453;
     //     liqTree.addTLiq(LiqRange(0, 11), 234236, 456456e28, 75675675e6);
-    //     liqTree.feeRateSnapshotTokenX.add(345345);
-    //     liqTree.feeRateSnapshotTokenY.add(45456457);
+    //     liqTree.feeRateSnapshotTokenX += 345345;
+    //     liqTree.feeRateSnapshotTokenY += 45456457;
     //     liqTree.removeTLiq(LiqRange(0, 11), 2456345, 2342352e18, 456456e6);
 
     //     // LiqRange(0, 12)
-    //     liqTree.feeRateSnapshotTokenX.add(5464564);
-    //     liqTree.feeRateSnapshotTokenY.add(234234);
+    //     liqTree.feeRateSnapshotTokenX += 5464564;
+    //     liqTree.feeRateSnapshotTokenY += 234234;
     //     liqTree.addMLiq(LiqRange(0, 12), 26345345);
-    //     liqTree.feeRateSnapshotTokenX.add(45674564);
-    //     liqTree.feeRateSnapshotTokenY.add(234234);
+    //     liqTree.feeRateSnapshotTokenX += 45674564;
+    //     liqTree.feeRateSnapshotTokenY += 234234;
     //     liqTree.removeMLiq(LiqRange(0, 12), 534345534534);
-    //     liqTree.feeRateSnapshotTokenX.add(223232323);
-    //     liqTree.feeRateSnapshotTokenY.add(454646456);
+    //     liqTree.feeRateSnapshotTokenX += 223232323;
+    //     liqTree.feeRateSnapshotTokenY += 454646456;
     //     liqTree.addTLiq(LiqRange(0, 12), 214123213, 3453454e18, 456456457e6);
-    //     liqTree.feeRateSnapshotTokenX.add(234245356);
-    //     liqTree.feeRateSnapshotTokenY.add(23423423);
+    //     liqTree.feeRateSnapshotTokenX += 234245356;
+    //     liqTree.feeRateSnapshotTokenY += 23423423;
     //     liqTree.removeTLiq(LiqRange(0, 12), 7553453, 234534534e18, 5685675674e6);
 
     //     // LiqRange(0, 13)
-    //     liqTree.feeRateSnapshotTokenX.add(23445);
-    //     liqTree.feeRateSnapshotTokenY.add(34543534);
+    //     liqTree.feeRateSnapshotTokenX += 23445;
+    //     liqTree.feeRateSnapshotTokenY += 34543534;
     //     liqTree.addMLiq(LiqRange(0, 13), 76574564);
-    //     liqTree.feeRateSnapshotTokenX.add(345346);
-    //     liqTree.feeRateSnapshotTokenY.add(74678456);
+    //     liqTree.feeRateSnapshotTokenX += 345346;
+    //     liqTree.feeRateSnapshotTokenY += 74678456;
     //     liqTree.removeMLiq(LiqRange(0, 13), 45252);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(45674574);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 45674574;
     //     liqTree.addTLiq(LiqRange(0, 13), 354635345, 46345634e18, 3453453e6);
-    //     liqTree.feeRateSnapshotTokenX.add(235454534);
-    //     liqTree.feeRateSnapshotTokenY.add(34643564357);
+    //     liqTree.feeRateSnapshotTokenX += 235454534;
+    //     liqTree.feeRateSnapshotTokenY += 34643564357;
     //     liqTree.removeTLiq(LiqRange(0, 13), 23453454, 23453454e18, 2342352e6);
 
     //     // LiqRange(0, 14)
-    //     liqTree.feeRateSnapshotTokenX.add(453463563);
-    //     liqTree.feeRateSnapshotTokenY.add(34564356);
+    //     liqTree.feeRateSnapshotTokenX += 453463563;
+    //     liqTree.feeRateSnapshotTokenY += 34564356;
     //     liqTree.addMLiq(LiqRange(0, 14), 2342454);
-    //     liqTree.feeRateSnapshotTokenX.add(456457457);
-    //     liqTree.feeRateSnapshotTokenY.add(3453452345);
+    //     liqTree.feeRateSnapshotTokenX += 456457457;
+    //     liqTree.feeRateSnapshotTokenY += 3453452345;
     //     liqTree.removeMLiq(LiqRange(0, 14), 234234234);
-    //     liqTree.feeRateSnapshotTokenX.add(6345634534);
-    //     liqTree.feeRateSnapshotTokenY.add(23423423);
+    //     liqTree.feeRateSnapshotTokenX += 6345634534;
+    //     liqTree.feeRateSnapshotTokenY += 23423423;
     //     liqTree.addTLiq(LiqRange(0, 14), 1345645646, 232342e18, 345345345e6);
-    //     liqTree.feeRateSnapshotTokenX.add(34523452352);
-    //     liqTree.feeRateSnapshotTokenY.add(7457457456);
+    //     liqTree.feeRateSnapshotTokenX += 34523452352;
+    //     liqTree.feeRateSnapshotTokenY += 7457457456;
     //     liqTree.removeTLiq(LiqRange(0, 14), 1345645646, 25634624e18, 23434635e6);
 
     //     // LiqRange(0, 15) aka root
-    //     liqTree.feeRateSnapshotTokenX.add(3453645745674);
-    //     liqTree.feeRateSnapshotTokenY.add(4574563456456);
+    //     liqTree.feeRateSnapshotTokenX += 3453645745674;
+    //     liqTree.feeRateSnapshotTokenY += 4574563456456;
     //     liqTree.addInfRangeMLiq(34534534534);
-    //     liqTree.feeRateSnapshotTokenX.add(2342342342);
-    //     liqTree.feeRateSnapshotTokenY.add(3533463457467);
+    //     liqTree.feeRateSnapshotTokenX += 2342342342;
+    //     liqTree.feeRateSnapshotTokenY += 3533463457467;
     //     liqTree.removeInfRangeMLiq(678678678);
-    //     liqTree.feeRateSnapshotTokenX.add(56456456456);
-    //     liqTree.feeRateSnapshotTokenY.add(34532464567568);
+    //     liqTree.feeRateSnapshotTokenX += 56456456456;
+    //     liqTree.feeRateSnapshotTokenY += 34532464567568;
     //     liqTree.addInfRangeTLiq(3463456456456, 34575684564e18, 345345746745e6);
-    //     liqTree.feeRateSnapshotTokenX.add(3645746746787);
-    //     liqTree.feeRateSnapshotTokenY.add(2342342);
+    //     liqTree.feeRateSnapshotTokenX += 3645746746787;
+    //     liqTree.feeRateSnapshotTokenY += 2342342;
     //     liqTree.removeInfRangeTLiq(3574534534, 4567452342e18, 234535734563e6);
 
     //     // region Ranges that start with 1 -------------------------------------------------------------------------------------
     //     // LiqRange(1, 1)
-    //     liqTree.feeRateSnapshotTokenX.add(75345234);
-    //     liqTree.feeRateSnapshotTokenY.add(674563456);
+    //     liqTree.feeRateSnapshotTokenX += 75345234;
+    //     liqTree.feeRateSnapshotTokenY += 674563456;
     //     liqTree.addMLiq(LiqRange(1, 1), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(53453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 53453;
     //     liqTree.removeMLiq(LiqRange(1, 1), 234345345);
-    //     liqTree.feeRateSnapshotTokenX.add(453453);
-    //     liqTree.feeRateSnapshotTokenY.add(453453453);
+    //     liqTree.feeRateSnapshotTokenX += 453453;
+    //     liqTree.feeRateSnapshotTokenY += 453453453;
     //     liqTree.addTLiq(LiqRange(1, 1), 234234, 34534e18, 4534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(9834);
-    //     liqTree.feeRateSnapshotTokenY.add(97234);
+    //     liqTree.feeRateSnapshotTokenX += 9834;
+    //     liqTree.feeRateSnapshotTokenY += 97234;
     //     liqTree.removeTLiq(LiqRange(1, 1), 34534, 234e18, 23e8);
 
     //     // LiqRange(1, 2)
-    //     liqTree.feeRateSnapshotTokenX.add(75345234);
-    //     liqTree.feeRateSnapshotTokenY.add(674563456);
+    //     liqTree.feeRateSnapshotTokenX += 75345234;
+    //     liqTree.feeRateSnapshotTokenY += 674563456;
     //     liqTree.addMLiq(LiqRange(1, 2), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(53453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 53453;
     //     liqTree.removeMLiq(LiqRange(1, 2), 234345345);
-    //     liqTree.feeRateSnapshotTokenX.add(453453);
-    //     liqTree.feeRateSnapshotTokenY.add(453453453);
+    //     liqTree.feeRateSnapshotTokenX += 453453;
+    //     liqTree.feeRateSnapshotTokenY += 453453453;
     //     liqTree.addTLiq(LiqRange(1, 2), 234234, 34534e18, 4534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(9834);
-    //     liqTree.feeRateSnapshotTokenY.add(97234);
+    //     liqTree.feeRateSnapshotTokenX += 9834;
+    //     liqTree.feeRateSnapshotTokenY += 97234;
     //     liqTree.removeTLiq(LiqRange(1, 2), 34534, 234e18, 23e8);
 
 
     //     // LiqRange(1, 3)
-    //     liqTree.feeRateSnapshotTokenX.add(75345234);
-    //     liqTree.feeRateSnapshotTokenY.add(674563456);
+    //     liqTree.feeRateSnapshotTokenX += 75345234;
+    //     liqTree.feeRateSnapshotTokenY += 674563456;
     //     liqTree.addMLiq(LiqRange(1, 3), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(53453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 53453;
     //     liqTree.removeMLiq(LiqRange(1, 3), 234345345);
-    //     liqTree.feeRateSnapshotTokenX.add(453453);
-    //     liqTree.feeRateSnapshotTokenY.add(453453453);
+    //     liqTree.feeRateSnapshotTokenX += 453453;
+    //     liqTree.feeRateSnapshotTokenY += 453453453;
     //     liqTree.addTLiq(LiqRange(1, 3), 234234, 34534e18, 4534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(9834);
-    //     liqTree.feeRateSnapshotTokenY.add(97234);
+    //     liqTree.feeRateSnapshotTokenX += 9834;
+    //     liqTree.feeRateSnapshotTokenY += 97234;
     //     liqTree.removeTLiq(LiqRange(1, 3), 34534, 234e18, 23e8);
 
 
     //     // LiqRange(1, 4)
-    //     liqTree.feeRateSnapshotTokenX.add(75345234);
-    //     liqTree.feeRateSnapshotTokenY.add(674563456);
+    //     liqTree.feeRateSnapshotTokenX += 75345234;
+    //     liqTree.feeRateSnapshotTokenY += 674563456;
     //     liqTree.addMLiq(LiqRange(1, 4), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(53453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 5345);
     //     liqTree.removeMLiq(LiqRange(1, 4), 234345345);
-    //     liqTree.feeRateSnapshotTokenX.add(453453);
-    //     liqTree.feeRateSnapshotTokenY.add(453453453);
+    //     liqTree.feeRateSnapshotTokenX += 453453;
+    //     liqTree.feeRateSnapshotTokenY += 453453453;
     //     liqTree.addTLiq(LiqRange(1, 4), 234234, 34534e18, 4534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(9834);
-    //     liqTree.feeRateSnapshotTokenY.add(97234);
+    //     liqTree.feeRateSnapshotTokenX += 9834;
+    //     liqTree.feeRateSnapshotTokenY += 97234;
     //     liqTree.removeTLiq(LiqRange(1, 4), 34534, 234e18, 23e8);
 
 
     //     // LiqRange(1, 5)
-    //     liqTree.feeRateSnapshotTokenX.add(75345234);
-    //     liqTree.feeRateSnapshotTokenY.add(674563456);
+    //     liqTree.feeRateSnapshotTokenX += 75345234;
+    //     liqTree.feeRateSnapshotTokenY += 674563456;
     //     liqTree.addMLiq(LiqRange(1, 5), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(53453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 53453;
     //     liqTree.removeMLiq(LiqRange(1, 5), 234345345);
-    //     liqTree.feeRateSnapshotTokenX.add(453453);
-    //     liqTree.feeRateSnapshotTokenY.add(453453453);
+    //     liqTree.feeRateSnapshotTokenX += 453453;
+    //     liqTree.feeRateSnapshotTokenY += 453453453;
     //     liqTree.addTLiq(LiqRange(1, 5), 234234, 34534e18, 4534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(9834);
-    //     liqTree.feeRateSnapshotTokenY.add(97234);
+    //     liqTree.feeRateSnapshotTokenX += 9834;
+    //     liqTree.feeRateSnapshotTokenY += 97234;
     //     liqTree.removeTLiq(LiqRange(1, 5), 34534, 234e18, 23e8);
 
 
     //     // LiqRange(1, 6)
-    //     liqTree.feeRateSnapshotTokenX.add(75345234);
-    //     liqTree.feeRateSnapshotTokenY.add(674563456);
+    //     liqTree.feeRateSnapshotTokenX += 75345234;
+    //     liqTree.feeRateSnapshotTokenY += 674563456;
     //     liqTree.addMLiq(LiqRange(1, 6), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(53453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 53453;
     //     liqTree.removeMLiq(LiqRange(1, 6), 234345345);
-    //     liqTree.feeRateSnapshotTokenX.add(453453);
-    //     liqTree.feeRateSnapshotTokenY.add(453453453);
+    //     liqTree.feeRateSnapshotTokenX += 453453;
+    //     liqTree.feeRateSnapshotTokenY += 453453453;
     //     liqTree.addTLiq(LiqRange(1, 6), 234234, 34534e18, 4534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(9834);
-    //     liqTree.feeRateSnapshotTokenY.add(97234);
+    //     liqTree.feeRateSnapshotTokenX += 9834;
+    //     liqTree.feeRateSnapshotTokenY += 97234;
     //     liqTree.removeTLiq(LiqRange(1, 6), 34534, 234e18, 23e8);
 
 
     //     // LiqRange(1, 7)
-    //     liqTree.feeRateSnapshotTokenX.add(45745645);
-    //     liqTree.feeRateSnapshotTokenY.add(46);
+    //     liqTree.feeRateSnapshotTokenX += 45745645;
+    //     liqTree.feeRateSnapshotTokenY += 46;
     //     liqTree.addMLiq(LiqRange(1, 7), 457467);
-    //     liqTree.feeRateSnapshotTokenX.add(3453);
-    //     liqTree.feeRateSnapshotTokenY.add(345346);
+    //     liqTree.feeRateSnapshotTokenX += 3453;
+    //     liqTree.feeRateSnapshotTokenY += 345346;
     //     liqTree.removeMLiq(LiqRange(1, 7), 73345);
-    //     liqTree.feeRateSnapshotTokenX.add(345345);
-    //     liqTree.feeRateSnapshotTokenY.add(56756);
+    //     liqTree.feeRateSnapshotTokenX += 345345;
+    //     liqTree.feeRateSnapshotTokenY += 56756;
     //     liqTree.addTLiq(LiqRange(1, 7), 6357457457, 456468745, 3453e6);
-    //     liqTree.feeRateSnapshotTokenX.add(68567);
-    //     liqTree.feeRateSnapshotTokenY.add(3467);
+    //     liqTree.feeRateSnapshotTokenX += 68567;
+    //     liqTree.feeRateSnapshotTokenY += 3467;
     //     liqTree.removeTLiq(LiqRange(1, 7), 3634534, 3453463e18, 34534e6);
 
     //     // LiqRange(1, 8)
-    //     liqTree.feeRateSnapshotTokenX.add(56457);
-    //     liqTree.feeRateSnapshotTokenY.add(456456);
+    //     liqTree.feeRateSnapshotTokenX += 56457;
+    //     liqTree.feeRateSnapshotTokenY += 456456;
     //     liqTree.addMLiq(LiqRange(1, 8), 3465346);
-    //     liqTree.feeRateSnapshotTokenX.add(343);
-    //     liqTree.feeRateSnapshotTokenY.add(3453746);
+    //     liqTree.feeRateSnapshotTokenX += 343;
+    //     liqTree.feeRateSnapshotTokenY += 3453746;
     //     liqTree.removeMLiq(LiqRange(1, 8), 756756);
-    //     liqTree.feeRateSnapshotTokenX.add(57457);
-    //     liqTree.feeRateSnapshotTokenY.add(45346346);
+    //     liqTree.feeRateSnapshotTokenX += 57457;
+    //     liqTree.feeRateSnapshotTokenY += 45346346;
     //     liqTree.addTLiq(LiqRange(1, 8), 23424, 223423e18, 34634534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(23423);
-    //     liqTree.feeRateSnapshotTokenY.add(34634);
+    //     liqTree.feeRateSnapshotTokenX += 23423;
+    //     liqTree.feeRateSnapshotTokenY += 34634;
     //     liqTree.removeTLiq(LiqRange(1, 8), 345345, 23423e18, 3434e6);
 
     //     // LiqRange(1, 9)
-    //     liqTree.feeRateSnapshotTokenX.add(3453);
-    //     liqTree.feeRateSnapshotTokenY.add(3573);
+    //     liqTree.feeRateSnapshotTokenX += 3453;
+    //     liqTree.feeRateSnapshotTokenY += 3573;
     //     liqTree.addMLiq(LiqRange(1, 9), 345345);
-    //     liqTree.feeRateSnapshotTokenX.add(45745);
-    //     liqTree.feeRateSnapshotTokenY.add(4523);
+    //     liqTree.feeRateSnapshotTokenX += 45745;
+    //     liqTree.feeRateSnapshotTokenY += 4523;
     //     liqTree.removeMLiq(LiqRange(1, 9), 34534);
-    //     liqTree.feeRateSnapshotTokenX.add(34534);
-    //     liqTree.feeRateSnapshotTokenY.add(6745674);
+    //     liqTree.feeRateSnapshotTokenX += 34534;
+    //     liqTree.feeRateSnapshotTokenY += 6745674;
     //     liqTree.addTLiq(LiqRange(1, 9), 573534, 2342354e18, 3453453e6);
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(64563453);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 64563453;
     //     liqTree.removeTLiq(LiqRange(1, 9), 34535754, 3453467435e18, 4564e6);
 
     //     // LiqRange(1, 10)
-    //     liqTree.feeRateSnapshotTokenX.add(457457);
-    //     liqTree.feeRateSnapshotTokenY.add(4534534);
+    //     liqTree.feeRateSnapshotTokenX += 457457;
+    //     liqTree.feeRateSnapshotTokenY += 4534534;
     //     liqTree.addMLiq(LiqRange(1, 10), 34534634);
-    //     liqTree.feeRateSnapshotTokenX.add(34534);
-    //     liqTree.feeRateSnapshotTokenY.add(47574);
+    //     liqTree.feeRateSnapshotTokenX += 34534;
+    //     liqTree.feeRateSnapshotTokenY += 47574;
     //     liqTree.removeMLiq(LiqRange(1, 10), 4574574);
-    //     liqTree.feeRateSnapshotTokenX.add(6745674);
-    //     liqTree.feeRateSnapshotTokenY.add(34525);
+    //     liqTree.feeRateSnapshotTokenX += 6745674;
+    //     liqTree.feeRateSnapshotTokenY += 34525;
     //     liqTree.addTLiq(LiqRange(1, 10), 3453453, 5645634523e18, 46346534e6);
-    //     liqTree.feeRateSnapshotTokenX.add(345357);
-    //     liqTree.feeRateSnapshotTokenY.add(756745);
+    //     liqTree.feeRateSnapshotTokenX += 345357;
+    //     liqTree.feeRateSnapshotTokenY += 756745;
     //     liqTree.removeTLiq(LiqRange(1, 10), 345346475, 745645e18, 78564564e6);
 
     //     // LiqRange(1, 11)
-    //     liqTree.feeRateSnapshotTokenX.add(457457);
-    //     liqTree.feeRateSnapshotTokenY.add(4434524);
+    //     liqTree.feeRateSnapshotTokenX += 457457;
+    //     liqTree.feeRateSnapshotTokenY += 4434524;
     //     liqTree.addMLiq(LiqRange(1, 11), 3453453467);
-    //     liqTree.feeRateSnapshotTokenX.add(35756785685);
-    //     liqTree.feeRateSnapshotTokenY.add(5664564);
+    //     liqTree.feeRateSnapshotTokenX += 35756785685;
+    //     liqTree.feeRateSnapshotTokenY += 5664564;
     //     liqTree.removeMLiq(LiqRange(1, 11), 345346346);
-    //     liqTree.feeRateSnapshotTokenX.add(234235);
-    //     liqTree.feeRateSnapshotTokenY.add(6347356);
+    //     liqTree.feeRateSnapshotTokenX += 234235;
+    //     liqTree.feeRateSnapshotTokenY += 6347356;
     //     liqTree.addTLiq(LiqRange(1, 11), 57463, 34634563e18, 453463e6);
-    //     liqTree.feeRateSnapshotTokenX.add(34524);
-    //     liqTree.feeRateSnapshotTokenY.add(2342345);
+    //     liqTree.feeRateSnapshotTokenX += 34524;
+    //     liqTree.feeRateSnapshotTokenY += 2342345;
     //     liqTree.removeTLiq(LiqRange(1, 11), 634634, 453576353e18, 5734534e6);
 
     //     // LiqRange(1, 12)
-    //     liqTree.feeRateSnapshotTokenX.add(3423423);
-    //     liqTree.feeRateSnapshotTokenY.add(3453456);
+    //     liqTree.feeRateSnapshotTokenX += 3423423;
+    //     liqTree.feeRateSnapshotTokenY += 3453456;
     //     liqTree.addMLiq(LiqRange(1, 12), 4564574);
-    //     liqTree.feeRateSnapshotTokenX.add(345245);
-    //     liqTree.feeRateSnapshotTokenY.add(234235);
+    //     liqTree.feeRateSnapshotTokenX += 345245;
+    //     liqTree.feeRateSnapshotTokenY += 234235;
     //     liqTree.removeMLiq(LiqRange(1, 12), 4574564);
-    //     liqTree.feeRateSnapshotTokenX.add(2342342);
-    //     liqTree.feeRateSnapshotTokenY.add(6345634);
+    //     liqTree.feeRateSnapshotTokenX += 2342342;
+    //     liqTree.feeRateSnapshotTokenY += 6345634;
     //     liqTree.addTLiq(LiqRange(1, 12), 34634567, 23424e18, 3453464e6);
-    //     liqTree.feeRateSnapshotTokenX.add(345345);
-    //     liqTree.feeRateSnapshotTokenY.add(234235);
+    //     liqTree.feeRateSnapshotTokenX += 345345;
+    //     liqTree.feeRateSnapshotTokenY += 234235;
     //     liqTree.removeTLiq(LiqRange(1, 12), 4564564, 2342342e18, 456456e6);
 
     //     // LiqRange(1, 13)
-    //     liqTree.feeRateSnapshotTokenX.add(456457);
-    //     liqTree.feeRateSnapshotTokenY.add(456457);
+    //     liqTree.feeRateSnapshotTokenX += 456457;
+    //     liqTree.feeRateSnapshotTokenY += 456457;
     //     liqTree.addMLiq(LiqRange(1, 13), 567568);
-    //     liqTree.feeRateSnapshotTokenX.add(567567);
-    //     liqTree.feeRateSnapshotTokenY.add(97867);
+    //     liqTree.feeRateSnapshotTokenX += 567567;
+    //     liqTree.feeRateSnapshotTokenY += 97867;
     //     liqTree.removeMLiq(LiqRange(1, 13), 9785);
-    //     liqTree.feeRateSnapshotTokenX.add(67758);
-    //     liqTree.feeRateSnapshotTokenY.add(35645674);
+    //     liqTree.feeRateSnapshotTokenX += 67758;
+    //     liqTree.feeRateSnapshotTokenY += 35645674;
     //     liqTree.addTLiq(LiqRange(1, 13), 235363565, 234534635e18, 456745643e6);
-    //     liqTree.feeRateSnapshotTokenX.add(345346);
-    //     liqTree.feeRateSnapshotTokenY.add(45674565);
+    //     liqTree.feeRateSnapshotTokenX += 345346;
+    //     liqTree.feeRateSnapshotTokenY += 45674565;
     //     liqTree.removeTLiq(LiqRange(1, 13), 4545345, 34535635e18, 7564353e6);
 
     //     // LiqRange(1, 14)
-    //     liqTree.feeRateSnapshotTokenX.add(4567435634);
-    //     liqTree.feeRateSnapshotTokenY.add(234234235);
+    //     liqTree.feeRateSnapshotTokenX += 4567435634;
+    //     liqTree.feeRateSnapshotTokenY += 234234235;
     //     liqTree.addMLiq(LiqRange(1, 14), 357635634);
-    //     liqTree.feeRateSnapshotTokenX.add(23535636);
-    //     liqTree.feeRateSnapshotTokenY.add(234534643576345);
+    //     liqTree.feeRateSnapshotTokenX += 23535636;
+    //     liqTree.feeRateSnapshotTokenY += 234534643576345;
     //     liqTree.removeMLiq(LiqRange(1, 14), 23425346456);
-    //     liqTree.feeRateSnapshotTokenX.add(3452342352);
-    //     liqTree.feeRateSnapshotTokenY.add(356734634532);
+    //     liqTree.feeRateSnapshotTokenX += 3452342352;
+    //     liqTree.feeRateSnapshotTokenY += 356734634532;
     //     liqTree.addTLiq(LiqRange(1, 14), 35235235, 346356343e18, 234265e6);
-    //     liqTree.feeRateSnapshotTokenX.add(2342456);
-    //     liqTree.feeRateSnapshotTokenY.add(3563463);
+    //     liqTree.feeRateSnapshotTokenX += 2342456;
+    //     liqTree.feeRateSnapshotTokenY += 3563463;
     //     liqTree.removeTLiq(LiqRange(1, 14), 234235, 4564565e18, 4564563452e6);
 
     //     // LiqRange(1, 15)
-    //     liqTree.feeRateSnapshotTokenX.add(234234);
-    //     liqTree.feeRateSnapshotTokenY.add(2463634534563);
+    //     liqTree.feeRateSnapshotTokenX += 234234;
+    //     liqTree.feeRateSnapshotTokenY += 2463634534563;
     //     liqTree.addMLiq(LiqRange(1, 15), 34634636);
-    //     liqTree.feeRateSnapshotTokenX.add(1234245346);
-    //     liqTree.feeRateSnapshotTokenY.add(3453453);
+    //     liqTree.feeRateSnapshotTokenX += 1234245346;
+    //     liqTree.feeRateSnapshotTokenY += 3453453;
     //     liqTree.removeMLiq(LiqRange(1, 15), 34534636);
-    //     liqTree.feeRateSnapshotTokenX.add(3463463);
-    //     liqTree.feeRateSnapshotTokenY.add(234523452);
+    //     liqTree.feeRateSnapshotTokenX += 3463463;
+    //     liqTree.feeRateSnapshotTokenY += 234523452;
     //     liqTree.addTLiq(LiqRange(1, 15), 234534534, 1234235235e18, 23423456346e6);
-    //     liqTree.feeRateSnapshotTokenX.add(134235235);
-    //     liqTree.feeRateSnapshotTokenY.add(3634634523);
+    //     liqTree.feeRateSnapshotTokenX += 134235235;
+    //     liqTree.feeRateSnapshotTokenY += 3634634523;
     //     liqTree.removeTLiq(LiqRange(1, 15), 2342352356, 3465343e18, 3562342346e6);
 
     //     // endregion
@@ -2635,8 +2633,8 @@ contract DenseTreeTreeStructureTest is Test {
 
     //     // Step 2); Assign different rates for X & Y
     //     vm.warp(98273); // T98273
-    //     liqTree.feeRateSnapshotTokenX.add(4541239648278065);  // 7.9% APR as Q192.64 T98273 - T0
-    //     liqTree.feeRateSnapshotTokenY.add(13278814667749784); // 23.1% APR as Q192.64 T98273 - T0
+    //     liqTree.feeRateSnapshotTokenX += 4541239648278065);  // 7.9% APR as Q192.64 T98273 - T0
+    //     liqTree.feeRateSnapshotTokenY += 13278814667749784); // 23.1% APR as Q192.64 T98273 - T0
 
     //     // Step 3); Apply change that effects the entire tree, to calculate the fees at each node
     //     // 3.1); addMLiq
@@ -2696,8 +2694,8 @@ contract DenseTreeTreeStructureTest is Test {
 
     //     // 3.2); removeMLiq
     //     vm.warp(2876298273); // T2876298273
-    //     liqTree.feeRateSnapshotTokenX.add(16463537718422861220174597);   // 978567.9% APR as Q192.64 T2876298273 - T98273
-    //     liqTree.feeRateSnapshotTokenY.add(3715979586694123491881712207); // 220872233.1% APR as Q192.64 T2876298273 - T98273
+    //     liqTree.feeRateSnapshotTokenX += 16463537718422861220174597);   // 978567.9% APR as Q192.64 T2876298273 - T98273
+    //     liqTree.feeRateSnapshotTokenY += 3715979586694123491881712207); // 220872233.1% APR as Q192.64 T2876298273 - T98273
 
     //     liqTree.removeMLiq(LiqRange(8, 12), 2734); // RRLL, RL
 
@@ -2755,8 +2753,8 @@ contract DenseTreeTreeStructureTest is Test {
 
     //     // 3.3); addTLiq
     //     vm.warp(9214298113); // T2876298273
-    //     liqTree.feeRateSnapshotTokenX.add(11381610389149375791104);   // 307% APR as Q192.64 T9214298113 - T2876298273
-    //     liqTree.feeRateSnapshotTokenY.add(185394198934916215865344);  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
+    //     liqTree.feeRateSnapshotTokenX += 11381610389149375791104);   // 307% APR as Q192.64 T9214298113 - T2876298273
+    //     liqTree.feeRateSnapshotTokenY += 185394198934916215865344);  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
     //     liqTree.addTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6); // RRLL, RL
 
@@ -2839,8 +2837,8 @@ contract DenseTreeTreeStructureTest is Test {
     //     // 3.4); removeTLiq
     //     // 3.3); addTLiq
     //     vm.warp(32876298273); // T32876298273
-    //     liqTree.feeRateSnapshotTokenX.add(2352954287417905205553); // 17% APR as Q192.64 T32876298273 - T9214298113
-    //     liqTree.feeRateSnapshotTokenY.add(6117681147286553534438); // 44.2% APR as Q192.64 T32876298273 - T9214298113
+    //     liqTree.feeRateSnapshotTokenX += 2352954287417905205553); // 17% APR as Q192.64 T32876298273 - T9214298113
+    //     liqTree.feeRateSnapshotTokenY += 6117681147286553534438); // 44.2% APR as Q192.64 T32876298273 - T9214298113
 
     //     liqTree.removeTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6); // RRLL, RL
 

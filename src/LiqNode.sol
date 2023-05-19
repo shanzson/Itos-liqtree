@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
-import { FeeRateSnapshot } from "src/FeeRateSnapshot.sol";
-
 struct LiqNodeTokenData {
     uint256 borrowed;
     uint256 subtreeBorrowed;
-    FeeRateSnapshot feeRateSnapshot;
+    uint256 feeRateSnapshot;
     uint256 cumulativeEarnedPerMLiq;
     uint256 subtreecumulativeEarnedPerMLiq;
 }
