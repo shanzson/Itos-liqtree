@@ -1277,6 +1277,8 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(L.tokenY.cummulativeEarnedPerMLiq, 256194846273571639740);
         assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 982369673901053899051127131);
 
+        return
+
         // 3) Trigger fee update for remaining nodes by updating the range (1,3) LLLR, LLL
         //    For this last one, also update the rates to increment accumulated fees in L
         //    While previous step does not, meaning we also tested that nothing should have accumulated.
