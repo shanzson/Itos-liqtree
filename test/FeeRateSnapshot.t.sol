@@ -33,14 +33,14 @@ contract FeeRateSnapshotTest is Test {
         vm.warp(10);
         t1.add(100);
         assertEq(t1.timestamp, 10);
-        assertEq(t1.cummulativeInterestX64, 115);
+        assertEq(t1.cumulativeInterestX64, 115);
     }
 
     function testAddZero() public {
         vm.warp(10);
         t1.add(0);
         assertEq(t1.timestamp, 10);
-        assertEq(t1.cummulativeInterestX64, 15);
+        assertEq(t1.cumulativeInterestX64, 15);
     }
 
 }

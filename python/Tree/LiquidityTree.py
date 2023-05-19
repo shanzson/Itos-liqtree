@@ -68,14 +68,14 @@ class LiqNode:
     token_x_borrowed: UnsignedDecimal = UnsignedDecimal(0)
     token_x_subtree_borrowed: UnsignedDecimal = UnsignedDecimal(0)
     token_x_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
-    token_x_cummulative_earned_per_m_liq: UnsignedDecimal = UnsignedDecimal(0)
-    token_x_cummulative_earned_per_m_subtree_liq: UnsignedDecimal = UnsignedDecimal(0)
+    token_x_cumulative_earned_per_m_liq: UnsignedDecimal = UnsignedDecimal(0)
+    token_x_cumulative_earned_per_m_subtree_liq: UnsignedDecimal = UnsignedDecimal(0)
 
     token_y_borrowed: UnsignedDecimal = UnsignedDecimal(0)
     token_y_subtree_borrowed: UnsignedDecimal = UnsignedDecimal(0)
     token_y_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
-    token_y_cummulative_earned_per_m_liq: UnsignedDecimal = UnsignedDecimal(0)
-    token_y_cummulative_earned_per_m_subtree_liq: UnsignedDecimal = UnsignedDecimal(0)
+    token_y_cumulative_earned_per_m_liq: UnsignedDecimal = UnsignedDecimal(0)
+    token_y_cumulative_earned_per_m_subtree_liq: UnsignedDecimal = UnsignedDecimal(0)
 
     # Can think of node in a tree as the combination key of (value, base)
     # ex. R is (1, 1) while LRR is (3, 2)
@@ -587,18 +587,18 @@ class LiquidityTree(ILiquidity):
         if total_m_liq <= 0:
             return
 
-        node.token_x_cummulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        node.token_x_cummulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_x_cumulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_x_cumulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
-        node.token_y_cummulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        node.token_y_cummulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_y_cumulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_y_cumulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
         if self.sol_truncation:
-            node.token_x_cummulative_earned_per_m_liq = UnsignedDecimal(int(node.token_x_cummulative_earned_per_m_liq))
-            node.token_x_cummulative_earned_per_m_subtree_liq = UnsignedDecimal(int(node.token_x_cummulative_earned_per_m_subtree_liq))
+            node.token_x_cumulative_earned_per_m_liq = UnsignedDecimal(int(node.token_x_cumulative_earned_per_m_liq))
+            node.token_x_cumulative_earned_per_m_subtree_liq = UnsignedDecimal(int(node.token_x_cumulative_earned_per_m_subtree_liq))
 
-            node.token_y_cummulative_earned_per_m_liq = UnsignedDecimal(int(node.token_y_cummulative_earned_per_m_liq))
-            node.token_y_cummulative_earned_per_m_subtree_liq = UnsignedDecimal(int(node.token_y_cummulative_earned_per_m_subtree_liq))
+            node.token_y_cumulative_earned_per_m_liq = UnsignedDecimal(int(node.token_y_cumulative_earned_per_m_liq))
+            node.token_y_cumulative_earned_per_m_subtree_liq = UnsignedDecimal(int(node.token_y_cumulative_earned_per_m_subtree_liq))
 
     def auxiliary_level_m_liq(self, node_key: int) -> UnsignedDecimal:
         if node_key == self.root_key:

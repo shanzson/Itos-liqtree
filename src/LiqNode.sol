@@ -7,8 +7,8 @@ struct LiqNodeTokenData {
     uint256 borrowed;
     uint256 subtreeBorrowed;
     FeeRateSnapshot feeRateSnapshot;
-    uint256 cummulativeEarnedPerMLiq;
-    uint256 subtreeCummulativeEarnedPerMLiq;
+    uint256 cumulativeEarnedPerMLiq;
+    uint256 subtreecumulativeEarnedPerMLiq;
 }
 
 struct LiqNode {

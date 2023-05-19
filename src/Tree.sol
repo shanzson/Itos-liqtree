@@ -651,11 +651,11 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreecumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
 
-            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreecumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
         }
 
         rootNode.mLiq += liq;
@@ -675,11 +675,11 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreecumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
 
-            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreecumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
         }
 
         rootNode.mLiq -= liq;
@@ -701,11 +701,11 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreecumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
 
-            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreecumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
         }
 
         rootNode.tLiq += liq;
@@ -728,11 +728,11 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cummulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCummulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.subtreecumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
 
-            rootNode.tokenY.cummulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCummulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.subtreecumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
         }
 
         rootNode.tLiq -= liq;
@@ -756,11 +756,11 @@ library LiqTreeImpl {
         uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth;
 
         if (totalMLiq > 0) {
-            node.tokenX.cummulativeEarnedPerMLiq += node.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            node.tokenX.subtreeCummulativeEarnedPerMLiq += node.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenX.cumulativeEarnedPerMLiq += node.tokenX.borrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenX.subtreecumulativeEarnedPerMLiq += node.tokenX.subtreeBorrowed * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
 
-            node.tokenY.cummulativeEarnedPerMLiq += node.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            node.tokenY.subtreeCummulativeEarnedPerMLiq += node.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenY.cumulativeEarnedPerMLiq += node.tokenY.borrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenY.subtreecumulativeEarnedPerMLiq += node.tokenY.subtreeBorrowed * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
         }
     }
 
