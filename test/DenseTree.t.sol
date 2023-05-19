@@ -1379,6 +1379,210 @@ contract DenseTreeTreeStructureTest is Test {
         assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 288535999994887906466277673329665978776994301813328609583743064);       // 1 wei lost
     }
 
+    function testLeftAndRightLegStoppingAtOrAbovePeak() public {
+        //   Range: (0, 1)
+        //
+        //           LLL(0-1)
+        //          /   \
+        //         /     \
+        //   LLLL(0) LLLR(1)
+
+        // 4th (0, 1)
+        LiqNode storage root = liqTree.nodes[liqTree.root];
+
+        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 16)];
+        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 16)];
+        LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 16)];
+        LiqNode storage LLLL = liqTree.nodes[LKey.wrap((1 << 24) | 16)];
+        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 17)];
+
+        liqTree.addMLiq(LiqRange(0, 1), 8264);  // LLL
+        liqTree.addMLiq(LiqRange(0, 0), 2582);  // LLLL
+        liqTree.addMLiq(LiqRange(1, 1), 1111);  // LLLR
+
+        liqTree.addTLiq(LiqRange(0, 1), 726, 346e18, 132e6);  // LLL
+        liqTree.addTLiq(LiqRange(0, 0), 245, 100e18, 222e6);  // LLLL
+        liqTree.addTLiq(LiqRange(1, 1), 342, 234e18, 313e6);  // LLLR
+
+        // Verify initial tree state
+        // mLiq
+        assertEq(root.mLiq, 0);
+        assertEq(L.mLiq, 0);
+        assertEq(LL.mLiq, 0);
+        assertEq(LLL.mLiq, 8264);
+        assertEq(LLLL.mLiq, 2582);
+        assertEq(LLLR.mLiq, 1111);
+
+        // tLiq
+        assertEq(root.tLiq, 0);
+        assertEq(L.tLiq, 0);
+        assertEq(LL.tLiq, 0);
+        assertEq(LLL.tLiq, 726);
+        assertEq(LLLL.tLiq, 245);
+        assertEq(LLLR.tLiq, 342);
+
+        // subtreeMLiq
+        assertEq(root.subtreeMLiq, 20221);
+        assertEq(L.subtreeMLiq, 20221);
+        assertEq(LL.subtreeMLiq, 20221);
+        assertEq(LLL.subtreeMLiq, 20221);  // 8264*2 + 2582*1 + 1111*1 = 20221
+        assertEq(LLLL.subtreeMLiq, 2582);
+        assertEq(LLLR.subtreeMLiq, 1111);
+
+        // borrowed_x
+        assertEq(root.tokenX.borrowed, 0);
+        assertEq(L.tokenX.borrowed, 0);
+        assertEq(LL.tokenX.borrowed, 0);
+        assertEq(LLL.tokenX.borrowed, 346e18);
+        assertEq(LLLL.tokenX.borrowed, 100e18);
+        assertEq(LLLR.tokenX.borrowed, 234e18);
+
+        // subtree_borrowed_x
+        assertEq(root.tokenX.subtreeBorrowed, 680e18);
+        assertEq(L.tokenX.subtreeBorrowed, 680e18);
+        assertEq(LL.tokenX.subtreeBorrowed, 680e18);
+        assertEq(LLL.tokenX.subtreeBorrowed, 680e18);  // 346e18 + 100e18 + 234e18 = 680e18
+        assertEq(LLLL.tokenX.subtreeBorrowed, 100e18);
+        assertEq(LLLR.tokenX.subtreeBorrowed, 234e18);
+
+        // borrowed_y
+        assertEq(root.tokenY.borrowed, 0);
+        assertEq(L.tokenY.borrowed, 0);
+        assertEq(LL.tokenY.borrowed, 0);
+        assertEq(LLL.tokenY.borrowed, 132e6);
+        assertEq(LLLL.tokenY.borrowed, 222e6);
+        assertEq(LLLR.tokenY.borrowed, 313e6);
+
+        // subtree_borrowed_y
+        assertEq(root.tokenY.subtreeBorrowed, 667e6);
+        assertEq(L.tokenY.subtreeBorrowed, 667e6);
+        assertEq(LL.tokenY.subtreeBorrowed, 667e6);
+        assertEq(LLL.tokenY.subtreeBorrowed, 667e6);  // 132e6 + 222e6 + 313e6 = 667e6
+        assertEq(LLLL.tokenY.subtreeBorrowed, 222e6);
+        assertEq(LLLR.tokenY.subtreeBorrowed, 313e6);
+
+        liqTree.feeRateSnapshotTokenX.add(997278349210980290827452342352346);
+        liqTree.feeRateSnapshotTokenY.add(7978726162930599238079167453467080976862);
+
+        liqTree.addMLiq(LiqRange(0, 1), 1234567);
+        liqTree.removeMLiq(LiqRange(0, 1), 1234567);
+
+        // LLLR
+        // (not updated)
+        assertEq(LLLR.tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(LLLR.tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(LLLR.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(LLLR.tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+
+        // LLLL
+        // (not updated)
+        assertEq(LLLL.tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(LLLL.tokenX.subtreeCummulativeEarnedPerMLiq, 0);
+        assertEq(LLLL.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(LLLL.tokenY.subtreeCummulativeEarnedPerMLiq, 0);
+
+        // LLL
+        //
+        //   total_mLiq = 20221 + (0 + 0 + 0) * 2 = 20221
+        //
+        //   earn_x      = 997278349210980290827452342352346 * 346e18 / 20221 / 2**64 = 925060501618136152524292214349.283139885351240161578507230288
+        //   earn_x_sub  = 997278349210980290827452342352346 * 680e18 / 20221 / 2**64 = 1818037980058764692822308398143.09981249144174367015429166646
+        //
+        //   earn_y      = 7978726162930599238079167453467080976862 * 132e6 / 20221 / 2**64 = 2823482754602022855424507.24027059608531549133804868998511635
+        //   earn_y_sub  = 7978726162930599238079167453467080976862 * 667e6 / 20221 / 2**64 = 14267143919087494277031411.5853067241583744903218066380308530
+        assertEq(LLL.tokenX.cummulativeEarnedPerMLiq, 925060501618136152524292214349);
+        assertEq(LLL.tokenX.subtreeCummulativeEarnedPerMLiq, 1818037980058764692822308398143);
+        assertEq(LLL.tokenY.cummulativeEarnedPerMLiq, 2823482754602022855424507);
+        assertEq(LLL.tokenY.subtreeCummulativeEarnedPerMLiq, 14267143919087494277031411);
+
+        // LL
+        //   NOTE: subtree earn is not 'diluted' because liq contributing to total_mLiq along the path to the root is 0.
+        //
+        //   total_mLiq = 20221 + (0 + 0) * 4 = 20221
+        //
+        //   earn_x      = 997278349210980290827452342352346 * 0 / 20221 / 2**64 = 0
+        //   earn_x_sub  = 997278349210980290827452342352346 * 680e18 / 20221 / 2**64 = 1818037980058764692822308398143.09981249144174367015429166646
+        //
+        //   earn_y      = 7978726162930599238079167453467080976862 * 0 / 20221 / 2**64 = 0
+        //   earn_y_sub  = 7978726162930599238079167453467080976862 * 667e6 / 20221 / 2**64 = 14267143919087494277031411.5853067241583744903218066380308530
+        assertEq(LL.tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(LL.tokenX.subtreeCummulativeEarnedPerMLiq, 1818037980058764692822308398143);
+        assertEq(LL.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(LL.tokenY.subtreeCummulativeEarnedPerMLiq, 14267143919087494277031411);
+
+        // L
+        //   NOTE: subtree earn is not 'diluted' because liq contributing to total_mLiq along the path to the root is 0.
+        assertEq(L.tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(L.tokenX.subtreeCummulativeEarnedPerMLiq, 1818037980058764692822308398143);
+        assertEq(L.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(L.tokenY.subtreeCummulativeEarnedPerMLiq, 14267143919087494277031411);
+
+        // root
+        //   NOTE: subtree earn is not 'diluted' because liq contributing to total_mLiq along the path to the root is 0.
+        assertEq(root.tokenX.cummulativeEarnedPerMLiq, 0);
+        assertEq(root.tokenX.subtreeCummulativeEarnedPerMLiq, 1818037980058764692822308398143);
+        assertEq(root.tokenY.cummulativeEarnedPerMLiq, 0);
+        assertEq(root.tokenY.subtreeCummulativeEarnedPerMLiq, 14267143919087494277031411);
+
+        // Verify ending tree state
+        // Will be the same as initial state, because any changes to the tree (minus fees) were undone
+        // mLiq
+        assertEq(root.mLiq, 0);
+        assertEq(L.mLiq, 0);
+        assertEq(LL.mLiq, 0);
+        assertEq(LLL.mLiq, 8264);
+        assertEq(LLLL.mLiq, 2582);
+        assertEq(LLLR.mLiq, 1111);
+
+        // tLiq
+        assertEq(root.tLiq, 0);
+        assertEq(L.tLiq, 0);
+        assertEq(LL.tLiq, 0);
+        assertEq(LLL.tLiq, 726);
+        assertEq(LLLL.tLiq, 245);
+        assertEq(LLLR.tLiq, 342);
+
+        // subtreeMLiq
+        assertEq(root.subtreeMLiq, 20221);
+        assertEq(L.subtreeMLiq, 20221);
+        assertEq(LL.subtreeMLiq, 20221);
+        assertEq(LLL.subtreeMLiq, 20221);
+        assertEq(LLLL.subtreeMLiq, 2582);
+        assertEq(LLLR.subtreeMLiq, 1111);
+
+        // borrowed_x
+        assertEq(root.tokenX.borrowed, 0);
+        assertEq(L.tokenX.borrowed, 0);
+        assertEq(LL.tokenX.borrowed, 0);
+        assertEq(LLL.tokenX.borrowed, 346e18);
+        assertEq(LLLL.tokenX.borrowed, 100e18);
+        assertEq(LLLR.tokenX.borrowed, 234e18);
+
+        // subtree_borrowed_x
+        assertEq(root.tokenX.subtreeBorrowed, 680e18);
+        assertEq(L.tokenX.subtreeBorrowed, 680e18);
+        assertEq(LL.tokenX.subtreeBorrowed, 680e18);
+        assertEq(LLL.tokenX.subtreeBorrowed, 680e18);
+        assertEq(LLLL.tokenX.subtreeBorrowed, 100e18);
+        assertEq(LLLR.tokenX.subtreeBorrowed, 234e18);
+
+        // borrowed_y
+        assertEq(root.tokenY.borrowed, 0);
+        assertEq(L.tokenY.borrowed, 0);
+        assertEq(LL.tokenY.borrowed, 0);
+        assertEq(LLL.tokenY.borrowed, 132e6);
+        assertEq(LLLL.tokenY.borrowed, 222e6);
+        assertEq(LLLR.tokenY.borrowed, 313e6);
+
+        // subtree_borrowed_y
+        assertEq(root.tokenY.subtreeBorrowed, 667e6);
+        assertEq(L.tokenY.subtreeBorrowed, 667e6);
+        assertEq(LL.tokenY.subtreeBorrowed, 667e6);
+        assertEq(LLL.tokenY.subtreeBorrowed, 667e6);
+        assertEq(LLLL.tokenY.subtreeBorrowed, 222e6);
+        assertEq(LLLR.tokenY.subtreeBorrowed, 313e6);
+    }
+
     // BELOW WAS BEFORE PYTHON
 
 /*
