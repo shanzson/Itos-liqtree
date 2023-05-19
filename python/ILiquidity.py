@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass
 
-from LiqTree.UnsignedDecimal import UnsignedDecimal
+from UnsignedDecimal import UnsignedDecimal
 
 
 @dataclass

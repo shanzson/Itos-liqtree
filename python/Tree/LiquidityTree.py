@@ -1,9 +1,9 @@
 from collections import defaultdict
 from dataclasses import dataclass
-from LiqTree.UnsignedDecimal import UnsignedDecimal
+from UnsignedDecimal import UnsignedDecimal
 
-from LiqTree.LiquidityKey import LiquidityKey
-from LiqTree.ILiquidity import ILiquidity
+from Tree.LiquidityKey import LiquidityKey
+from ILiquidity import ILiquidity
 
 
 #  Liquidity Tree

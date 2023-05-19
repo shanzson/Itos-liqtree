@@ -12,7 +12,7 @@ from decimal import Decimal
 #
 #       If all goes perfectly, the final result in python would 100% match the final output in solidity
 
-from LiqTree.LiquidityTree import LiquidityTree, LiqNode, LiqRange
+from Tree.LiquidityTree import LiquidityTree, LiqNode, LiqRange
 
 
 class TestDenseLiquidityTreeExact(TestCase):
@@ -201,11 +201,11 @@ class TestDenseLiquidityTreeExact(TestCase):
         self.assertEqual(LR.token_y_subtree_borrowed, Decimal("552e6"))
         self.assertEqual(LLR.token_y_subtree_borrowed, Decimal("788296e6"))
         self.assertEqual(LLRR.token_y_subtree_borrowed, Decimal("779531e6"))
-        
+
         # T98273
         liq_tree.token_x_fee_rate_snapshot += Decimal("4541239648278065")
         liq_tree.token_y_fee_rate_snapshot += Decimal("13278814667749784")
-        
+
         # Apply change that requires fee calculation
         # add_m_liq
         liq_tree.add_m_liq(LiqRange(low=3, high=7), Decimal("2734"))  # LLRR, LR
@@ -1082,14 +1082,14 @@ class TestDenseLiquidityTreeExact(TestCase):
 
 
 contract DenseTreeCodeStructureTest is Test {
-    LiqTree public liq_tree;
-    using LiqTreeImpl for LiqTree;
+    Tree public liq_tree;
+    using LiqTreeImpl for Tree;
     using LKeyImpl for LKey;
     using FeeRateSnapshotImpl for FeeRateSnapshot;
 
     function setUp() public {
-        # A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]). 
-        # ie. A complete tree matching the ascii documentation. 
+        # A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]).
+        # ie. A complete tree matching the ascii documentation.
         liq_tree.init(4)
     }
 
@@ -1125,14 +1125,14 @@ contract DenseTreeCodeStructureTest is Test {
 
 
 contract DenseTreeMathmaticalLimitationsTest is Test {
-    LiqTree public liq_tree;
-    using LiqTreeImpl for LiqTree;
+    Tree public liq_tree;
+    using LiqTreeImpl for Tree;
     using LKeyImpl for LKey;
     using FeeRateSnapshotImpl for FeeRateSnapshot;
 
     function setUp() public {
-        # A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]). 
-        # ie. A complete tree matching the ascii documentation. 
+        # A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15]).
+        # ie. A complete tree matching the ascii documentation.
         liq_tree.init(4)
     }
 

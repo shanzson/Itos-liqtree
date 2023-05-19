@@ -1,5 +1,20 @@
 from unittest import TestCase
-from LiqTree.UnsignedDecimal import UnsignedDecimal, UnsignedDecimalIsSignedException
+
+from Bucket.LiquidityBucket import LiquidityBucket
+from ILiquidity import LiqRange
+from UnsignedDecimal import UnsignedDecimal
+
+
+class TestLiquidityBucket(TestCase):
+    def setUp(self) -> None:
+        self.liq_bucket = LiquidityBucket(size=16, sol_truncation=True)
+
+    def test_a(self):
+        self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal("100"))
+
+'''
+from unittest import TestCase
+from UnsignedDecimal import UnsignedDecimalIsSignedException
 
 # NOTE: all numbers must be given as UnsignedDecimal numbers to avoid precision errors.
 #       each UnsignedDecimal number must be created using a string! Otherwise precision is lost when the input variable is created
@@ -12,7 +27,7 @@ from LiqTree.UnsignedDecimal import UnsignedDecimal, UnsignedDecimalIsSignedExce
 #
 #       If all goes perfectly, the final result in python would 100% match the final output in solidity
 
-from LiqTree.LiquidityTree import *
+from Tree.LiquidityTree import *
 
 #                                                               root(0-16)
 #                                                       ____----    ----____
@@ -1597,3 +1612,5 @@ class TestLiquidityTree(TestCase):
     # endregion
 
     # endregion
+
+'''
