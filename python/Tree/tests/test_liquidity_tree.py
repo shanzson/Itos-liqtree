@@ -1464,7 +1464,7 @@ class TestLiquidityTree(TestCase):
         self.assertRaises(UnsignedDecimalIsSignedException, lambda: self.liq_tree.remove_t_liq(LiqRange(3, 7), UnsignedDecimal("1"), UnsignedDecimal("1"), UnsignedDecimal("12")))
 
     def test_revert_adding_t_liq_without_sufficient_m_liq(self):
-        self.assertRaises(LiqTreeExceptionTLiqExceedsMLiq, lambda: self.liq_tree.add_t_liq(LiqRange(3, 6), UnsignedDecimal("1"), UnsignedDecimal("1"), UnsignedDecimal("1")))
+        self.assertRaises(LiquidityExceptionTLiqExceedsMLiq, lambda: self.liq_tree.add_t_liq(LiqRange(3, 6), UnsignedDecimal("1"), UnsignedDecimal("1"), UnsignedDecimal("1")))
 
     def test_revert_removing_m_liq_before_adding_m_liq(self):
         self.assertRaises(UnsignedDecimalIsSignedException, lambda: self.liq_tree.remove_m_liq(LiqRange(3, 6), UnsignedDecimal("1")))
@@ -1475,104 +1475,104 @@ class TestLiquidityTree(TestCase):
     # region Range High Below Low
 
     def test_revert_adding_m_liq_on_range_with_high_below_low(self):
-        self.assertRaises(LiqTreeExceptionRangeHighBelowLow, lambda: self.liq_tree.add_m_liq(LiqRange(3, 2), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeHighBelowLow, lambda: self.liq_tree.add_m_liq(LiqRange(3, 2), UnsignedDecimal("2")))
 
     def test_revert_removing_m_liq_on_range_with_high_below_low(self):
-        self.assertRaises(LiqTreeExceptionRangeHighBelowLow, lambda: self.liq_tree.remove_m_liq(LiqRange(3, 2), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeHighBelowLow, lambda: self.liq_tree.remove_m_liq(LiqRange(3, 2), UnsignedDecimal("2")))
 
     def test_revert_adding_t_liq_on_range_with_high_below_low(self):
-        self.assertRaises(LiqTreeExceptionRangeHighBelowLow, lambda: self.liq_tree.add_t_liq(LiqRange(3, 2), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeHighBelowLow, lambda: self.liq_tree.add_t_liq(LiqRange(3, 2), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_range_with_high_below_low(self):
-        self.assertRaises(LiqTreeExceptionRangeHighBelowLow, lambda: self.liq_tree.remove_t_liq(LiqRange(3, 2), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeHighBelowLow, lambda: self.liq_tree.remove_t_liq(LiqRange(3, 2), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     # endregion
 
     # region Oversized Range
 
     def test_revert_adding_m_liq_on_oversized_range(self):
-        self.assertRaises(LiqTreeExceptionOversizedRange, lambda: self.liq_tree.add_m_liq(LiqRange(0, 20), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionOversizedRange, lambda: self.liq_tree.add_m_liq(LiqRange(0, 20), UnsignedDecimal("2")))
 
     def test_revert_removing_m_liq_on_oversized_range(self):
-        self.assertRaises(LiqTreeExceptionOversizedRange, lambda: self.liq_tree.remove_m_liq(LiqRange(0, 20), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionOversizedRange, lambda: self.liq_tree.remove_m_liq(LiqRange(0, 20), UnsignedDecimal("2")))
 
     def test_revert_adding_t_liq_on_oversized_range(self):
-        self.assertRaises(LiqTreeExceptionOversizedRange, lambda: self.liq_tree.add_t_liq(LiqRange(0, 20), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionOversizedRange, lambda: self.liq_tree.add_t_liq(LiqRange(0, 20), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_oversized_range(self):
-        self.assertRaises(LiqTreeExceptionOversizedRange, lambda: self.liq_tree.remove_t_liq(LiqRange(0, 20), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionOversizedRange, lambda: self.liq_tree.remove_t_liq(LiqRange(0, 20), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     # endregion
 
     # region Root Range
 
     def test_revert_adding_m_liq_on_root_range(self):
-        self.assertRaises(LiqTreeExceptionRootRange, lambda: self.liq_tree.add_m_liq(LiqRange(0, 15), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRootRange, lambda: self.liq_tree.add_m_liq(LiqRange(0, 15), UnsignedDecimal("2")))
 
     def test_revert_removing_m_liq_on_root_range(self):
-        self.assertRaises(LiqTreeExceptionRootRange, lambda: self.liq_tree.remove_m_liq(LiqRange(0, 15), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRootRange, lambda: self.liq_tree.remove_m_liq(LiqRange(0, 15), UnsignedDecimal("2")))
 
     def test_revert_adding_t_liq_on_root_range(self):
-        self.assertRaises(LiqTreeExceptionRootRange, lambda: self.liq_tree.add_t_liq(LiqRange(0, 15), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRootRange, lambda: self.liq_tree.add_t_liq(LiqRange(0, 15), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_root_range(self):
-        self.assertRaises(LiqTreeExceptionRootRange, lambda: self.liq_tree.remove_t_liq(LiqRange(0, 15), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRootRange, lambda: self.liq_tree.remove_t_liq(LiqRange(0, 15), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     # endregion
 
     # region Negative Range Value
 
     def test_revert_adding_m_liq_on_range_with_negative_low_value(self):
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.add_m_liq(LiqRange(-3, 7), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_m_liq(LiqRange(-3, 7), UnsignedDecimal("2")))
 
     def test_revert_removing_m_liq_on_range_with_negative_low_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.remove_m_liq(LiqRange(-3, 7), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.remove_m_liq(LiqRange(-3, 7), UnsignedDecimal("2")))
 
     def test_revert_adding_t_liq_on_range_with_negative_low_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.add_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_range_with_negative_low_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
         self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("10"), UnsignedDecimal("2"), UnsignedDecimal("2"))
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.remove_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.remove_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_adding_m_liq_on_range_with_negative_high_value(self):
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.add_m_liq(LiqRange(3, -7), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_m_liq(LiqRange(3, -7), UnsignedDecimal("2")))
 
     def test_revert_removing_m_liq_on_range_with_negative_high_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.remove_m_liq(LiqRange(3, -7), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.remove_m_liq(LiqRange(3, -7), UnsignedDecimal("2")))
 
     def test_revert_adding_t_liq_on_range_with_negative_high_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.add_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_range_with_negative_high_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
         self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("10"), UnsignedDecimal("2"), UnsignedDecimal("2"))
-        self.assertRaises(LiqTreeExceptionRangeContainsNegative, lambda: self.liq_tree.remove_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.remove_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     # endregion
 
     # region Zero Liquidity
 
     def test_revert_adding_m_liq_with_zero_liq(self):
-        self.assertRaises(LiqTreeExceptionZeroLiquidity, lambda: self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("0")))
+        self.assertRaises(LiquidityExceptionZeroLiquidity, lambda: self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("0")))
 
     def test_revert_removing_m_liq_with_zero_liq(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiqTreeExceptionZeroLiquidity, lambda: self.liq_tree.remove_m_liq(LiqRange(3, 7), UnsignedDecimal("0")))
+        self.assertRaises(LiquidityExceptionZeroLiquidity, lambda: self.liq_tree.remove_m_liq(LiqRange(3, 7), UnsignedDecimal("0")))
 
     def test_revert_adding_t_liq_with_zero_liq(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("100"))
-        self.assertRaises(LiqTreeExceptionZeroLiquidity, lambda: self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("0"), UnsignedDecimal("3"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionZeroLiquidity, lambda: self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("0"), UnsignedDecimal("3"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_with_zero_liq(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("100"))
         self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("100"), UnsignedDecimal("100"), UnsignedDecimal("100"))
-        self.assertRaises(LiqTreeExceptionZeroLiquidity, lambda: self.liq_tree.remove_t_liq(LiqRange(3, 7), UnsignedDecimal("0"), UnsignedDecimal("3"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionZeroLiquidity, lambda: self.liq_tree.remove_t_liq(LiqRange(3, 7), UnsignedDecimal("0"), UnsignedDecimal("3"), UnsignedDecimal("2")))
 
     # endregion
 

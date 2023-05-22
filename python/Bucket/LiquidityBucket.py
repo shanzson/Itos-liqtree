@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List
 
-from ILiquidity import ILiquidity, LiqRange
+from ILiquidity import *
 from UnsignedDecimal import UnsignedDecimal
 
 
@@ -59,7 +59,15 @@ class LiquidityBucket(ILiquidity):
 
     def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
         """Removes mLiq from the provided range."""
-        pass
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            bucket: Bucket = self._buckets[tick]
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == liq_range.low and snap.range.high == liq_range.high]), None)
+
+            if snap is None:
+                raise LiquidityExceptionRemovingMoreMLiqThanExists()
+
+            bucket.snapshots.append(snap)
 
     def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq to the provided range. Borrowing given amounts."""

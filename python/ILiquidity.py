@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from UnsignedDecimal import UnsignedDecimal
 
 
+TWO_POW_SIXTY_FOUR: UnsignedDecimal = UnsignedDecimal(2**64)
+
+
 @dataclass
 class LiqRange:
     low: int

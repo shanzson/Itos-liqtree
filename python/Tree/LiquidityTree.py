@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from UnsignedDecimal import UnsignedDecimal
 
 from Tree.LiquidityKey import LiquidityKey
-from ILiquidity import ILiquidity
+from ILiquidity import *
 
 
 #  Liquidity Tree
@@ -25,38 +25,6 @@ from ILiquidity import ILiquidity
 #          /   \          /   \          /   \          /   \            /   \          /   \          /   \          /   \
 #         /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
 #      LLLL    LLLR    LLRL    LLRR   LRLL    LRLR   LRRL    LRRR      RLLL   RLLR   RLRL    RLRR   RRLL    RRLR   RRRL    RRRR
-
-TWO_POW_SIXTY_FOUR: UnsignedDecimal = UnsignedDecimal(2**64)
-
-
-class LiqTreeExceptionZeroLiquidity(Exception):
-    pass
-
-
-class LiqTreeExceptionRangeContainsNegative(Exception):
-    pass
-
-
-class LiqTreeExceptionOversizedRange(Exception):
-    pass
-
-
-class LiqTreeExceptionRootRange(Exception):
-    pass
-
-
-class LiqTreeExceptionRangeHighBelowLow(Exception):
-    pass
-
-
-class LiqTreeExceptionTLiqExceedsMLiq(Exception):
-    pass
-
-
-@dataclass
-class LiqRange:
-    low: int
-    high: int
 
 
 @dataclass
@@ -133,17 +101,17 @@ class LiquidityTree(ILiquidity):
 
     def add_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
         if liq == UnsignedDecimal("0"):
-            raise LiqTreeExceptionZeroLiquidity()
+            raise LiquidityExceptionZeroLiquidity()
         if liq_range.low < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.high < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.low == UnsignedDecimal("0") and liq_range.high == UnsignedDecimal(self.width - 1):
-            raise LiqTreeExceptionRootRange()
+            raise LiquidityExceptionRootRange()
         if liq_range.high >= UnsignedDecimal(self.width):
-            raise LiqTreeExceptionOversizedRange()
+            raise LiquidityExceptionOversizedRange()
         if liq_range.high < liq_range.low:
-            raise LiqTreeExceptionRangeHighBelowLow()
+            raise LiquidityExceptionRangeHighBelowLow()
 
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
@@ -230,17 +198,17 @@ class LiquidityTree(ILiquidity):
 
     def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
         if liq == UnsignedDecimal("0"):
-            raise LiqTreeExceptionZeroLiquidity()
+            raise LiquidityExceptionZeroLiquidity()
         if liq_range.low < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.high < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.low == UnsignedDecimal("0") and liq_range.high == UnsignedDecimal(self.width - 1):
-            raise LiqTreeExceptionRootRange()
+            raise LiquidityExceptionRootRange()
         if liq_range.high >= UnsignedDecimal(self.width):
-            raise LiqTreeExceptionOversizedRange()
+            raise LiquidityExceptionOversizedRange()
         if liq_range.high < liq_range.low:
-            raise LiqTreeExceptionRangeHighBelowLow()
+            raise LiquidityExceptionRangeHighBelowLow()
 
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
@@ -259,7 +227,7 @@ class LiquidityTree(ILiquidity):
             node.subtree_m_liq -= m_liq_per_tick
 
             if node.t_liq > node.m_liq:
-                raise LiqTreeExceptionTLiqExceedsMLiq()
+                raise LiquidityExceptionTLiqExceedsMLiq()
 
             # right propagate
             current, _ = LiquidityKey.right_up(current)
@@ -278,7 +246,7 @@ class LiquidityTree(ILiquidity):
                     node.subtree_m_liq -= liq * UnsignedDecimal(current >> 24)
 
                     if node.t_liq > node.m_liq:
-                        raise LiqTreeExceptionTLiqExceedsMLiq()
+                        raise LiquidityExceptionTLiqExceedsMLiq()
 
                 # right propagate
                 up, left = LiquidityKey.right_up(current)
@@ -298,7 +266,7 @@ class LiquidityTree(ILiquidity):
             node.subtree_m_liq -= m_liq_per_tick
 
             if node.t_liq > node.m_liq:
-                raise LiqTreeExceptionTLiqExceedsMLiq()
+                raise LiquidityExceptionTLiqExceedsMLiq()
 
             # left propagate
             current, _ = LiquidityKey.left_up(current)
@@ -317,7 +285,7 @@ class LiquidityTree(ILiquidity):
                     node.subtree_m_liq -= liq * UnsignedDecimal(current >> 24)
 
                     if node.t_liq > node.m_liq:
-                        raise LiqTreeExceptionTLiqExceedsMLiq()
+                        raise LiquidityExceptionTLiqExceedsMLiq()
 
                 # left propogate
                 up, right = LiquidityKey.left_up(current)
@@ -339,17 +307,17 @@ class LiquidityTree(ILiquidity):
 
     def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         if liq == UnsignedDecimal("0"):
-            raise LiqTreeExceptionZeroLiquidity()
+            raise LiquidityExceptionZeroLiquidity()
         if liq_range.low < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.high < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.low == UnsignedDecimal("0") and liq_range.high == UnsignedDecimal(self.width - 1):
-            raise LiqTreeExceptionRootRange()
+            raise LiquidityExceptionRootRange()
         if liq_range.high >= UnsignedDecimal(self.width):
-            raise LiqTreeExceptionOversizedRange()
+            raise LiquidityExceptionOversizedRange()
         if liq_range.high < liq_range.low:
-            raise LiqTreeExceptionRangeHighBelowLow()
+            raise LiquidityExceptionRangeHighBelowLow()
 
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
@@ -370,7 +338,7 @@ class LiquidityTree(ILiquidity):
             node.token_y_subtree_borrowed += amount_y
 
             if node.t_liq > node.m_liq:
-                raise LiqTreeExceptionTLiqExceedsMLiq()
+                raise LiquidityExceptionTLiqExceedsMLiq()
 
             # right propagate
             current, _ = LiquidityKey.right_up(current)
@@ -393,7 +361,7 @@ class LiquidityTree(ILiquidity):
                     node.token_y_subtree_borrowed += amount_y
 
                     if node.t_liq > node.m_liq:
-                        raise LiqTreeExceptionTLiqExceedsMLiq()
+                        raise LiquidityExceptionTLiqExceedsMLiq()
 
                 # right propagate
                 up, left = LiquidityKey.right_up(current)
@@ -416,7 +384,7 @@ class LiquidityTree(ILiquidity):
             node.token_y_subtree_borrowed += amount_y
 
             if node.t_liq > node.m_liq:
-                raise LiqTreeExceptionTLiqExceedsMLiq()
+                raise LiquidityExceptionTLiqExceedsMLiq()
 
             # left propagate
             current, _ = LiquidityKey.left_up(current)
@@ -439,7 +407,7 @@ class LiquidityTree(ILiquidity):
                     node.token_y_subtree_borrowed += amount_y
 
                     if node.t_liq > node.m_liq:
-                        raise LiqTreeExceptionTLiqExceedsMLiq()
+                        raise LiquidityExceptionTLiqExceedsMLiq()
 
                 # left propogate
                 up, right = LiquidityKey.left_up(current)
@@ -463,17 +431,17 @@ class LiquidityTree(ILiquidity):
 
     def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         if liq == UnsignedDecimal("0"):
-            raise LiqTreeExceptionZeroLiquidity()
+            raise LiquidityExceptionZeroLiquidity()
         if liq_range.low < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.high < UnsignedDecimal("0"):
-            raise LiqTreeExceptionRangeContainsNegative()
+            raise LiquidityExceptionRangeContainsNegative()
         if liq_range.low == UnsignedDecimal("0") and liq_range.high == UnsignedDecimal(self.width - 1):
-            raise LiqTreeExceptionRootRange()
+            raise LiquidityExceptionRootRange()
         if liq_range.high >= UnsignedDecimal(self.width):
-            raise LiqTreeExceptionOversizedRange()
+            raise LiquidityExceptionOversizedRange()
         if liq_range.high < liq_range.low:
-            raise LiqTreeExceptionRangeHighBelowLow()
+            raise LiquidityExceptionRangeHighBelowLow()
 
         low, high, _, stop_range = LiquidityKey.keys(liq_range.low, liq_range.high, self.width)
 
