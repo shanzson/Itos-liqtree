@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from Bucket.LiquidityBucket import LiquidityBucket
+from Bucket.LiquidityBucket import LiquidityBucket, Snapshot
 from ILiquidity import LiqRange
 from UnsignedDecimal import UnsignedDecimal
 
@@ -10,6 +10,20 @@ class TestLiquidityBucket(TestCase):
         self.liq_bucket = LiquidityBucket(size=16, sol_truncation=True)
 
     # mLiq
+
+    def test_add_m_liq(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)
+
+        m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 11))
+        self.assertEqual(m_liq, 1111)
+
+        m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
+        self.assertEqual(m_liq, 277)  # 277.75
+
+
+    def test_add_wide_m_liq(self):
+
+        self.liq_bucket.add_wide_m_liq(1600)
 
     def test_a(self):
         self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)

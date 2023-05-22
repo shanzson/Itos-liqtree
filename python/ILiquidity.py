@@ -9,6 +9,9 @@ class LiqRange:
     low: int
     high: int
 
+    def copy(self):
+        return LiqRange(self.low, self.high)
+
 
 class ILiquidity(metaclass=abc.ABCMeta):
 

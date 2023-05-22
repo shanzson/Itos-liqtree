@@ -1,19 +1,55 @@
 from dataclasses import dataclass, field
+from typing import List
 
 from ILiquidity import ILiquidity, LiqRange
 from UnsignedDecimal import UnsignedDecimal
+
+
+@dataclass
+class Snapshot:
+    range: LiqRange
+    m_liq: UnsignedDecimal = UnsignedDecimal(0)
+    t_liq: UnsignedDecimal = UnsignedDecimal(0)
+
+    def copy(self):
+        return Snapshot(
+            range=LiqRange(self.range.low, self.range.high),
+            m_liq=self.m_liq,
+            t_liq=self.t_liq
+        )
+
+    def width(self):
+        return UnsignedDecimal(self.range.high - self.range.low + 1)
+
+    def total_m_liq(self):
+        return self.m_liq * self.width()
+
+
+@dataclass
+class Bucket:
+    snapshots: List[Snapshot] = field(default_factory=list)
 
 
 class LiquidityBucket(ILiquidity):
     def __init__(self, size, sol_truncation = True):
         self.sol_truncation = sol_truncation
 
+        self._buckets = [Bucket() for n in range(0, size)]
+
         self.token_x_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
         self.token_y_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
 
     def add_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
         """Adds mLiq to the provided range."""
-        pass
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            bucket: Bucket = self._buckets[tick]
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == liq_range.low and snap.range.high == liq_range.high]), None)
+
+            if snap is None:
+                snap = Snapshot(range=liq_range.copy(), m_liq=liq)
+
+            bucket.snapshots.append(snap)
 
     def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
         """Removes mLiq from the provided range."""
@@ -42,6 +78,18 @@ class LiquidityBucket(ILiquidity):
     def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq covering the entire data structure. Repaying given amounts."""
         pass
+
+    def query_m_liq(self, liq_range: LiqRange):
+        m_liq = UnsignedDecimal(0)
+        for tick in range(liq_range.low, liq_range.high + 1):
+            print(self._buckets[tick])
+            for snapshot in self._buckets[tick].snapshots:
+                m_liq += snapshot.m_liq / snapshot.width()
+
+        if self.sol_truncation:
+            m_liq = int(m_liq)
+
+        return m_liq
 
 
 # @dataclass
