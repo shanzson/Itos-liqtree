@@ -21,6 +21,34 @@ contract DenseTreeTreeStructureTest is Test {
         liqTree.init(4);
     }
 
+    function testSimpleFee() public {
+        liqTree.addMLiq(LiqRange(8, 11), 1111);
+        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
+
+        liqTree.feeRateSnapshotTokenX += 113712805933826;
+
+        LiqNode storage RL = liqTree.nodes[LKey.wrap((4 << 24) | 24)];
+        LiqNode storage RLL = liqTree.nodes[LKey.wrap((2 << 24) | 24)];
+        LiqNode storage RLLL = liqTree.nodes[LKey.wrap((1 << 24) | 24)];
+
+        // trigger fees + undo
+        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
+        liqTree.removeTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
+
+        // 113712805933826 * 24e18 / 4444 / 2**64 = 33291000332.9100024179226406346006655493880262469301129331683
+        assertEq(RL.tokenX.cumulativeEarnedPerMLiq, 33291000332);
+        assertEq(RL.tokenX.subtreecumulativeEarnedPerMLiq, 33291000332);
+
+        // RL feeX / 4 = 8322750083.22750060448066015865016638734700656173252823329207
+        assertEq(RLLL.tokenX.cumulativeEarnedPerMLiq, 0);
+
+        /*
+            uint256 feeRateSnapshot;
+            uint256 cumulativeEarnedPerMLiq;
+            uint256 subtreecumulativeEarnedPerMLiq;
+        */
+    }
+
     function testRootNodeOnly() public {
         LiqNode storage root = liqTree.nodes[liqTree.root];
 

@@ -9,8 +9,25 @@ class TestLiquidityBucket(TestCase):
     def setUp(self) -> None:
         self.liq_bucket = LiquidityBucket(size=16, sol_truncation=True)
 
+    # mLiq
+
     def test_a(self):
-        self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal("100"))
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)
+        self.liq_bucket.add_t_liq(LiqRange(8, 11), 111, 24e18, 7e6)
+
+        self.liq_bucket.token_x_fee_rate_snapshot += 113712805933826
+
+        # trigger fees - keeping tree state the same by undoing action
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), 10)
+        self.liq_bucket.remove_m_liq(LiqRange(8, 11), 10)
+
+        # 8-11
+        # 113712805933826 * 24e18 / 4444 / 2**64 = 33291000332.9100024179226406346006655493880262469301129331683
+        # (min_m_liq, max_t_liq, acc_fees_x, acc_fees_y)
+
+
+        # 8-8
+        # 1/4 of 8-11 = 8322750083.227500604480660158650166387347006561732528233292075
 
 '''
 from unittest import TestCase
