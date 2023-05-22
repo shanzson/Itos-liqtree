@@ -18,8 +18,7 @@ class TestLiquidityBucket(TestCase):
         self.assertEqual(m_liq, 1111)
 
         m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
-        self.assertEqual(m_liq, 277)  # 277.75
-
+        self.assertEqual(m_liq, 277)  # 277.75 * 4 = 1111
 
     def test_add_wide_m_liq(self):
 

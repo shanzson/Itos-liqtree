@@ -10,6 +10,12 @@ class Snapshot:
     range: LiqRange
     m_liq: UnsignedDecimal = UnsignedDecimal(0)
     t_liq: UnsignedDecimal = UnsignedDecimal(0)
+    borrow_x: UnsignedDecimal = UnsignedDecimal(0)
+    borrow_y: UnsignedDecimal = UnsignedDecimal(0)
+    rate_x: UnsignedDecimal = UnsignedDecimal(0)
+    rate_y: UnsignedDecimal = UnsignedDecimal(0)
+    acc_x: UnsignedDecimal = UnsignedDecimal(0)
+    acc_y: UnsignedDecimal = UnsignedDecimal(0)
 
     def copy(self):
         return Snapshot(
@@ -82,7 +88,6 @@ class LiquidityBucket(ILiquidity):
     def query_m_liq(self, liq_range: LiqRange):
         m_liq = UnsignedDecimal(0)
         for tick in range(liq_range.low, liq_range.high + 1):
-            print(self._buckets[tick])
             for snapshot in self._buckets[tick].snapshots:
                 m_liq += snapshot.m_liq / snapshot.width()
 
