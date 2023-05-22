@@ -3,6 +3,7 @@ from unittest import TestCase
 from Bucket.LiquidityBucket import LiquidityBucket, Snapshot
 from ILiquidity import *
 from UnsignedDecimal import UnsignedDecimal
+from LiquidityExceptions import *
 
 
 class TestLiquidityBucket(TestCase):
@@ -12,32 +13,36 @@ class TestLiquidityBucket(TestCase):
     # mLiq
 
     def test_add_m_liq(self):
-        self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), UnsignedDecimal(1111))
 
         m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 11))
-        self.assertEqual(m_liq, 1111)
+        self.assertEqual(m_liq, UnsignedDecimal(1111))
 
         m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
-        self.assertEqual(m_liq, 277)  # 277.75 * 4 = 1111
+        self.assertEqual(m_liq, UnsignedDecimal(277))  # 277.75 * 4 = 1111
 
     # tLiq
 
     def test_remove_m_liq(self):
-        self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)
-        self.liq_bucket.remove_m_liq(LiqRange(8, 11), 111)
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), UnsignedDecimal(1111))
+        self.liq_bucket.remove_m_liq(LiqRange(8, 11), UnsignedDecimal(111))
 
         m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 11))
-        self.assertEqual(m_liq, 1000)
+        self.assertEqual(m_liq, UnsignedDecimal(1000))
 
         m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
-        self.assertEqual(m_liq, 250)
+        self.assertEqual(m_liq, UnsignedDecimal(250))
 
-    def test_revert_removing_m_liq_that_does_not_exist(self):
-        self.assertRaises(LiquidityExceptionRemovingMoreMLiqThanExists, lambda: self.liq_bucket.remove_m_liq(LiqRange(3, 7), 100))
+    def test_revert_removing_m_liq_at_tick_with_zero_m_liq(self):
+        self.assertRaises(LiquidityExceptionRemovingMoreMLiqThanExists, lambda: self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(100)))
+
+    def test_revert_removing_m_liq_at_tick_where_m_liq_is_lower_than_amount_to_remove(self):
+        self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(90))
+        self.assertRaises(LiquidityExceptionRemovingMoreMLiqThanExists, lambda: self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(100)))
+
 
     def test_add_wide_m_liq(self):
-
-        self.liq_bucket.add_wide_m_liq(1600)
+        self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1600))
 
     def test_a(self):
         self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)

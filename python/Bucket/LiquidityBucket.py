@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from typing import List
 
 from ILiquidity import *
-from UnsignedDecimal import UnsignedDecimal
+from LiquidityExceptions import *
+from UnsignedDecimal import UnsignedDecimal, UnsignedDecimalIsSignedException
 
 
 @dataclass
@@ -67,7 +68,10 @@ class LiquidityBucket(ILiquidity):
             if snap is None:
                 raise LiquidityExceptionRemovingMoreMLiqThanExists()
 
-            bucket.snapshots.append(snap)
+            try:
+                snap.m_liq -= liq
+            except UnsignedDecimalIsSignedException:
+                raise LiquidityExceptionRemovingMoreMLiqThanExists()
 
     def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq to the provided range. Borrowing given amounts."""
