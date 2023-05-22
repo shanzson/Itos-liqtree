@@ -71,7 +71,7 @@ class TestLiquidityTree(TestCase):
     # region m_liq
     def test_adding_m_liq_root_only(self):
         root: LiqNode = self.liq_tree.nodes[self.liq_tree.root_key]
-        self.liq_tree.add_inf_range_m_liq(UnsignedDecimal("123"))
+        self.liq_tree.add_wide_m_liq(UnsignedDecimal("123"))
 
         self.assertEqual(root.m_liq, UnsignedDecimal("123"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("1968"))
@@ -1098,7 +1098,7 @@ class TestLiquidityTree(TestCase):
     # t_liq
     def test_adding_t_liq_root_only(self):
         root: LiqNode = self.liq_tree.nodes[self.liq_tree.root_key]
-        self.liq_tree.add_inf_range_t_liq(UnsignedDecimal("123"), UnsignedDecimal("456e18"), UnsignedDecimal("789e18"))
+        self.liq_tree.add_wide_t_liq(UnsignedDecimal("123"), UnsignedDecimal("456e18"), UnsignedDecimal("789e18"))
 
         self.assertEqual(root.m_liq, UnsignedDecimal("0"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("0"))

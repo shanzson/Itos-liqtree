@@ -27,19 +27,19 @@ class LiquidityBucket(ILiquidity):
         """Removes tLiq to the provided range. Repaying given amounts."""
         pass
 
-    def add_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+    def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Adds mLiq covering the entire data structure."""
         pass
 
-    def remove_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+    def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Removes mLiq covering the entire data structure."""
         pass
 
-    def add_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+    def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq covering the entire data structure. Borrowing given amounts."""
         pass
 
-    def remove_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+    def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq covering the entire data structure. Repaying given amounts."""
         pass
 
@@ -129,24 +129,24 @@ class LiquidityBucket(ILiquidity):
 #             bucket.token_x_borrowed -= amount_x
 #             bucket.token_y_borrowed -= amount_y
 #
-#     def add_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+#     def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
 #         """Adds mLiq covering the entire data structure."""
 #
 #         self._wide_bucket.m_liq += liq
 #
-#     def remove_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+#     def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
 #         """Removes mLiq covering the entire data structure."""
 #
 #         self._wide_bucket.m_liq -= liq
 #
-#     def add_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+#     def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
 #         """Adds tLiq covering the entire data structure. Borrowing given amounts."""
 #
 #         self._wide_bucket.m_liq += liq
 #         self._wide_bucket.token_x_borrowed += amount_x
 #         self._wide_bucket.token_y_borrowed += amount_y
 #
-#     def remove_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+#     def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
 #         """Removes tLiq covering the entire data structure. Repaying given amounts."""
 #
 #         self._wide_bucket.m_liq -= liq

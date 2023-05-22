@@ -38,8 +38,8 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
     def test_root_only(self):
         liq_tree: LiquidityTree = self.liq_tree
 
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("8430"))
-        liq_tree.add_inf_range_t_liq(UnsignedDecimal("4381"), UnsignedDecimal("832e18"), UnsignedDecimal("928e6"))
+        liq_tree.add_wide_m_liq(UnsignedDecimal("8430"))
+        liq_tree.add_wide_t_liq(UnsignedDecimal("4381"), UnsignedDecimal("832e18"), UnsignedDecimal("928e6"))
 
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("113712805933826")  # 5.4% APR as Q192.64 = 0.054 * 3600 / (365 * 24 * 60 * 60) * 2^64 = 113712805933826
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("113712805933826")
@@ -54,8 +54,8 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.token_y_borrowed, UnsignedDecimal("928e6"))
         self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("928e6"))
 
-        # Testing add_inf_range_m_liq
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("9287"))
+        # Testing add_wide_m_liq
+        liq_tree.add_wide_m_liq(UnsignedDecimal("9287"))
 
         # earn_x      = 113712805933826 * 832e18 / 134880 / 2**64 = 38024667284.1612625482053537908689136045718673850859328662514
         # earn_y      = 113712805933826 * 928e6 / 134880 / 2**64  = 0.0424121288938721774576136638436614805589455443910573866585112692
@@ -72,11 +72,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.token_y_borrowed, UnsignedDecimal("928e6"))
         self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("928e6"))
 
-        # Testing remove_inf_range_m_liq
+        # Testing remove_wide_m_liq
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("74672420010376264941568")
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("74672420010376264941568")
 
-        liq_tree.remove_inf_range_m_liq(UnsignedDecimal("3682"))
+        liq_tree.remove_wide_m_liq(UnsignedDecimal("3682"))
 
         # earn_x      = 74672420010376264941568 * 832e18 / 283472 / 2**64 = 11881018231077496190.0999040469605463678952418581023875373934
         # earn_y      = 74672420010376264941568 * 928e6 / 283472 / 2**64  = 13251904.9500479765197268160523790709488062313032680476378619
@@ -93,11 +93,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.token_y_borrowed, UnsignedDecimal("928e6"))
         self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("928e6"))
 
-        # Testing add_inf_range_t_liq
+        # Testing add_wide_t_liq
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("6932491854677024")
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("6932491854677024")
 
-        liq_tree.add_inf_range_t_liq(UnsignedDecimal("7287"), UnsignedDecimal("9184e18"), UnsignedDecimal("7926920e6"))
+        liq_tree.add_wide_t_liq(UnsignedDecimal("7287"), UnsignedDecimal("9184e18"), UnsignedDecimal("7926920e6"))
 
         # earn_x      = 6932491854677024 * 832e18 / 224560 / 2**64 = 1392388963085.50927075184684754182568989829487082029858389739
         # earn_y      = 6932491854677024 * 928e6 / 224560 / 2**64  = 1.5530492280569141866078291761043440387327135097611022666547915924
@@ -114,11 +114,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.token_y_borrowed, UnsignedDecimal("7927848e6"))
         self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("7927848e6"))
 
-        # Testing remove_inf_range_t_liq
+        # Testing remove_wide_t_liq
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("1055375100301031600000000")
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("1055375100301031600000000")
 
-        liq_tree.remove_inf_range_t_liq(UnsignedDecimal("4923"), UnsignedDecimal("222e18"), UnsignedDecimal("786e6"))
+        liq_tree.remove_wide_t_liq(UnsignedDecimal("4923"), UnsignedDecimal("222e18"), UnsignedDecimal("786e6"))
 
         # earn_x      = 1055375100301031600000000 * 10016e18 / 224560 / 2**64  = 2551814126505030241953.87164028103035638433335980020216618053
         # earn_y      = 1055375100301031600000000 * 7927848e6 / 224560 / 2**64 = 2019807759503.25988354767545683493270255599285721099372431609
@@ -149,14 +149,14 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         LLRR: LiqNode = liq_tree.nodes[(1 << 24) | 19]  # 16777235
 
         # T0 - populate tree with data excluding fee calculations
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("8430"))  # root
+        liq_tree.add_wide_m_liq(UnsignedDecimal("8430"))  # root
         liq_tree.add_m_liq(LiqRange(low=0, high=7), UnsignedDecimal("377"))  # L
         liq_tree.add_m_liq(LiqRange(low=0, high=3), UnsignedDecimal("9082734"))  # LL
         liq_tree.add_m_liq(LiqRange(low=4, high=7), UnsignedDecimal("1111"))  # LR
         liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("45346"))  # LLR
         liq_tree.add_m_liq(LiqRange(low=3, high=3), UnsignedDecimal("287634865"))  # LLRR
 
-        liq_tree.add_inf_range_t_liq(UnsignedDecimal("4430"), UnsignedDecimal("492e18"), UnsignedDecimal("254858e6"))  # root
+        liq_tree.add_wide_t_liq(UnsignedDecimal("4430"), UnsignedDecimal("492e18"), UnsignedDecimal("254858e6"))  # root
         liq_tree.add_t_liq(LiqRange(low=0, high=7), UnsignedDecimal("77"), UnsignedDecimal("998e18"), UnsignedDecimal("353e6"))  # L
         liq_tree.add_t_liq(LiqRange(low=0, high=3), UnsignedDecimal("82734"), UnsignedDecimal("765e18"), UnsignedDecimal("99763e6"))  # LL
         liq_tree.add_t_liq(LiqRange(low=4, high=7), UnsignedDecimal("111"), UnsignedDecimal("24e18"), UnsignedDecimal("552e6"))  # LR
@@ -578,14 +578,14 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         RRLL: LiqNode = liq_tree.nodes[(1 << 24) | 28]
 
         # T0 - populate tree with data excluding fee calculations
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("8430"))                        # root
+        liq_tree.add_wide_m_liq(UnsignedDecimal("8430"))                        # root
         liq_tree.add_m_liq(LiqRange(low=8, high=15), UnsignedDecimal("377"))         # R
         liq_tree.add_m_liq(LiqRange(low=12, high=15), UnsignedDecimal("9082734"))    # RR
         liq_tree.add_m_liq(LiqRange(low=8, high=11), UnsignedDecimal("1111"))        # RL
         liq_tree.add_m_liq(LiqRange(low=12, high=13), UnsignedDecimal("45346"))      # RRL
         liq_tree.add_m_liq(LiqRange(low=12, high=12), UnsignedDecimal("287634865"))  # RRLL
 
-        liq_tree.add_inf_range_t_liq(UnsignedDecimal("4430"), UnsignedDecimal("492e18"), UnsignedDecimal("254858e6"))                      # root
+        liq_tree.add_wide_t_liq(UnsignedDecimal("4430"), UnsignedDecimal("492e18"), UnsignedDecimal("254858e6"))                      # root
         liq_tree.add_t_liq(LiqRange(low=8, high=15), UnsignedDecimal("77"), UnsignedDecimal("998e18"), UnsignedDecimal("353e6"))           # R
         liq_tree.add_t_liq(LiqRange(low=12, high=15), UnsignedDecimal("82734"), UnsignedDecimal("765e18"), UnsignedDecimal("99763e6"))     # RR
         liq_tree.add_t_liq(LiqRange(low=8, high=11), UnsignedDecimal("111"), UnsignedDecimal("24e18"), UnsignedDecimal("552e6"))           # RL
@@ -1144,7 +1144,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         LRLL: LiqNode = liq_tree.nodes[(1 << 24) | 20]
 
         # Pre-populate nodes w/o fee calculation
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("432"))
+        liq_tree.add_wide_m_liq(UnsignedDecimal("432"))
         liq_tree.add_m_liq(LiqRange(low=0, high=7), UnsignedDecimal("98237498262"))      # L
         liq_tree.add_m_liq(LiqRange(low=0, high=3), UnsignedDecimal("932141354"))        # LL
         liq_tree.add_m_liq(LiqRange(low=4, high=7), UnsignedDecimal("151463465"))        # LR
@@ -1482,7 +1482,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
     #     LRLL: LiqNode = liq_tree.nodes[(1 << 24) | 20]
     #
     #     # Pre-populate nodes w/o fee calculation
-    #     liq_tree.add_inf_range_m_liq(UnsignedDecimal("432"))
+    #     liq_tree.add_wide_m_liq(UnsignedDecimal("432"))
     #     liq_tree.add_m_liq(LiqRange(low=0, high=7), UnsignedDecimal("98237498262"))      # L
     #     liq_tree.add_m_liq(LiqRange(low=0, high=3), UnsignedDecimal("932141354"))        # LL
     #     liq_tree.add_m_liq(LiqRange(low=4, high=7), UnsignedDecimal("151463465"))        # LR
@@ -2039,8 +2039,8 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("713278814667749784")
 
         # Add m_liq + t_liq to all nodes ------------------------------------------------------------------------------------
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("837205720"))  # root
-        liq_tree.add_inf_range_t_liq(UnsignedDecimal("137205720"), UnsignedDecimal("92749012637e18"), UnsignedDecimal("936252847e6"))
+        liq_tree.add_wide_m_liq(UnsignedDecimal("837205720"))  # root
+        liq_tree.add_wide_t_liq(UnsignedDecimal("137205720"), UnsignedDecimal("92749012637e18"), UnsignedDecimal("936252847e6"))
 
         liq_tree.add_m_liq(LiqRange(0, 7), UnsignedDecimal("628294582176"))   # L
         liq_tree.add_t_liq(LiqRange(0, 7), UnsignedDecimal("28294582176"), UnsignedDecimal("41423892459e18"), UnsignedDecimal("178263465237e6"))
@@ -2322,16 +2322,16 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         # LiqRange(0, 15) aka root
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3453645745674")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("4574563456456")
-        liq_tree.add_inf_range_m_liq(UnsignedDecimal("34534534534"))
+        liq_tree.add_wide_m_liq(UnsignedDecimal("34534534534"))
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("2342342342")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3533463457467")
-        liq_tree.remove_inf_range_m_liq(UnsignedDecimal("678678678"))
+        liq_tree.remove_wide_m_liq(UnsignedDecimal("678678678"))
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("56456456456")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("34532464567568")
-        liq_tree.add_inf_range_t_liq(UnsignedDecimal("3463456456456"), UnsignedDecimal("34575684564e18"), UnsignedDecimal("345345746745e6"))
+        liq_tree.add_wide_t_liq(UnsignedDecimal("3463456456456"), UnsignedDecimal("34575684564e18"), UnsignedDecimal("345345746745e6"))
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("3645746746787")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("2342342")
-        liq_tree.remove_inf_range_t_liq(UnsignedDecimal("3574534534"), UnsignedDecimal("4567452342e18"), UnsignedDecimal("234535734563e6"))
+        liq_tree.remove_wide_t_liq(UnsignedDecimal("3574534534"), UnsignedDecimal("4567452342e18"), UnsignedDecimal("234535734563e6"))
 
         # region Ranges that start with 1 -------------------------------------------------------------------------------------
         # LiqRange(1, 1)

@@ -616,19 +616,19 @@ class LiquidityTree(ILiquidity):
 
     # region Liquidity INF Range Methods
 
-    def add_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+    def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         self.handle_fee(self.root_key, self.root)
 
         self.root.m_liq += liq
         self.root.subtree_m_liq += self.width * liq
 
-    def remove_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+    def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         self.handle_fee(self.root_key, self.root)
 
         self.root.m_liq -= liq
         self.root.subtree_m_liq -= self.width * liq
 
-    def add_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+    def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         self.handle_fee(self.root_key, self.root)
 
         self.root.t_liq += liq
@@ -637,7 +637,7 @@ class LiquidityTree(ILiquidity):
         self.root.token_y_borrowed += amount_y
         self.root.token_y_subtree_borrowed += amount_y
 
-    def remove_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+    def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         self.handle_fee(self.root_key, self.root)
 
         self.root.t_liq -= liq

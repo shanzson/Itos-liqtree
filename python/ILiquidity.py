@@ -33,21 +33,21 @@ class ILiquidity(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+    def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Adds mLiq covering the entire data structure."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def remove_inf_range_m_liq(self, liq: UnsignedDecimal) -> None:
+    def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Removes mLiq covering the entire data structure."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+    def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq covering the entire data structure. Borrowing given amounts."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def remove_inf_range_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
+    def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq covering the entire data structure. Repaying given amounts."""
         raise NotImplementedError

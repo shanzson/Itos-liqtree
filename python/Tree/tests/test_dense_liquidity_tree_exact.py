@@ -23,8 +23,8 @@ class TestDenseLiquidityTreeExact(TestCase):
         liq_tree: LiquidityTree = self.liq_tree
 
         # T0
-        liq_tree.add_inf_range_m_liq(Decimal("8430"))
-        liq_tree.add_inf_range_t_liq(Decimal("4381"), Decimal("832e18"), Decimal("928e6"))
+        liq_tree.add_wide_m_liq(Decimal("8430"))
+        liq_tree.add_wide_t_liq(Decimal("4381"), Decimal("832e18"), Decimal("928e6"))
         self.assertEqual(True, True)
 
         # T3600 (1hr) --- 5.4% APR as Q192.64
@@ -42,9 +42,9 @@ class TestDenseLiquidityTreeExact(TestCase):
         self.assertEqual(root.token_y_subtree_borrowed, Decimal("928e6"))     #
 
         # Testing 4 methods for proper fee accumulation:
-        # add_inf_range_m_liq, remove_inf_range_m_liq
-        # add_inf_range_t_liq, remove_inf_range_t_liq
-        liq_tree.add_inf_range_m_liq(Decimal("9287"))
+        # add_wide_m_liq, remove_wide_m_liq
+        # add_wide_t_liq, remove_wide_t_liq
+        liq_tree.add_wide_m_liq(Decimal("9287"))
 
         self.assertEqual(int(root.token_x_cumulative_earned_per_m_liq), Decimal("38024667284"))
         self.assertEqual(int(root.token_x_cumulative_earned_per_m_subtree_liq), Decimal("38024667284"))
@@ -63,7 +63,7 @@ class TestDenseLiquidityTreeExact(TestCase):
         liq_tree.token_y_fee_rate_snapshot += Decimal("74672420010376264941568")   # Q192.64 - 1377463021295958900099740410883797719973888
         liq_tree.token_x_fee_rate_snapshot += Decimal("74672420010376264941568")   # Q192.64 - 1377463021295958900099740410883797719973888
 
-        liq_tree.remove_inf_range_m_liq(Decimal("3682"))
+        liq_tree.remove_wide_m_liq(Decimal("3682"))
 
         # rounding error
         self.assertEqual(int(root.token_x_cumulative_earned_per_m_liq), Decimal("11881018269102163474"))
@@ -83,7 +83,7 @@ class TestDenseLiquidityTreeExact(TestCase):
         liq_tree.token_y_fee_rate_snapshot += Decimal("6932491854677024")  # Q192.64 - 127881903036303130599671671537270784
         liq_tree.token_x_fee_rate_snapshot += Decimal("6932491854677024")  # Q192.64 - 127881903036303130599671671537270784
 
-        liq_tree.add_inf_range_t_liq(Decimal("7287"), Decimal("9184e18"), Decimal("7926920e6"))
+        liq_tree.add_wide_t_liq(Decimal("7287"), Decimal("9184e18"), Decimal("7926920e6"))
 
         # rounding error
         self.assertEqual(int(root.token_x_cumulative_earned_per_m_liq), Decimal("11881019661491126559"))
@@ -103,7 +103,7 @@ class TestDenseLiquidityTreeExact(TestCase):
         liq_tree.token_y_fee_rate_snapshot += Decimal("1055375100301031600000000")     # Q192.64 - 19468234377018678290990465858247065600000000
         liq_tree.token_x_fee_rate_snapshot += Decimal("1055375100301031600000000")     # Q192.64 - 19468234377018678290990465858247065600000000
 
-        liq_tree.remove_inf_range_t_liq(Decimal("4923"), Decimal("222e18"), Decimal("786e6"))
+        liq_tree.remove_wide_t_liq(Decimal("4923"), Decimal("222e18"), Decimal("786e6"))
 
         self.assertEqual(int(root.token_x_cumulative_earned_per_m_liq), Decimal("2563695146166521368513"))
         self.assertEqual(int(root.token_x_cumulative_earned_per_m_subtree_liq), Decimal("2563695146166521368513"))
@@ -132,14 +132,14 @@ class TestDenseLiquidityTreeExact(TestCase):
         LLRR: LiqNode = liq_tree.nodes[(1 << 24) | 19]  # 16777235
 
         # T0 - populate tree with data excluding fee calculations
-        liq_tree.add_inf_range_m_liq(Decimal("8430"))                       # root
+        liq_tree.add_wide_m_liq(Decimal("8430"))                       # root
         liq_tree.add_m_liq(LiqRange(low=0, high=7), Decimal("377"))         # L
         liq_tree.add_m_liq(LiqRange(low=0, high=3), Decimal("9082734"))     # LL
         liq_tree.add_m_liq(LiqRange(low=4, high=7), Decimal("1111"))        # LR
         liq_tree.add_m_liq(LiqRange(low=2, high=3), Decimal("45346"))       # LLR
         liq_tree.add_m_liq(LiqRange(low=3, high=3), Decimal("287634865"))   # LLRR
 
-        liq_tree.add_inf_range_t_liq(Decimal("4430"), Decimal("492e18"), Decimal("254858e6"))                       # root
+        liq_tree.add_wide_t_liq(Decimal("4430"), Decimal("492e18"), Decimal("254858e6"))                       # root
         liq_tree.add_t_liq(LiqRange(low=0, high=7), Decimal("77"), Decimal("998e18"), Decimal("353e6"))             # L
         liq_tree.add_t_liq(LiqRange(low=0, high=3), Decimal("82734"), Decimal("765e18"), Decimal("99763e6"))        # LL
         liq_tree.add_t_liq(LiqRange(low=4, high=7), Decimal("111"), Decimal("24e18"), Decimal("552e6"))             # LR
@@ -512,14 +512,14 @@ class TestDenseLiquidityTreeExact(TestCase):
         RRLL: LiqNode = liq_tree.nodes[(1 << 24) | 28]
 
         # T0 - populate tree with data excluding fee calculations
-        liq_tree.add_inf_range_m_liq(Decimal("8430"))                        # root
+        liq_tree.add_wide_m_liq(Decimal("8430"))                        # root
         liq_tree.add_m_liq(LiqRange(low=8, high=15), Decimal("377"))         # R
         liq_tree.add_m_liq(LiqRange(low=12, high=15), Decimal("9082734"))    # RR
         liq_tree.add_m_liq(LiqRange(low=8, high=11), Decimal("1111"))        # RL
         liq_tree.add_m_liq(LiqRange(low=12, high=13), Decimal("45346"))      # RRL
         liq_tree.add_m_liq(LiqRange(low=12, high=12), Decimal("287634865"))  # RRLL
 
-        liq_tree.add_inf_range_t_liq(Decimal("4430"), Decimal("492e18"), Decimal("254858e6"))                      # root
+        liq_tree.add_wide_t_liq(Decimal("4430"), Decimal("492e18"), Decimal("254858e6"))                      # root
         liq_tree.add_t_liq(LiqRange(low=8, high=15), Decimal("77"), Decimal("998e18"), Decimal("353e6"))           # R
         liq_tree.add_t_liq(LiqRange(low=12, high=15), Decimal("82734"), Decimal("765e18"), Decimal("99763e6"))     # RR
         liq_tree.add_t_liq(LiqRange(low=8, high=11), Decimal("111"), Decimal("24e18"), Decimal("552e6"))           # RL
