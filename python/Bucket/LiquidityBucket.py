@@ -75,7 +75,20 @@ class LiquidityBucket(ILiquidity):
 
     def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq to the provided range. Borrowing given amounts."""
-        pass
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            bucket: Bucket = self._buckets[tick]
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == liq_range.low and snap.range.high == liq_range.high]), None)
+
+            if snap is None:
+                raise LiquidityExceptionTLiqExceedsMLiq()
+
+            try:
+                snap.t_liq += liq
+                snap.borrow_x += amount_x
+                snap.borrow_y += amount_y
+            except UnsignedDecimalIsSignedException:
+                raise LiquidityExceptionTLiqExceedsMLiq()
 
     def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq to the provided range. Repaying given amounts."""
@@ -107,6 +120,17 @@ class LiquidityBucket(ILiquidity):
             m_liq = int(m_liq)
 
         return m_liq
+
+    def query_t_liq(self, liq_range: LiqRange):
+        t_liq = UnsignedDecimal(0)
+        for tick in range(liq_range.low, liq_range.high + 1):
+            for snapshot in self._buckets[tick].snapshots:
+                t_liq += snapshot.t_liq / snapshot.width()
+
+        if self.sol_truncation:
+            t_liq = int(t_liq)
+
+        return t_liq
 
 
 # @dataclass
