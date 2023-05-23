@@ -2,6 +2,18 @@ class LiquidityExceptionRemovingMoreMLiqThanExists(Exception):
     pass
 
 
+class LiquidityExceptionRemovingMoreTLiqThanExists(Exception):
+    pass
+
+
+class LiquidityExceptionRepayingTokenXThanExists(Exception):
+    pass
+
+
+class LiquidityExceptionRepayingTokenYThanExists(Exception):
+    pass
+
+
 class LiquidityExceptionZeroLiquidity(Exception):
     pass
 

@@ -42,7 +42,6 @@ class TestLiquidityBucket(TestCase):
         t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 8))
         self.assertEqual(t_liq, UnsignedDecimal(25))  # 25 * 4 = 100
 
-
     def test_revert_removing_m_liq_at_tick_with_zero_m_liq(self):
         self.assertRaises(LiquidityExceptionRemovingMoreMLiqThanExists, lambda: self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(100)))
 
@@ -50,6 +49,16 @@ class TestLiquidityBucket(TestCase):
         self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(90))
         self.assertRaises(LiquidityExceptionRemovingMoreMLiqThanExists, lambda: self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(100)))
 
+    def test_remove_t_liq(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), UnsignedDecimal(1111))
+        self.liq_bucket.add_t_liq(LiqRange(8, 11), UnsignedDecimal(100), UnsignedDecimal(24e18), UnsignedDecimal(7e6))
+        self.liq_bucket.remove_t_liq(LiqRange(8, 11), UnsignedDecimal(20), UnsignedDecimal(24e18), UnsignedDecimal(7e6))
+
+        t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 11))
+        self.assertEqual(t_liq, UnsignedDecimal(80))
+
+        t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 8))
+        self.assertEqual(t_liq, UnsignedDecimal(20))
 
     def test_add_wide_m_liq(self):
         self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1600))

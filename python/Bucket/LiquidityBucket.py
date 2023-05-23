@@ -92,7 +92,20 @@ class LiquidityBucket(ILiquidity):
 
     def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq to the provided range. Repaying given amounts."""
-        pass
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            bucket: Bucket = self._buckets[tick]
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == liq_range.low and snap.range.high == liq_range.high]), None)
+
+            if snap is None:
+                raise LiquidityExceptionTLiqExceedsMLiq()
+
+            try:
+                snap.t_liq -= liq
+                snap.borrow_x -= amount_x
+                snap.borrow_y -= amount_y
+            except UnsignedDecimalIsSignedException:
+                raise LiquidityExceptionTLiqExceedsMLiq()
 
     def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Adds mLiq covering the entire data structure."""
