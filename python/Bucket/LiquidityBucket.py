@@ -98,14 +98,16 @@ class LiquidityBucket(ILiquidity):
             snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == liq_range.low and snap.range.high == liq_range.high]), None)
 
             if snap is None:
-                raise LiquidityExceptionTLiqExceedsMLiq()
+                # TODO: add more detailed exceptions
+                raise Exception()
 
-            try:
-                snap.t_liq -= liq
-                snap.borrow_x -= amount_x
-                snap.borrow_y -= amount_y
-            except UnsignedDecimalIsSignedException:
-                raise LiquidityExceptionTLiqExceedsMLiq()
+            # try:
+            # TODO: add more detailed exceptions
+            snap.t_liq -= liq
+            snap.borrow_x -= amount_x
+            snap.borrow_y -= amount_y
+            # except UnsignedDecimalIsSignedException:
+            #     raise LiquidityExceptionTLiqExceedsMLiq()
 
     def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Adds mLiq covering the entire data structure."""
