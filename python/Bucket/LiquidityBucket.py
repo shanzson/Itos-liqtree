@@ -86,6 +86,8 @@ class LiquidityBucket(ILiquidity):
             if snap is None:
                 raise LiquidityExceptionTLiqExceedsMLiq()
 
+            # check tLiq does not exceed mLiq
+
             try:
                 snap.t_liq += liq
                 snap.borrow_x += amount_x
@@ -124,15 +126,43 @@ class LiquidityBucket(ILiquidity):
 
     def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Removes mLiq covering the entire data structure."""
-        pass
+
+        self._wide_snapshot.m_liq -= liq
+
+        range: LiqRange = self._wide_snapshot.range
+        for bucket in self._buckets:
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            snap.m_liq -= liq
 
     def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq covering the entire data structure. Borrowing given amounts."""
-        pass
+
+        self._wide_snapshot.t_liq += liq
+        self._wide_snapshot.borrow_x += amount_x
+        self._wide_snapshot.borrow_y += amount_y
+
+        range: LiqRange = self._wide_snapshot.range
+        for bucket in self._buckets:
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            # check tLiq does not exceed mLiq
+            snap.t_liq += liq
+            snap.borrow_x += amount_x
+            snap.borrow_y += amount_y
 
     def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq covering the entire data structure. Repaying given amounts."""
-        pass
+
+        self._wide_snapshot.t_liq -= liq
+        self._wide_snapshot.borrow_x -= amount_x
+        self._wide_snapshot.borrow_y -= amount_y
+
+        range: LiqRange = self._wide_snapshot.range
+        for bucket in self._buckets:
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            # check tLiq does not exceed mLiq
+            snap.t_liq -= liq
+            snap.borrow_x -= amount_x
+            snap.borrow_y -= amount_y
 
     def query_m_liq(self, liq_range: LiqRange):
         m_liq = UnsignedDecimal(0)
@@ -158,6 +188,9 @@ class LiquidityBucket(ILiquidity):
 
     def query_wide_m_liq(self):
         return self._wide_snapshot.m_liq
+
+    def query_wide_t_liq(self):
+        return self._wide_snapshot.t_liq
 
 
 # @dataclass

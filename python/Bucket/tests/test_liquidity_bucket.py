@@ -72,6 +72,46 @@ class TestLiquidityBucket(TestCase):
         m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
         self.assertEqual(m_liq, UnsignedDecimal(100))
 
+    def test_remove_wide_m_liq(self):
+        self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1600))
+        self.liq_bucket.remove_wide_m_liq(UnsignedDecimal(800))
+
+        wide_m_liq = self.liq_bucket.query_wide_m_liq()
+        self.assertEqual(wide_m_liq, UnsignedDecimal(800))
+
+        m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 11))
+        self.assertEqual(m_liq, UnsignedDecimal(200))
+
+        m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
+        self.assertEqual(m_liq, UnsignedDecimal(50))
+
+    def test_add_wide_t_liq(self):
+        self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1600))
+        self.liq_bucket.add_wide_t_liq(UnsignedDecimal(400), UnsignedDecimal(24e18), UnsignedDecimal(7e6))
+
+        wide_t_liq = self.liq_bucket.query_wide_t_liq()
+        self.assertEqual(wide_t_liq, UnsignedDecimal(400))
+
+        t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 11))
+        self.assertEqual(t_liq, UnsignedDecimal(100))
+
+        t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 8))
+        self.assertEqual(t_liq, UnsignedDecimal(25))
+
+    def test_remove_wide_t_liq(self):
+        self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1600))
+        self.liq_bucket.add_wide_t_liq(UnsignedDecimal(400), UnsignedDecimal(24e18), UnsignedDecimal(7e6))
+        self.liq_bucket.remove_wide_t_liq(UnsignedDecimal(25), UnsignedDecimal(24e18), UnsignedDecimal(7e6))
+
+        wide_t_liq = self.liq_bucket.query_wide_t_liq()
+        self.assertEqual(wide_t_liq, UnsignedDecimal(375))
+
+        t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 11))
+        self.assertEqual(t_liq, UnsignedDecimal(93))
+
+        t_liq = self.liq_bucket.query_t_liq(LiqRange(8, 8))
+        self.assertEqual(t_liq, UnsignedDecimal(23))
+
     def test_a(self):
         self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)
         self.liq_bucket.add_t_liq(LiqRange(8, 11), 111, 24e18, 7e6)
