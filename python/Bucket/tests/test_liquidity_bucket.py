@@ -63,6 +63,15 @@ class TestLiquidityBucket(TestCase):
     def test_add_wide_m_liq(self):
         self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1600))
 
+        wide_m_liq = self.liq_bucket.query_wide_m_liq()
+        self.assertEqual(wide_m_liq, UnsignedDecimal(1600))
+
+        m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 11))
+        self.assertEqual(m_liq, UnsignedDecimal(400))
+
+        m_liq = self.liq_bucket.query_m_liq(LiqRange(8, 8))
+        self.assertEqual(m_liq, UnsignedDecimal(100))
+
     def test_a(self):
         self.liq_bucket.add_m_liq(LiqRange(8, 11), 1111)
         self.liq_bucket.add_t_liq(LiqRange(8, 11), 111, 24e18, 7e6)

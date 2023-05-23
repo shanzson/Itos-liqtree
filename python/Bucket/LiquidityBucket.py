@@ -42,6 +42,9 @@ class LiquidityBucket(ILiquidity):
         self.sol_truncation = sol_truncation
 
         self._buckets = [Bucket() for n in range(0, size)]
+        self._wide_snapshot = Snapshot(range=LiqRange(0, size - 1))
+        for bucket in self._buckets:
+            bucket.snapshots.append(self._wide_snapshot.copy())
 
         self.token_x_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
         self.token_y_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
@@ -111,7 +114,13 @@ class LiquidityBucket(ILiquidity):
 
     def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Adds mLiq covering the entire data structure."""
-        pass
+
+        self._wide_snapshot.m_liq += liq
+
+        range: LiqRange = self._wide_snapshot.range
+        for bucket in self._buckets:
+            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            snap.m_liq += liq
 
     def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Removes mLiq covering the entire data structure."""
@@ -146,6 +155,9 @@ class LiquidityBucket(ILiquidity):
             t_liq = int(t_liq)
 
         return t_liq
+
+    def query_wide_m_liq(self):
+        return self._wide_snapshot.m_liq
 
 
 # @dataclass
