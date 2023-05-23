@@ -58,8 +58,9 @@ class LiquidityBucket(ILiquidity):
 
             if snap is None:
                 snap = Snapshot(range=liq_range.copy(), m_liq=liq)
-
-            bucket.snapshots.append(snap)
+                bucket.snapshots.append(snap)
+            else:
+                self._accumulate_fees(snap)
 
     def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
         """Removes mLiq from the provided range."""
@@ -70,6 +71,8 @@ class LiquidityBucket(ILiquidity):
 
             if snap is None:
                 raise LiquidityExceptionRemovingMoreMLiqThanExists()
+
+            self._accumulate_fees(snap)
 
             try:
                 snap.m_liq -= liq
@@ -85,6 +88,8 @@ class LiquidityBucket(ILiquidity):
 
             if snap is None:
                 raise LiquidityExceptionTLiqExceedsMLiq()
+
+            self._accumulate_fees(snap)
 
             # check tLiq does not exceed mLiq
 
@@ -106,6 +111,8 @@ class LiquidityBucket(ILiquidity):
                 # TODO: add more detailed exceptions
                 raise Exception()
 
+            self._accumulate_fees(snap)
+
             # try:
             # TODO: add more detailed exceptions
             snap.t_liq -= liq
@@ -117,26 +124,31 @@ class LiquidityBucket(ILiquidity):
     def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Adds mLiq covering the entire data structure."""
 
+        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.m_liq += liq
 
         range: LiqRange = self._wide_snapshot.range
         for bucket in self._buckets:
             snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            self._accumulate_fees(snap)
             snap.m_liq += liq
 
     def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         """Removes mLiq covering the entire data structure."""
 
+        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.m_liq -= liq
 
         range: LiqRange = self._wide_snapshot.range
         for bucket in self._buckets:
             snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            self._accumulate_fees(snap)
             snap.m_liq -= liq
 
     def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Adds tLiq covering the entire data structure. Borrowing given amounts."""
 
+        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.t_liq += liq
         self._wide_snapshot.borrow_x += amount_x
         self._wide_snapshot.borrow_y += amount_y
@@ -144,6 +156,7 @@ class LiquidityBucket(ILiquidity):
         range: LiqRange = self._wide_snapshot.range
         for bucket in self._buckets:
             snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            self._accumulate_fees(snap)
             # check tLiq does not exceed mLiq
             snap.t_liq += liq
             snap.borrow_x += amount_x
@@ -152,6 +165,7 @@ class LiquidityBucket(ILiquidity):
     def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         """Removes tLiq covering the entire data structure. Repaying given amounts."""
 
+        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.t_liq -= liq
         self._wide_snapshot.borrow_x -= amount_x
         self._wide_snapshot.borrow_y -= amount_y
@@ -159,10 +173,25 @@ class LiquidityBucket(ILiquidity):
         range: LiqRange = self._wide_snapshot.range
         for bucket in self._buckets:
             snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
+            self._accumulate_fees(snap)
             # check tLiq does not exceed mLiq
             snap.t_liq -= liq
             snap.borrow_x -= amount_x
             snap.borrow_y -= amount_y
+
+    def _accumulate_fees(self, snapshot: Snapshot):
+        rate_x = self.token_x_fee_rate_snapshot - snapshot.rate_x
+        snapshot.rate_x = self.token_x_fee_rate_snapshot
+
+        rate_y = self.token_y_fee_rate_snapshot - snapshot.rate_y
+        snapshot.rate_y = self.token_y_fee_rate_snapshot
+
+        snapshot.acc_x += rate_x * snapshot.borrow_x / snapshot.total_m_liq() / 2**64 / snapshot.width()
+        snapshot.acc_y += rate_y * snapshot.borrow_y / snapshot.total_m_liq() / 2**64 / snapshot.width()
+
+        if self.sol_truncation:
+            snapshot.acc_x = int(snapshot.acc_x)
+            snapshot.acc_y = int(snapshot.acc_y)
 
     def query_m_liq(self, liq_range: LiqRange):
         m_liq = UnsignedDecimal(0)
@@ -192,6 +221,19 @@ class LiquidityBucket(ILiquidity):
     def query_wide_t_liq(self):
         return self._wide_snapshot.t_liq
 
+    def query_fees_in_range(self, liq_range: LiqRange):
+        acc_x = acc_y = UnsignedDecimal(0)
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            for snapshot in self._buckets[tick].snapshots:
+                acc_x += snapshot.acc_x
+                acc_y += snapshot.acc_y
+
+                if self.sol_truncation:
+                    acc_x = int(acc_x)
+                    acc_y = int(acc_y)
+
+        return acc_x, acc_y
 
 # @dataclass
 # class BorrowSnapshot:
