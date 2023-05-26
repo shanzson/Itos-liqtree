@@ -49,8 +49,8 @@ class LiquidityBucket(ILiquidity):
         self.token_x_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
         self.token_y_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
 
-    def add_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
-        """Adds mLiq to the provided range."""
+    def add_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
+        """Adds mLiq to the provided range. Liquidity provided is per tick. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
 
         for tick in range(liq_range.low, liq_range.high + 1):
             bucket: Bucket = self._buckets[tick]
@@ -61,9 +61,15 @@ class LiquidityBucket(ILiquidity):
                 bucket.snapshots.append(snap)
             else:
                 self._accumulate_fees(snap)
+                snap.m_liq += liq
 
-    def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> None:
-        """Removes mLiq from the provided range."""
+        (min_m_liq, _) = self.query_min_m_liq_max_t_liq(liq_range)
+        (acc_rate_x, acc_rate_y) = self.query_accumulated_fee_rates(liq_range)
+
+        return min_m_liq, acc_rate_x, acc_rate_y
+
+    def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
+        """Removes mLiq from the provided range. Liquidity provided is per tick. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
 
         for tick in range(liq_range.low, liq_range.high + 1):
             bucket: Bucket = self._buckets[tick]
@@ -79,8 +85,8 @@ class LiquidityBucket(ILiquidity):
             except UnsignedDecimalIsSignedException:
                 raise LiquidityExceptionRemovingMoreMLiqThanExists()
 
-    def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
-        """Adds tLiq to the provided range. Borrowing given amounts."""
+    def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
+        """Adds tLiq to the provided range. Liquidity provided is per tick. Borrowing given amounts. Returns the max tLiq."""
 
         for tick in range(liq_range.low, liq_range.high + 1):
             bucket: Bucket = self._buckets[tick]
@@ -100,8 +106,8 @@ class LiquidityBucket(ILiquidity):
             except UnsignedDecimalIsSignedException:
                 raise LiquidityExceptionTLiqExceedsMLiq()
 
-    def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
-        """Removes tLiq to the provided range. Repaying given amounts."""
+    def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
+        """Removes tLiq to the provided range. Liquidity provided is per tick. Repaying given amounts. Returns the max tLiq."""
 
         for tick in range(liq_range.low, liq_range.high + 1):
             bucket: Bucket = self._buckets[tick]
@@ -121,8 +127,8 @@ class LiquidityBucket(ILiquidity):
             # except UnsignedDecimalIsSignedException:
             #     raise LiquidityExceptionTLiqExceedsMLiq()
 
-    def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
-        """Adds mLiq covering the entire data structure."""
+    def add_wide_m_liq(self, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
+        """Adds mLiq over the wide range. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
 
         self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.m_liq += liq
@@ -133,8 +139,13 @@ class LiquidityBucket(ILiquidity):
             self._accumulate_fees(snap)
             snap.m_liq += liq
 
-    def remove_wide_m_liq(self, liq: UnsignedDecimal) -> None:
-        """Removes mLiq covering the entire data structure."""
+        (min_m_liq, _) = self.query_wide_min_m_liq_max_t_liq()
+        (acc_rate_x, acc_rate_y) = self.query_wide_accumulated_fee_rates()
+
+        return min_m_liq, acc_rate_x, acc_rate_y
+
+    def remove_wide_m_liq(self, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
+        """Removes mLiq over the wide range. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
 
         self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.m_liq -= liq
@@ -145,8 +156,8 @@ class LiquidityBucket(ILiquidity):
             self._accumulate_fees(snap)
             snap.m_liq -= liq
 
-    def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
-        """Adds tLiq covering the entire data structure. Borrowing given amounts."""
+    def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
+        """Adds tLiq over the wide range. Borrowing given amounts. Returns the max tLiq."""
 
         self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.t_liq += liq
@@ -162,8 +173,8 @@ class LiquidityBucket(ILiquidity):
             snap.borrow_x += amount_x
             snap.borrow_y += amount_y
 
-    def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
-        """Removes tLiq covering the entire data structure. Repaying given amounts."""
+    def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
+        """Removes tLiq over the wide range. Repaying given amounts. Returns the max tLiq."""
 
         self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.t_liq -= liq
@@ -179,7 +190,44 @@ class LiquidityBucket(ILiquidity):
             snap.borrow_x -= amount_x
             snap.borrow_y -= amount_y
 
+    def query_min_m_liq_max_t_liq(self, liq_range: LiqRange) -> (UnsignedDecimal, UnsignedDecimal):
+        """Returns the min mLiq, max tLiq over the wide range. Returned liquidity is per tick."""
+
+        min_m_liq: UnsignedDecimal = None
+        max_t_liq: UnsignedDecimal = UnsignedDecimal(0)
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            bucket: Bucket = self._buckets[tick]
+
+            if min_m_liq is None:
+                min_m_liq = sum([snap.m_liq for snap in bucket.snapshots])
+            else:
+                min_m_liq = min(sum([snap.m_liq for snap in bucket.snapshots]), min_m_liq)
+
+            max_t_liq = max(sum([snap.t_liq for snap in bucket.snapshots]), max_t_liq)
+
+        return min_m_liq, max_t_liq
+
+    def query_wide_min_m_liq_max_t_liq(self) -> (UnsignedDecimal, UnsignedDecimal):
+        """Returns the min mLiq, max tLiq over the wide range. Returned liquidity is for all tick."""
+
+        return self._wide_snapshot.m_liq, self._wide_snapshot.t_liq
+
+    def query_accumulated_fee_rates(self, liq_range: LiqRange) -> (UnsignedDecimal, UnsignedDecimal):
+        """Returns the accumulated fee rates per mLiq for each token over the provided range."""
+        return 0, 0
+
+    def query_wide_accumulated_fee_rates(self) -> (UnsignedDecimal, UnsignedDecimal):
+        """Returns the accumulated fee rates per mLiq for each token over the wide range."""
+
+        # If a borrow occurred w/o changing mLiq then fees would not have accumulated.
+        # Accumulate them now to make sure returned accumulated rates are accurate
+        self._accumulate_fees(self._wide_snapshot)
+        return self._wide_snapshot.rate_x, self._wide_snapshot.rate_y
+
     def _accumulate_fees(self, snapshot: Snapshot):
+        return
+
         rate_x = self.token_x_fee_rate_snapshot - snapshot.rate_x
         snapshot.rate_x = self.token_x_fee_rate_snapshot
 

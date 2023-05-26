@@ -19,7 +19,7 @@ class LiqRange:
 class ILiquidity(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def add_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal):
+    def add_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
         """Adds mLiq to the provided range. Liquidity provided is per tick. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
         raise NotImplementedError
 
@@ -69,12 +69,11 @@ class ILiquidity(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def query_accumulated_fee_rates(self) -> (UnsignedDecimal, UnsignedDecimal):
+    def query_accumulated_fee_rates(self, liq_range: LiqRange) -> (UnsignedDecimal, UnsignedDecimal):
         """Returns the accumulated fee rates per mLiq for each token over the provided range."""
         raise NotImplementedError
 
     @abc.abstractmethod
-    def query_wide_accumulated_fee_rates_per_m_liq(self) -> (UnsignedDecimal, UnsignedDecimal):
+    def query_wide_accumulated_fee_rates(self) -> (UnsignedDecimal, UnsignedDecimal):
         """Returns the accumulated fee rates per mLiq for each token over the wide range."""
         raise NotImplementedError
-    
