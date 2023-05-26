@@ -85,6 +85,11 @@ class LiquidityBucket(ILiquidity):
             except UnsignedDecimalIsSignedException:
                 raise LiquidityExceptionRemovingMoreMLiqThanExists()
 
+        (min_m_liq, _) = self.query_min_m_liq_max_t_liq(liq_range)
+        (acc_rate_x, acc_rate_y) = self.query_accumulated_fee_rates(liq_range)
+
+        return min_m_liq, acc_rate_x, acc_rate_y
+
     def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
         """Adds tLiq to the provided range. Liquidity provided is per tick. Borrowing given amounts. Returns the max tLiq."""
 
@@ -155,6 +160,11 @@ class LiquidityBucket(ILiquidity):
             snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
             self._accumulate_fees(snap)
             snap.m_liq -= liq
+
+        (min_m_liq, _) = self.query_wide_min_m_liq_max_t_liq()
+        (acc_rate_x, acc_rate_y) = self.query_wide_accumulated_fee_rates()
+
+        return min_m_liq, acc_rate_x, acc_rate_y
 
     def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
         """Adds tLiq over the wide range. Borrowing given amounts. Returns the max tLiq."""
