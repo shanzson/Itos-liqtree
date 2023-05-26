@@ -11,6 +11,21 @@ class TestLiquidityBucket(TestCase):
         self.liq_bucket = LiquidityBucket(size=16, sol_truncation=True)
 
     # mLiq
+    def test_add_m_liq_to_single_tick(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), UnsignedDecimal(1111))
+
+    def test_add_m_liq_to_multiple_independent_ticks(self):
+        pass
+
+    def test_add_m_liq_to_multiple_overlapping_ticks(self):
+        pass
+
+    def test_add_m_liq_to_wide_range(self):
+        pass
+
+    def test_add_m_liq_to_wide_range_and_limited_range(self):
+        pass
+
     def test_add_m_liq(self):
         self.liq_bucket.add_m_liq(LiqRange(8, 11), UnsignedDecimal(1111))
 
