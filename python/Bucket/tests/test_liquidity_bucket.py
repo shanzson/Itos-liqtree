@@ -10,139 +10,741 @@ class TestLiquidityBucket(TestCase):
     def setUp(self) -> None:
         self.liq_bucket = LiquidityBucket(size=16, sol_truncation=True)
 
+    # region Floating Point Helpers
+        
+    def assertFloatingPointEqual(self, first: UnsignedDecimal, second: UnsignedDecimal) -> bool:
+        # self.assertAlmostEqual does a diff between the two numbers which may trigger the unsigned decimal exception
+
+        tolerance = UnsignedDecimal("1e-50")
+        pass_condition: bool = False
+
+        if first > second:
+            pass_condition = (second + tolerance >= first)
+        elif second > first:
+            pass_condition = (first + tolerance >= second)
+        else:
+            pass_condition = True
+
+        if not pass_condition:
+            self.fail("{0} not equal to {1}".format(first, second))
+
+    def testAssertFloatingPointEqualFirstPlusTolerance(self):
+        self.assertFloatingPointEqual(UnsignedDecimal("1.1") + UnsignedDecimal("1e-50"), UnsignedDecimal("1.1"))
+
+    def testAssertFloatingPointEqualFirstMinusTolerance(self):
+        self.assertFloatingPointEqual(UnsignedDecimal("1.1") - UnsignedDecimal("1e-50"), UnsignedDecimal("1.1"))
+
+    def testAssertFloatingPointEqualSecondPlusTolerance(self):
+        self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") + UnsignedDecimal("1e-50"))
+
+    def testAssertFloatingPointEqualSecondMinusTolerance(self):
+        self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") - UnsignedDecimal("1e-50"))
+
+    def testAssertFloatingPointEqualFirstPlusDeltaOverTolerance(self):
+        is_assert_thrown: bool = False
+        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1") + UnsignedDecimal("1e-49"), UnsignedDecimal("1.1"))
+        except AssertionError: is_assert_thrown = True
+        self.assertTrue(is_assert_thrown)
+
+    def testFailAssertFloatingPointEqualFirstMinusDeltaUnderTolerance(self):
+        is_assert_thrown: bool = False
+        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1") - UnsignedDecimal("1e-49"), UnsignedDecimal("1.1"))
+        except AssertionError: is_assert_thrown = True
+        self.assertTrue(is_assert_thrown)
+
+    def testFailAssertFloatingPointEqualSecondPlusDeltaOverTolerance(self):
+        is_assert_thrown: bool = False
+        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") + UnsignedDecimal("1e-49"))
+        except AssertionError: is_assert_thrown = True
+        self.assertTrue(is_assert_thrown)
+
+    def testFailAssertFloatingPointEqualSecondMinusDeltaUnderTolerance(self):
+        is_assert_thrown: bool = False
+        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") - UnsignedDecimal("1e-49"))
+        except AssertionError: is_assert_thrown = True
+        self.assertTrue(is_assert_thrown)
+
+
+    # endregion
+
+    # We can think of the liquidity tree as a state machine.
+    # Describing that, each node has the following relationship.
+    #
+    #                addTLiq    => removeTLiq
+    #   addMLiq =>
+    #               removeMLiq
+    #
+    # Where the previous node must happen at least once,
+    # Before it's valid to execute the next step.
+    # At which point, it is (can be) valid to transition to any other node.
+    # Of course, we need to test and protect against invalid transitions.
+    # However, for the next few sections, we will take advantages of this fact.
+    # Allowing us to simplify the scope of our focus, while testing all cases.
+
     # region add mLiq
+    # Other liquidity methods are not valid before addingMLiq
     def test_add_m_liq_to_single_tick(self):
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal(1111))
-        self.assertEqual(min_m_liq, UnsignedDecimal(1111))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal("1111"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1111"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         # Range mLiq was added
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
-        self.assertEqual(min_m_liq, UnsignedDecimal(1111))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1111"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Range covering range which mLiq was added
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Range outside range which mLiq was added
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Wide range
         (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal("20"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1131"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1131"))
+
+    def test_add_m_liq_to_multiple_independent_ticks(self):
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal("456"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("456"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal("123"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("123"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Ranges mLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("456"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
+        self.assertEqual(min_m_liq, UnsignedDecimal("123"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Ranges covering ranges which mLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 15))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Range overlapping both ranges which mLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 14))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Wide range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal("20"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("476"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("476"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal("20"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("143"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
+        self.assertEqual(min_m_liq, UnsignedDecimal("143"))
+
+    def test_add_m_liq_to_multiple_overlapping_ticks(self):
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal("22"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("22"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal("77"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("77"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Query lower non-overlapping range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("22"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query overlap between ranges
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
+        self.assertEqual(min_m_liq, UnsignedDecimal("99"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query upper non-overlapping range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
+        self.assertEqual(min_m_liq, UnsignedDecimal("77"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Wide range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that min_m_liq can accumulate
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal(5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("27"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(7))
+        self.assertEqual(min_m_liq, UnsignedDecimal("84"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("27"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
+        self.assertEqual(min_m_liq, UnsignedDecimal("111"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
+        self.assertEqual(min_m_liq, UnsignedDecimal("84"))
+
+    def test_add_m_liq_to_wide_range(self):
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal("22"))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("22"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        # Query wide Range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("22"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Query single tick range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("22"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("22"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Verify wide_min_m_liq can be accumulated
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("23"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("23"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("23"))
+
+    def test_add_m_liq_to_wide_range_and_limited_range(self):
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(11))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("11"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(8))
+        self.assertEqual(min_m_liq, UnsignedDecimal("19"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Query wide Range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("11"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Query single tick range outside overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 1))
+        self.assertEqual(min_m_liq, UnsignedDecimal("11"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query single tick range in overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("19"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range outside overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(0, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("11"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range in lower partial overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("11"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range in overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 6))
+        self.assertEqual(min_m_liq, UnsignedDecimal("19"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range in upper partial overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("11"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal("3"))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("14"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 4), UnsignedDecimal("8"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("30"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (wide_min_m_liq, _) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("14"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 3))
+        self.assertEqual(min_m_liq, UnsignedDecimal("30"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
+        self.assertEqual(min_m_liq, UnsignedDecimal("30"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 6))
+        self.assertEqual(min_m_liq, UnsignedDecimal("22"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 11))
+        self.assertEqual(min_m_liq, UnsignedDecimal("14"))
+
+    # endregion
+
+    # region remove mLiq
+    # Only addingMLiq is a valid liquidity action before removeMLiq
+
+    def test_remove_m_liq_at_single_tick(self):
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal("1111"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 8), UnsignedDecimal("111"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1000"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Range mLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1000"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Range covering range which mLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Range outside range which mLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Wide range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal("20"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 8), UnsignedDecimal("4"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1016"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
+        self.assertEqual(min_m_liq, UnsignedDecimal("1016"))
+
+    def test_remove_m_liq_at_multiple_independent_ticks(self):
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal("456"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 10), UnsignedDecimal("56"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("400"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal("123"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(12, 14), UnsignedDecimal("23"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("100"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Ranges mLiq was removed
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("400"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
+        self.assertEqual(min_m_liq, UnsignedDecimal("100"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Ranges covering ranges which mLiq was removed
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 15))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Range overlapping both ranges which mLiq was removed
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 14))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Wide range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal("20"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 10), UnsignedDecimal("10"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("410"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("410"))
+
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal("20"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(12, 14), UnsignedDecimal("10"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("110"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
+        self.assertEqual(min_m_liq, UnsignedDecimal("110"))
+
+    def test_remove_m_liq_to_multiple_overlapping_ticks(self):
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal("22"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(1, 4), UnsignedDecimal("2"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("20"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal("77"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal("7"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("70"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Query lower non-overlapping range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("20"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query overlap between ranges
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
+        self.assertEqual(min_m_liq, UnsignedDecimal("90"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query upper non-overlapping range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
+        self.assertEqual(min_m_liq, UnsignedDecimal("70"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Wide range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that min_m_liq can accumulate
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal("5"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(1, 4), UnsignedDecimal("2"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("23"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(7))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal("1"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("76"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("23"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
+        self.assertEqual(min_m_liq, UnsignedDecimal("99"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
+        self.assertEqual(min_m_liq, UnsignedDecimal("76"))
+
+    def test_remove_m_liq_to_wide_range(self):
+        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal("22"))
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal("2"))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("20"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        # Query wide Range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("20"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Query single tick range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("20"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("20"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Verify wide_min_m_liq can be accumulated
+        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal("8"))
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal("1"))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("27"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("27"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("27"))
+
+    def test_remove_m_liq_to_wide_range_and_limited_range(self):
+        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal("11"))
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal("3"))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("8"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal("8"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal("4"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("12"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Query wide Range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("8"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
+
+        # Query single tick range outside overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 1))
+        self.assertEqual(min_m_liq, UnsignedDecimal("8"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query single tick range in overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("12"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range outside overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(0, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("8"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range in lower partial overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 5))
+        self.assertEqual(min_m_liq, UnsignedDecimal("8"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range in overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 6))
+        self.assertEqual(min_m_liq, UnsignedDecimal("12"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Query multi tick range in upper partial overlap
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 10))
+        self.assertEqual(min_m_liq, UnsignedDecimal("8"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
+        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(3))
+        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal("2"))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("9"))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
+
+        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 4), UnsignedDecimal("8"))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 4), UnsignedDecimal("2"))
+        self.assertEqual(min_m_liq, UnsignedDecimal("19"))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        (wide_min_m_liq, _) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("9"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 3))
+        self.assertEqual(min_m_liq, UnsignedDecimal("19"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
+        self.assertEqual(min_m_liq, UnsignedDecimal("19"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 6))
+        self.assertEqual(min_m_liq, UnsignedDecimal("13"))
+
+        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 11))
+        self.assertEqual(min_m_liq, UnsignedDecimal("9"))
+
+    # endregion
+
+    # region add tLiq (NEEDS ATTENTION)
+    # Only addingMLiq is a valid liquidity action before removeMLiq
+
+    def test_add_t_liq_to_single_tick(self):
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal(1111))
+        self.assertEqual(min_m_liq, UnsignedDecimal(1111))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        max_t_liq = self.liq_bucket.add_t_liq(LiqRange(8, 8), UnsignedDecimal(34), UnsignedDecimal(1), UnsignedDecimal(3))
+        self.assertEqual(max_t_liq, UnsignedDecimal(34))
+
+        # Range mLiq + tLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
+        self.assertEqual(min_m_liq, UnsignedDecimal(1111))
+        self.assertEqual(max_t_liq, UnsignedDecimal(34))
+
+        # Range covering range which mLiq + tLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal(34))
+
+        # Range outside range which mLiq + tLiq was added
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
+
+        # Wide range
+        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal(34))
 
         # Verify that mLiq can accumulate, checking previous range(s) of accumulation
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal(20))
         self.assertEqual(min_m_liq, UnsignedDecimal(1131))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
+        max_t_liq = self.liq_bucket.add_t_liq(LiqRange(8, 8), UnsignedDecimal(20), UnsignedDecimal(1), UnsignedDecimal(3))
+        self.assertEqual(max_t_liq, UnsignedDecimal(54))
+
+        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
         self.assertEqual(min_m_liq, UnsignedDecimal(1131))
+        self.assertEqual(max_t_liq, UnsignedDecimal(54))
 
-    def test_add_m_liq_to_multiple_independent_ticks(self):
+    def test_add_t_liq_to_multiple_independent_ticks(self):
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal(456))
         self.assertEqual(min_m_liq, UnsignedDecimal(456))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal(123))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal(123))
         self.assertEqual(min_m_liq, UnsignedDecimal(123))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         # Ranges mLiq was added
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
         self.assertEqual(min_m_liq, UnsignedDecimal(456))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
         self.assertEqual(min_m_liq, UnsignedDecimal(123))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Ranges covering ranges which mLiq was added
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 15))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Range overlapping both ranges which mLiq was added
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 14))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Wide range
         (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
 
         # Verify that mLiq can accumulate, checking previous range(s) of accumulation
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal(20))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal(20))
         self.assertEqual(min_m_liq, UnsignedDecimal(476))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
         self.assertEqual(min_m_liq, UnsignedDecimal(476))
 
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal(20))
+        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal(20))
         self.assertEqual(min_m_liq, UnsignedDecimal(143))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
         self.assertEqual(min_m_liq, UnsignedDecimal(143))
 
-    def test_add_m_liq_to_multiple_overlapping_ticks(self):
+    def test_add_t_liq_to_multiple_overlapping_ticks(self):
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal(22))
         self.assertEqual(min_m_liq, UnsignedDecimal(22))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(77))
         self.assertEqual(min_m_liq, UnsignedDecimal(77))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         # Query lower non-overlapping range
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
         self.assertEqual(min_m_liq, UnsignedDecimal(22))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query overlap between ranges
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
         self.assertEqual(min_m_liq, UnsignedDecimal(99))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query upper non-overlapping range
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
         self.assertEqual(min_m_liq, UnsignedDecimal(77))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Wide range
         (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(wide_min_m_liq, UnsignedDecimal("0"))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
 
         # Verify that min_m_liq can accumulate
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal(5))
         self.assertEqual(min_m_liq, UnsignedDecimal(27))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(7))
         self.assertEqual(min_m_liq, UnsignedDecimal(84))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
         self.assertEqual(min_m_liq, UnsignedDecimal(27))
@@ -153,32 +755,32 @@ class TestLiquidityBucket(TestCase):
         (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
         self.assertEqual(min_m_liq, UnsignedDecimal(84))
 
-    def test_add_m_liq_to_wide_range(self):
+    def test_add_t_liq_to_wide_range(self):
         (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(22))
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(22))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
 
         # Query wide Range
         (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(22))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
 
         # Query single tick range
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
         self.assertEqual(min_m_liq, UnsignedDecimal(22))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query multi tick range
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
         self.assertEqual(min_m_liq, UnsignedDecimal(22))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Verify wide_min_m_liq can be accumulated
         (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(1))
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(23))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
         self.assertEqual(min_m_liq, UnsignedDecimal(23))
@@ -186,62 +788,62 @@ class TestLiquidityBucket(TestCase):
         (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
         self.assertEqual(min_m_liq, UnsignedDecimal(23))
 
-    def test_add_m_liq_to_wide_range_and_limited_range(self):
+    def test_add_t_liq_to_wide_range_and_limited_range(self):
         (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(11))
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(11))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(8))
         self.assertEqual(min_m_liq, UnsignedDecimal(19))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         # Query wide Range
         (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(11))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(wide_max_t_liq, UnsignedDecimal("0"))
 
         # Query single tick range outside overlap
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 1))
         self.assertEqual(min_m_liq, UnsignedDecimal(11))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query single tick range in overlap
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
         self.assertEqual(min_m_liq, UnsignedDecimal(19))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query multi tick range outside overlap
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(0, 2))
         self.assertEqual(min_m_liq, UnsignedDecimal(11))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query multi tick range in lower partial overlap
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 5))
         self.assertEqual(min_m_liq, UnsignedDecimal(11))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query multi tick range in overlap
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 6))
         self.assertEqual(min_m_liq, UnsignedDecimal(19))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Query multi tick range in upper partial overlap
         (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 10))
         self.assertEqual(min_m_liq, UnsignedDecimal(11))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.assertEqual(max_t_liq, UnsignedDecimal("0"))
 
         # Verify that mLiq can accumulate, checking previous range(s) of accumulation
         (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(3))
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(14))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(wide_acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(wide_acc_rate_y, UnsignedDecimal("0"))
 
         (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(3, 4), UnsignedDecimal(8))
         self.assertEqual(min_m_liq, UnsignedDecimal(30))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        self.assertEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertEqual(acc_rate_y, UnsignedDecimal("0"))
 
         (wide_min_m_liq, _) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
         self.assertEqual(wide_min_m_liq, UnsignedDecimal(14))
@@ -260,273 +862,374 @@ class TestLiquidityBucket(TestCase):
 
     # endregion
 
-    # region remove mLiq
-    # we know adding function correctly, so we can take the same above tests and partially remove the added mLiq
+    # region Fees
 
-    def test_remove_m_liq_at_single_tick(self):
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal(1111))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 8), UnsignedDecimal(111))
-        self.assertEqual(min_m_liq, UnsignedDecimal(1000))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+    # Naming below only mentions m_liq distribution.
+    # But there are many ways fees can accumulate at different m_liq distributions.
+    # We will test all cases within each method.
+    # NOTE: m_liq distribution defines how fees can accumulate.
+    # Without m_liq, a borrow can not occur. Meaning fees can not accumulate.
+    # Therefore, to be exhaustive, we only need to check ranges surrounding the m_liq distribution.
+    # Ex. wide, overlapping, non-overlapping, fully contained, exact
 
-        # Range mLiq was added
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
-        self.assertEqual(min_m_liq, UnsignedDecimal(1000))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+    # Remember, from the liquidity tree
+    # totalMLiq = node.subtreeMLiq + A[level] * node.range
+    # fees = borrow * rate / totalMLiq / Q192.64 conversion
 
-        # Range covering range which mLiq was added
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_at_one_tick_over_one_range(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal("456"))
+        self.liq_bucket.add_t_liq(LiqRange(8, 8), UnsignedDecimal("456"), UnsignedDecimal("7"), UnsignedDecimal("4"))
 
-        # Range outside range which mLiq was added
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal("74")
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal("374")
 
-        # Wide range
-        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        # Querying the exact range (also fully contained)
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(8, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("1.1359649122807017543859649122807017543859649122807017543859649122"))  # 7 * 74 / 456
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("3.2807017543859649122807017543859649122807017543859649122807017543"))  # 4 * 374 / 456
 
-        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(8, 8), UnsignedDecimal(20))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 8), UnsignedDecimal(4))
-        self.assertEqual(min_m_liq, UnsignedDecimal(1016))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # Querying an overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(4, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("1.1359649122807017543859649122807017543859649122807017543859649122"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("3.2807017543859649122807017543859649122807017543859649122807017543"))
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 8))
-        self.assertEqual(min_m_liq, UnsignedDecimal(1016))
+        # Querying a non-overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-    def test_remove_m_liq_at_multiple_independent_ticks(self):
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal(456))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 10), UnsignedDecimal(56))
-        self.assertEqual(min_m_liq, UnsignedDecimal(400))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("1.1359649122807017543859649122807017543859649122807017543859649122"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("3.2807017543859649122807017543859649122807017543859649122807017543"))
 
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal(123))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(12, 14), UnsignedDecimal(23))
-        self.assertEqual(min_m_liq, UnsignedDecimal(100))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_at_multiple_ticks_over_one_range(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 12), UnsignedDecimal("1456"))
+        self.liq_bucket.add_t_liq(LiqRange(8, 12), UnsignedDecimal("1456"), UnsignedDecimal("12"), UnsignedDecimal("36"))
 
-        # Ranges mLiq was removed
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(400))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal("274")
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal("2374")
 
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
-        self.assertEqual(min_m_liq, UnsignedDecimal(100))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying the exact range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(8, 14))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0.4516483516483516483516483516483516483516483516483516483516483516"))  # (5*12/5) * 274 / (1456*5)
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("11.739560439560439560439560439560439560439560439560439560439560439"))  # (5*36/5) * 2374 / (1456*5)
 
-        # Ranges covering ranges which mLiq was removed
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 11))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying a fully contained range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(9, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0.1806593406593406593406593406593406593406593406593406593406593406"))  # (2/5) * 12 * 274 / (1456*5)
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("4.6958241758241758241758241758241758241758241758241758241758241758"))  # (2/5) * 36 * 2374 / (1456*5)
 
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 15))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying an overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0.2709890109890109890109890109890109890109890109890109890109890109"))  # (3/5) * 12 * 274 / (1456*5)
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("7.0437362637362637362637362637362637362637362637362637362637362637"))  # (3/5) * 36 * 2374 / (1456*5)
 
-        # Range overlapping both ranges which mLiq was removed
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 14))
-        self.assertEqual(min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying a non-overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        # Wide range
-        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0.4516483516483516483516483516483516483516483516483516483516483516"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("11.739560439560439560439560439560439560439560439560439560439560439"))
 
-        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(8, 10), UnsignedDecimal(20))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(8, 10), UnsignedDecimal(10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(410))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_over_wide_range(self):
+        self.liq_bucket.add_wide_m_liq(UnsignedDecimal("300"))
+        self.liq_bucket.add_wide_t_liq(UnsignedDecimal("200"), UnsignedDecimal("1600"), UnsignedDecimal("3200"))
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(8, 10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(410))
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal("21")
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal("36")
 
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.add_m_liq(LiqRange(12, 14), UnsignedDecimal(20))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(12, 14), UnsignedDecimal(10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(110))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # Querying the exact range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 15))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("7"))   # 1600 * 21 / (300*16)
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("24"))  # 3200 * 36 / (300*16)
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(12, 14))
-        self.assertEqual(min_m_liq, UnsignedDecimal(110))
+        # Querying a fully contained range
+        # (overlapping and non-overlapping do not exist, so query a contained range over different ticks)
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(9, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0.875"))  # 2/16 * 7
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("3"))  # 2/16 * 24
 
-    def test_remove_m_liq_to_multiple_overlapping_ticks(self):
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal(22))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(1, 4), UnsignedDecimal(2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(20))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("4.375"))  # 10/16 * 7
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("15"))  # 10/16 * 24
 
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(77))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(7))
-        self.assertEqual(min_m_liq, UnsignedDecimal(70))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("7"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("24"))
 
-        # Query lower non-overlapping range
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(20))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_at_one_tick_over_multiple_non_overlapping_ranges(self):
+        pass
 
-        # Query overlap between ranges
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
-        self.assertEqual(min_m_liq, UnsignedDecimal(90))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_at_multiple_ticks_over_multiple_non_overlapping_ranges(self):
+        # rx: 800 * 500 / (700*4) = 142.85714285714285714285714285714285714285714285714285714285714285
+        # ry: 2400 * 1200 / (700*4) = 1028.5714285714285714285714285714285714285714285714285714285714285
+        self.liq_bucket.add_m_liq(LiqRange(8, 11), UnsignedDecimal("700"))
+        self.liq_bucket.add_t_liq(LiqRange(8, 11), UnsignedDecimal("400"), UnsignedDecimal("800"), UnsignedDecimal("2400"))
 
-        # Query upper non-overlapping range
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
-        self.assertEqual(min_m_liq, UnsignedDecimal(70))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # lx: 700 * 500 / (200*3) = 583.33333333333333333333333333333333333333333333333333333333333333
+        # ly: 2700 * 1200 / (200*3) = 5400
+        self.liq_bucket.add_m_liq(LiqRange(2, 4), UnsignedDecimal("200"))
+        self.liq_bucket.add_t_liq(LiqRange(2, 4), UnsignedDecimal("1"), UnsignedDecimal("700"), UnsignedDecimal("2700"))
 
-        # Wide range
-        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(0))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal("500")
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal("1200")
 
-        # Verify that min_m_liq can accumulate
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(1, 4), UnsignedDecimal(5))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(1, 4), UnsignedDecimal(2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(23))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # Query partially overlapping the inside of both ranges
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(4, 9))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("265.87301587301587301587301587301587301587301587301587301587301587"))  # (1/3) * lx + (2/4) * rx
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("2314.2857142857142857142857142857142857142857142857142857142857142"))  # (1/3) * ly + (2/4) * ry
 
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(7))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(1))
-        self.assertEqual(min_m_liq, UnsignedDecimal(76))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # Query fully overlapping both ranges
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 13))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("726.19047619047619047619047619047619047619047619047619047619047619"))  # lx + rx
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("6428.5714285714285714285714285714285714285714285714285714285714285"))  # ly + ry
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(23))
+        # Query partially overlapping the inside left range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("388.88888888888888888888888888888888888888888888888888888888888888"))  # (2/3) * lx
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("3600"))  # (2/3) * ly
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
-        self.assertEqual(min_m_liq, UnsignedDecimal(99))
+        # Query partially overlapping the inside right range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("107.14285714285714285714285714285714285714285714285714285714285714"))  # (3/4) * rx
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("771.42857142857142857142857142857142857142857142857142857142857142"))  # (3/4) * ry
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 7))
-        self.assertEqual(min_m_liq, UnsignedDecimal(76))
+        # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("726.19047619047619047619047619047619047619047619047619047619047619"))  # lx + # rx
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("6428.5714285714285714285714285714285714285714285714285714285714285"))  # lx + rx
 
-    def test_remove_m_liq_to_wide_range(self):
-        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(22))
-        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal(2))
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(20))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_at_one_tick_over_multiple_overlapping_ranges(self):
+        pass
 
-        # Query wide Range
-        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(20))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+    def test_fee_accumulation_with_m_liq_at_multiple_ticks_over_multiple_non_overlapping_ranges(self):
+        self.liq_bucket.add_m_liq(LiqRange(1, 7), UnsignedDecimal(200))
+        self.liq_bucket.add_t_liq(LiqRange(1, 7), UnsignedDecimal(100), UnsignedDecimal(500), UnsignedDecimal(300))
 
-        # Query single tick range
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
-        self.assertEqual(min_m_liq, UnsignedDecimal(20))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.liq_bucket.add_m_liq(LiqRange(3, 5), UnsignedDecimal(214))
+        self.liq_bucket.add_t_liq(LiqRange(3, 5), UnsignedDecimal(410), UnsignedDecimal(98), UnsignedDecimal(17))
 
-        # Query multi tick range
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(20))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal(533)
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal(234)
 
-        # Verify wide_min_m_liq can be accumulated
-        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(8))
-        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal(1))
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(27))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        # Ticks (mLiq)      (borrowX)           (borrowY)
+        # 0:    0       |       0         |         0
+        # 1:  200       |   500/7         |     300/7
+        # 2:  200       |   500/7         |     300/7
+        # 3:  200 + 214 |   500/7 + 98/3  |     300/7 + 17/3
+        # 4:  200 + 214 |   500/7 + 98/3  |     300/7 + 17/3
+        # 5:  200 + 214 |   500/7 + 98/3  |     300/7 + 17/3
+        # 6:  200       |   500/7         |     300/7
+        # 7:  200       |   500/7         |     300/7
+        # 8:    0       |       0         |         0
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
-        self.assertEqual(min_m_liq, UnsignedDecimal(27))
+        # mLiq is distributed differently over 2 regions
+        # Thus the fee calculation can be different in 2 types of ticks
+        # Then for queries, we take the sum of each depending on the tick type
+        # m1 (1-2, 6-7)
+        #   x: 500/7 * 533 / (200*7) = 27.193877551020408163265306122448979591836734693877551020408163265
+        #   y: 300/7 * 234 / (200*7) = 7.1632653061224489795918367346938775510204081632653061224489795918
+        # m2 (3-5)
+        #   x: (500/7 + 98/3) * 533 / (200*7 + 214*3) = 27.170794272655193321207033254045986661069912783918660510237395643
+        #   y: (300/7 + 17/3) * 234 / (200*7 + 214*3) = 5.5605149013572128165663914929340982230306422275080453337064502588
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(2, 10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(27))
+        # Querying larger range
+        # m1x * 1 and m1y * 1
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 1))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
+        return
 
-    def test_remove_m_liq_to_wide_range_and_limited_range(self):
-        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(11))
-        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal(3))
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(8))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(2, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 7), UnsignedDecimal(8))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 7), UnsignedDecimal(4))
-        self.assertEqual(min_m_liq, UnsignedDecimal(12))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 6))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        # Query wide Range
-        (wide_min_m_liq, wide_max_t_liq) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(8))
-        self.assertEqual(wide_max_t_liq, UnsignedDecimal(0))
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(7, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        # Query single tick range outside overlap
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 1))
-        self.assertEqual(min_m_liq, UnsignedDecimal(8))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # m1x * 2 and m1y * 2
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        # Query single tick range in overlap
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(5, 5))
-        self.assertEqual(min_m_liq, UnsignedDecimal(12))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        # Query multi tick range outside overlap
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(0, 2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(8))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying smaller range
 
-        # Query multi tick range in lower partial overlap
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(1, 5))
-        self.assertEqual(min_m_liq, UnsignedDecimal(8))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying overlap of larger and range w/o mLiq
 
-        # Query multi tick range in overlap
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 6))
-        self.assertEqual(min_m_liq, UnsignedDecimal(12))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
+        # Querying overlap smaller range with lower and range w/o mLiq
 
-        # Query multi tick range in upper partial overlap
-        (min_m_liq, max_t_liq) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(4, 10))
-        self.assertEqual(min_m_liq, UnsignedDecimal(8))
-        self.assertEqual(max_t_liq, UnsignedDecimal(0))
 
-        # Verify that mLiq can accumulate, checking previous range(s) of accumulation
-        (_, _, _) = self.liq_bucket.add_wide_m_liq(UnsignedDecimal(3))
-        (wide_min_m_liq, wide_acc_rate_x, wide_acc_rate_y) = self.liq_bucket.remove_wide_m_liq(UnsignedDecimal(2))
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(9))
-        self.assertEqual(wide_acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(wide_acc_rate_y, UnsignedDecimal(0))
+        # Querying contained ranges
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 0))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
 
-        (_, _, _) = self.liq_bucket.add_m_liq(LiqRange(3, 4), UnsignedDecimal(8))
-        (min_m_liq, acc_rate_x, acc_rate_y) = self.liq_bucket.remove_m_liq(LiqRange(3, 4), UnsignedDecimal(2))
-        self.assertEqual(min_m_liq, UnsignedDecimal(19))
-        self.assertEqual(acc_rate_x, UnsignedDecimal(0))
-        self.assertEqual(acc_rate_y, UnsignedDecimal(0))
+        # borrow * rate / totalMLiq
+        # 1-2
+        # borrow = 500/7*2 + 0 = 1000/7
+        # totalMLiq = 200*2 + 0
+        # 1000/7 * 533 / 400
 
-        (wide_min_m_liq, _) = self.liq_bucket.query_wide_min_m_liq_max_t_liq()
-        self.assertEqual(wide_min_m_liq, UnsignedDecimal(9))
+        # 500/7*2 * 533 / (200*2)
+        # (2/7) * 500 * 533 / 200*7
+        # 9327.5 / 7 * 2 = 2665
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 3))
-        self.assertEqual(min_m_liq, UnsignedDecimal(19))
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 4))
-        self.assertEqual(min_m_liq, UnsignedDecimal(19))
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 6))
-        self.assertEqual(min_m_liq, UnsignedDecimal(13))
+        # (1-1)
+        # (1-2)
 
-        (min_m_liq, _) = self.liq_bucket.query_min_m_liq_max_t_liq(LiqRange(3, 11))
-        self.assertEqual(min_m_liq, UnsignedDecimal(9))
+        # borrow * rate / totalMLiq
+        # 500/7 * 533 / (200*7) = 27.193877551020408163265306122448979591836734693877551020408163265
+        #
+        # overlap
+        # (500/7 + 98/3) * 533 / (200*7 + 214*3) = 27.170794272655193321207033254045986661069912783918660510237395643
+        #
+        #
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("380.71428571428571428571428571428571428571428571428571428571428571"))  # x0 + x1
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))  # y0 + y1
+        return
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 5))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(8, 9))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # Querying overlapping ranges
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 4))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 11))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 3))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 6))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 6))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(7, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+
+        # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))
+
+    def test_fee_accumulation_with_m_liq_at_multiple_ticks_over_multiple_partially_overlapping_ranges(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 14), UnsignedDecimal(456))
+        self.liq_bucket.add_t_liq(LiqRange(8, 14), UnsignedDecimal(456), UnsignedDecimal(7), UnsignedDecimal(4))
+
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal(74)
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal(374)
+
+        # Querying the exact range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(8, 14))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))  # 7 * 74 / 456
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))  # 4 * 374 / 456
+
+        # Querying a fully contained range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(9, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))
+
+        # Querying an overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))
+
+        # Querying a non-overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))
+
+    def test_fee_accumulation_with_m_liq_over_wide_range_and_at_multiple_ticks_over_multiple_partially_overlapping_ranges(self):
+        self.liq_bucket.add_m_liq(LiqRange(8, 14), UnsignedDecimal(456))
+        self.liq_bucket.add_t_liq(LiqRange(8, 14), UnsignedDecimal(456), UnsignedDecimal(7), UnsignedDecimal(4))
+
+        self.liq_bucket.token_x_fee_rate_snapshot += UnsignedDecimal(74)
+        self.liq_bucket.token_y_fee_rate_snapshot += UnsignedDecimal(374)
+
+        # Querying the exact range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(8, 14))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))  # 7 * 74 / 456
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))  # 4 * 374 / 456
+
+        # Querying a fully contained range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(9, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))
+
+        # Querying an overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 10))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))
+
+        # Querying a non-overlapping range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+
+        # # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(1.1359649122807017543859649122807017543859649122807017543859649122))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(3.2807017543859649122807017543859649122807017543859649122807017543))
 
     # endregion
+
+
 
     #
     # # tLiq
@@ -677,14 +1380,14 @@ class TestLiquidityTree(TestCase):
 
         self.assertEqual(root.m_liq, UnsignedDecimal("123"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("1968"))
-        self.assertEqual(root.t_liq, UnsignedDecimal(0))
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal(0))
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal(0))
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal(0))
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal(0))
+        self.assertEqual(root.t_liq, UnsignedDecimal("0"))
+        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
+        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("0"))
 
-        self.assertEqual(self.liq_tree.token_x_fee_rate_snapshot, UnsignedDecimal(0))
-        self.assertEqual(self.liq_tree.token_y_fee_rate_snapshot, UnsignedDecimal(0))
+        self.assertEqual(self.liq_tree.token_x_fee_rate_snapshot, UnsignedDecimal("0"))
+        self.assertEqual(self.liq_tree.token_y_fee_rate_snapshot, UnsignedDecimal("0"))
 
     def test_adding_m_liq_left_leg_only(self):
         # range 1-3
@@ -1710,8 +2413,8 @@ class TestLiquidityTree(TestCase):
         self.assertEqual(root.token_y_borrowed, UnsignedDecimal("789e18"))
         self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("789e18"))
 
-        self.assertEqual(self.liq_tree.token_x_fee_rate_snapshot, UnsignedDecimal(0))
-        self.assertEqual(self.liq_tree.token_y_fee_rate_snapshot, UnsignedDecimal(0))
+        self.assertEqual(self.liq_tree.token_x_fee_rate_snapshot, UnsignedDecimal("0"))
+        self.assertEqual(self.liq_tree.token_y_fee_rate_snapshot, UnsignedDecimal("0"))
 
     def test_adding_t_liq_left_leg_only(self):
         # range 1-3

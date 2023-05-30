@@ -44,7 +44,8 @@ class LiquidityBucket(ILiquidity):
         self._buckets = [Bucket() for n in range(0, size)]
         self._wide_snapshot = Snapshot(range=LiqRange(0, size - 1))
         for bucket in self._buckets:
-            bucket.snapshots.append(self._wide_snapshot.copy())
+            # maintain the same reference to the wide range in all buckets
+            bucket.snapshots.append(self._wide_snapshot)
 
         self.token_x_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
         self.token_y_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
@@ -65,7 +66,6 @@ class LiquidityBucket(ILiquidity):
 
         (min_m_liq, _) = self.query_min_m_liq_max_t_liq(liq_range)
         (acc_rate_x, acc_rate_y) = self.query_accumulated_fee_rates(liq_range)
-
         return min_m_liq, acc_rate_x, acc_rate_y
 
     def remove_m_liq(self, liq_range: LiqRange, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
@@ -87,7 +87,6 @@ class LiquidityBucket(ILiquidity):
 
         (min_m_liq, _) = self.query_min_m_liq_max_t_liq(liq_range)
         (acc_rate_x, acc_rate_y) = self.query_accumulated_fee_rates(liq_range)
-
         return min_m_liq, acc_rate_x, acc_rate_y
 
     def add_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
@@ -110,6 +109,9 @@ class LiquidityBucket(ILiquidity):
                 snap.borrow_y += amount_y
             except UnsignedDecimalIsSignedException:
                 raise LiquidityExceptionTLiqExceedsMLiq()
+
+        (_, max_t_liq) = self.query_min_m_liq_max_t_liq(liq_range)
+        return max_t_liq
 
     def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
         """Removes tLiq to the provided range. Liquidity provided is per tick. Repaying given amounts. Returns the max tLiq."""
@@ -135,70 +137,34 @@ class LiquidityBucket(ILiquidity):
     def add_wide_m_liq(self, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
         """Adds mLiq over the wide range. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
 
-        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.m_liq += liq
-
-        range: LiqRange = self._wide_snapshot.range
-        for bucket in self._buckets:
-            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
-            self._accumulate_fees(snap)
-            snap.m_liq += liq
 
         (min_m_liq, _) = self.query_wide_min_m_liq_max_t_liq()
         (acc_rate_x, acc_rate_y) = self.query_wide_accumulated_fee_rates()
-
         return min_m_liq, acc_rate_x, acc_rate_y
 
     def remove_wide_m_liq(self, liq: UnsignedDecimal) -> (UnsignedDecimal, UnsignedDecimal, UnsignedDecimal):
         """Removes mLiq over the wide range. Returns the min mLiq, and accumulated fee rates per mLiq for each token."""
 
-        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.m_liq -= liq
-
-        range: LiqRange = self._wide_snapshot.range
-        for bucket in self._buckets:
-            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
-            self._accumulate_fees(snap)
-            snap.m_liq -= liq
 
         (min_m_liq, _) = self.query_wide_min_m_liq_max_t_liq()
         (acc_rate_x, acc_rate_y) = self.query_wide_accumulated_fee_rates()
-
         return min_m_liq, acc_rate_x, acc_rate_y
 
     def add_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
         """Adds tLiq over the wide range. Borrowing given amounts. Returns the max tLiq."""
 
-        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.t_liq += liq
         self._wide_snapshot.borrow_x += amount_x
         self._wide_snapshot.borrow_y += amount_y
 
-        range: LiqRange = self._wide_snapshot.range
-        for bucket in self._buckets:
-            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
-            self._accumulate_fees(snap)
-            # check tLiq does not exceed mLiq
-            snap.t_liq += liq
-            snap.borrow_x += amount_x
-            snap.borrow_y += amount_y
-
     def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> UnsignedDecimal:
         """Removes tLiq over the wide range. Repaying given amounts. Returns the max tLiq."""
 
-        self._accumulate_fees(self._wide_snapshot)
         self._wide_snapshot.t_liq -= liq
         self._wide_snapshot.borrow_x -= amount_x
         self._wide_snapshot.borrow_y -= amount_y
-
-        range: LiqRange = self._wide_snapshot.range
-        for bucket in self._buckets:
-            snap = next(iter([snap for snap in bucket.snapshots if snap.range.low == range.low and snap.range.high == range.high]), None)
-            self._accumulate_fees(snap)
-            # check tLiq does not exceed mLiq
-            snap.t_liq -= liq
-            snap.borrow_x -= amount_x
-            snap.borrow_y -= amount_y
 
     def query_min_m_liq_max_t_liq(self, liq_range: LiqRange) -> (UnsignedDecimal, UnsignedDecimal):
         """Returns the min mLiq, max tLiq over the wide range. Returned liquidity is per tick."""
@@ -221,74 +187,57 @@ class LiquidityBucket(ILiquidity):
     def query_wide_min_m_liq_max_t_liq(self) -> (UnsignedDecimal, UnsignedDecimal):
         """Returns the min mLiq, max tLiq over the wide range. Returned liquidity is for all tick."""
 
-        return self._wide_snapshot.m_liq, self._wide_snapshot.t_liq
+        wide_max_t_liq: UnsignedDecimal = self._wide_snapshot.t_liq
+
+        for bucket in self._buckets:
+            wide_max_t_liq = max(sum([snap.t_liq for snap in bucket.snapshots]), wide_max_t_liq)
+
+        return self._wide_snapshot.m_liq, wide_max_t_liq
 
     def query_accumulated_fee_rates(self, liq_range: LiqRange) -> (UnsignedDecimal, UnsignedDecimal):
         """Returns the accumulated fee rates per mLiq for each token over the provided range."""
-        return 0, 0
+
+        acc_rate_x: UnsignedDecimal = UnsignedDecimal(0)
+        acc_rate_y: UnsignedDecimal = UnsignedDecimal(0)
+
+        for tick in range(liq_range.low, liq_range.high + 1):
+            bucket: Bucket = self._buckets[tick]
+
+            for snap in bucket.snapshots:
+                self._accumulate_fees(snap)
+
+            acc_rate_x += sum([snap.acc_x for snap in bucket.snapshots])
+            acc_rate_y += sum([snap.acc_y for snap in bucket.snapshots])
+
+        return acc_rate_x, acc_rate_y
 
     def query_wide_accumulated_fee_rates(self) -> (UnsignedDecimal, UnsignedDecimal):
         """Returns the accumulated fee rates per mLiq for each token over the wide range."""
 
-        # If a borrow occurred w/o changing mLiq then fees would not have accumulated.
-        # Accumulate them now to make sure returned accumulated rates are accurate
-        self._accumulate_fees(self._wide_snapshot)
-        return self._wide_snapshot.rate_x, self._wide_snapshot.rate_y
+        acc_rate_x: UnsignedDecimal = UnsignedDecimal(0)
+        acc_rate_y: UnsignedDecimal = UnsignedDecimal(0)
+
+        for bucket in self._buckets:
+            for snap in bucket.snapshots:
+                # If a borrow occurred w/o changing mLiq then fees would not have accumulated.
+                # Accumulate them now to make sure returned accumulated rates are accurate
+                self._accumulate_fees(snap)
+
+            acc_rate_x += sum([snap.acc_x for snap in bucket.snapshots])
+            acc_rate_y += sum([snap.acc_y for snap in bucket.snapshots])
+
+        return acc_rate_x, acc_rate_y
 
     def _accumulate_fees(self, snapshot: Snapshot):
-        return
-
         rate_x = self.token_x_fee_rate_snapshot - snapshot.rate_x
         snapshot.rate_x = self.token_x_fee_rate_snapshot
 
         rate_y = self.token_y_fee_rate_snapshot - snapshot.rate_y
         snapshot.rate_y = self.token_y_fee_rate_snapshot
 
-        snapshot.acc_x += rate_x * snapshot.borrow_x / snapshot.total_m_liq() / 2**64 / snapshot.width()
-        snapshot.acc_y += rate_y * snapshot.borrow_y / snapshot.total_m_liq() / 2**64 / snapshot.width()
+        total_m_liq = snapshot.total_m_liq()
+        if total_m_liq == UnsignedDecimal(0):
+            return
 
-        if self.sol_truncation:
-            snapshot.acc_x = int(snapshot.acc_x)
-            snapshot.acc_y = int(snapshot.acc_y)
-
-    def query_m_liq(self, liq_range: LiqRange):
-        m_liq = UnsignedDecimal(0)
-        for tick in range(liq_range.low, liq_range.high + 1):
-            for snapshot in self._buckets[tick].snapshots:
-                m_liq += snapshot.m_liq / snapshot.width()
-
-        if self.sol_truncation:
-            m_liq = int(m_liq)
-
-        return m_liq
-
-    def query_t_liq(self, liq_range: LiqRange):
-        t_liq = UnsignedDecimal(0)
-        for tick in range(liq_range.low, liq_range.high + 1):
-            for snapshot in self._buckets[tick].snapshots:
-                t_liq += snapshot.t_liq / snapshot.width()
-
-        if self.sol_truncation:
-            t_liq = int(t_liq)
-
-        return t_liq
-
-    def query_wide_m_liq(self):
-        return self._wide_snapshot.m_liq
-
-    def query_wide_t_liq(self):
-        return self._wide_snapshot.t_liq
-
-    def query_fees_in_range(self, liq_range: LiqRange):
-        acc_x = acc_y = UnsignedDecimal(0)
-
-        for tick in range(liq_range.low, liq_range.high + 1):
-            for snapshot in self._buckets[tick].snapshots:
-                acc_x += snapshot.acc_x
-                acc_y += snapshot.acc_y
-
-                if self.sol_truncation:
-                    acc_x = int(acc_x)
-                    acc_y = int(acc_y)
-
-        return acc_x, acc_y
+        snapshot.acc_x += rate_x * snapshot.borrow_x / snapshot.width() / total_m_liq
+        snapshot.acc_y += rate_y * snapshot.borrow_y / snapshot.width() / total_m_liq
