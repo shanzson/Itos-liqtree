@@ -8,7 +8,7 @@ from LiquidityExceptions import *
 
 class TestLiquidityBucket(TestCase):
     def setUp(self) -> None:
-        self.liq_bucket = LiquidityBucket(size=16, sol_truncation=True)
+        self.liq_bucket = LiquidityBucket(size=16)
 
     # region Floating Point Helpers
         
@@ -1042,126 +1042,139 @@ class TestLiquidityBucket(TestCase):
         # m1x * 1 and m1y * 1
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 1))
         self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
-        return
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("7.1632653061224489795918367346938775510204081632653061224489795918"))
 
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(2, 2))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("7.1632653061224489795918367346938775510204081632653061224489795918"))
 
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 6))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("7.1632653061224489795918367346938775510204081632653061224489795918"))
 
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(7, 7))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("7.1632653061224489795918367346938775510204081632653061224489795918"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(7, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.193877551020408163265306122448979591836734693877551020408163265"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("7.1632653061224489795918367346938775510204081632653061224489795918"))
 
         # m1x * 2 and m1y * 2
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.38775510204081632653061224489795918367346938775510204081632653"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("14.326530612244897959183673469387755102040816326530612244897959183"))
 
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 7))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.38775510204081632653061224489795918367346938775510204081632653"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("14.326530612244897959183673469387755102040816326530612244897959183"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.38775510204081632653061224489795918367346938775510204081632653"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("14.326530612244897959183673469387755102040816326530612244897959183"))
 
         # Querying smaller range
+        # m2x * 1 and m2y * 1
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 3))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.170794272655193321207033254045986661069912783918660510237395643"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("5.5605149013572128165663914929340982230306422275080453337064502588"))
 
-        # Querying overlap of larger and range w/o mLiq
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(4, 4))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.170794272655193321207033254045986661069912783918660510237395643"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("5.5605149013572128165663914929340982230306422275080453337064502588"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 5))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("27.170794272655193321207033254045986661069912783918660510237395643"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("5.5605149013572128165663914929340982230306422275080453337064502588"))
+
+        # m2x * 2 and m2y * 2
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 4))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.341588545310386642414066508091973322139825567837321020474791285"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("11.121029802714425633132782985868196446061284455016090667412900517"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(4, 5))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.341588545310386642414066508091973322139825567837321020474791285"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("11.121029802714425633132782985868196446061284455016090667412900517"))
+
+        # m2x * 3 and m2y * 3
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 5))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("81.512382817965579963621099762137959983209738351755981530712186928"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("16.681544704071638449699174478802294669091926682524136001119350776"))
+
+        # Querying overlap of larger range and range w/o mLiq
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 2))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.38775510204081632653061224489795918367346938775510204081632653"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("14.326530612244897959183673469387755102040816326530612244897959183"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 12))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.38775510204081632653061224489795918367346938775510204081632653"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("14.326530612244897959183673469387755102040816326530612244897959183"))
 
         # Querying overlap smaller range with lower and range w/o mLiq
-
-
-        # Querying contained ranges
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 0))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
-
-        # borrow * rate / totalMLiq
-        # 1-2
-        # borrow = 500/7*2 + 0 = 1000/7
-        # totalMLiq = 200*2 + 0
-        # 1000/7 * 533 / 400
-
-        # 500/7*2 * 533 / (200*2)
-        # (2/7) * 500 * 533 / 200*7
-        # 9327.5 / 7 * 2 = 2665
-
-
-
-        # (1-1)
-        # (1-2)
-
-        # borrow * rate / totalMLiq
-        # 500/7 * 533 / (200*7) = 27.193877551020408163265306122448979591836734693877551020408163265
-        #
-        # overlap
-        # (500/7 + 98/3) * 533 / (200*7 + 214*3) = 27.170794272655193321207033254045986661069912783918660510237395643
-        #
-        #
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 2))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("380.71428571428571428571428571428571428571428571428571428571428571"))  # x0 + x1
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))  # y0 + y1
-        return
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 5))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(6, 7))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(8, 9))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("0"))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("0"))
-
-        # Querying overlapping ranges
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 2))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 4))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 7))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 11))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 3))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 6))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
-
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 8))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+        # m1x*1 + m2x*1 and m1y*1 + m2y*1
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(2, 3))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.364671823675601484472339376494966252906647477796211530645558907"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("12.723780207479661796158228227627975774051050390773351456155429850"))
 
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 6))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("54.364671823675601484472339376494966252906647477796211530645558907"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("12.723780207479661796158228227627975774051050390773351456155429850"))
+
+        # m1x*2 + m2x*1 and m1y*2 + m2y*1
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 3))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("81.558549374696009647737645498943945844743382171673762551053722174"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("19.887045513602110775750064962321853325071458554038657578604409442"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 3))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("81.558549374696009647737645498943945844743382171673762551053722174"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("19.887045513602110775750064962321853325071458554038657578604409442"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("81.558549374696009647737645498943945844743382171673762551053722174"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("19.887045513602110775750064962321853325071458554038657578604409442"))
 
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(5, 8))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("81.558549374696009647737645498943945844743382171673762551053722174"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("19.887045513602110775750064962321853325071458554038657578604409442"))
 
-        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(7, 10))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))  #
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))  #
+        # m1x*2 + m2x*2 and m1y*2 + m2y*2
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 4))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("108.72934364735120296894467875298993250581329495559242306129111781"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("25.447560414959323592316456455255951548102100781546702912310859701"))
 
-        # Querying the wide range
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 4))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("108.72934364735120296894467875298993250581329495559242306129111781"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("25.447560414959323592316456455255951548102100781546702912310859701"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(4, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("108.72934364735120296894467875298993250581329495559242306129111781"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("25.447560414959323592316456455255951548102100781546702912310859701"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(4, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("108.72934364735120296894467875298993250581329495559242306129111781"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("25.447560414959323592316456455255951548102100781546702912310859701"))
+
+        # m1x*2 + m2x*3 and m1y*2 + m2y*3
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 5))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("135.90013792000639629015171200703591916688320773951108357152851346"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("31.008075316316536408882847948190049771132743009054748246017309960"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(1, 5))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("135.90013792000639629015171200703591916688320773951108357152851346"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("31.008075316316536408882847948190049771132743009054748246017309960"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 7))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("135.90013792000639629015171200703591916688320773951108357152851346"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("31.008075316316536408882847948190049771132743009054748246017309960"))
+
+        (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(3, 8))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("135.90013792000639629015171200703591916688320773951108357152851346"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("31.008075316316536408882847948190049771132743009054748246017309960"))
+
+        # Querying the wide range (4*m1 + 3*m2)
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_wide_accumulated_fee_rates()
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal(""))
-        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal(""))
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("190.28789302204721261668232425193387835055667712726618561234483999"))
+        self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("45.334605928561434368066521417577804873173559335585360490915269143"))
 
     def test_fee_accumulation_with_m_liq_at_multiple_ticks_over_multiple_partially_overlapping_ranges(self):
         self.liq_bucket.add_m_liq(LiqRange(8, 14), UnsignedDecimal(456))
