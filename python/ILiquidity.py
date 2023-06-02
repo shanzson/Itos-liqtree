@@ -1,10 +1,9 @@
 import abc
 from dataclasses import dataclass
 
-from UnsignedDecimal import UnsignedDecimal
+from FloatingPoint.UnsignedDecimal import UnsignedDecimal
 
-
-TWO_POW_SIXTY_FOUR: UnsignedDecimal = UnsignedDecimal(2**64)
+TWO_POW_SIXTY_FOUR: UnsignedDecimal = UnsignedDecimal(2 ** 64)
 
 
 @dataclass
@@ -14,6 +13,9 @@ class LiqRange:
 
     def copy(self):
         return LiqRange(self.low, self.high)
+
+    def width(self):
+        return self.high - self.low + 1
 
 
 class ILiquidity(metaclass=abc.ABCMeta):

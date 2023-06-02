@@ -28,7 +28,7 @@ from unittest import TestCase
 #   LLLL(0) LLLR(1) LLRL(2) LLRR(3) LRLL(4) LRLR(5) LRRL(6) LRRR(7) RLLL(8) RLLR(9) RLRL(10) RLRR(11) RRLL(12) RRLR(13) RRRL(14) RRRR(15)
 
 from Tree.LiquidityTree import LiquidityTree, LiqNode, LiqRange
-from UnsignedDecimal import UnsignedDecimal
+from FloatingPoint.UnsignedDecimal import UnsignedDecimal
 
 
 class TestDenseLiquidityTreeSolTruncation(TestCase):

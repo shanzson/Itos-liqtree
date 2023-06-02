@@ -6,6 +6,58 @@ import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
 
+
+/**
+
+    Fee Accumulation
+
+    1. Node Calculations
+
+        totalMLiq = N.subtreeMLiq + A[] * N.range
+        nodeEarnPerMLiq += N.borrow * rate / totalMLiq
+        nodeSubtreeEarnPerMLiq += N.subtreeBorrow * rate / totalMLiq
+
+    2. Queries
+
+        sum of earned fee rates over traversed nodes
+        - if moving upward along the same path to the root, use the nodeEarnPerMLiq
+        - if moving upward while flipping to the adjacent node, use the nodeSubtreeEarnPerMLiq
+
+    3. Testing - isolate variables
+
+        N.subtreeMLiq
+
+        A[]
+
+
+        N.range
+
+
+        N.borrow
+
+
+        rate
+
+
+        totalMLiq
+
+
+        N.subtreeBorrow
+
+
+        rate
+
+
+
+ */
+
+
+
+
+
+
+
+
 /**
  * In practice, the LiqTree will have many nodes. So many, that testing at that scale is intractable.
  * Thus the reason for this file. A smaller scale LiqTree, where we can more easily populate the values densely.
@@ -20,6 +72,112 @@ contract DenseTreeTreeStructureTest is Test {
         // ie. A complete tree matching the ascii documentation. 
         liqTree.init(4);
     }
+
+    function testFeesExampleOne() public {
+    /*        
+    *                                                              0-15
+    *                                                      ____----    ----
+    *                                  __________----------                 [right side]
+    *                                0-7      
+    *                            __--  --__           
+    *                       __---          ---__         
+    *                     /                       \      
+    *                  0-3                          4-7 
+    *                /   \                         /   \ 
+    *              /       \                     /       \   
+    *            /           \                 /           \        
+    *          0-1            2-3            4-5            6-7   
+    *         /   \          /   \          /   \          /   \ 
+    *        /     \        /     \        /     \        /     \  
+    *       0       1      2       3      4       5      6       7
+    */
+        LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 17)];
+        LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 18)];
+        LiqNode storage fourSeven = liqTree.nodes[LKey.wrap((4 << 24) | 20)];
+        LiqNode storage threeThree = liqTree.nodes[LKey.wrap((1 << 24) | 19)];
+        LiqNode storage fourFive = liqTree.nodes[LKey.wrap((2 << 24) | 20)];
+
+        liqTree.addMLiq(LiqRange(1, 7), 200);
+        liqTree.addTLiq(LiqRange(1, 7), 100, 500, 300);
+
+        liqTree.addMLiq(LiqRange(3, 5), 214);
+        liqTree.addTLiq(LiqRange(3, 5), 410, 98, 17);
+
+        liqTree.feeRateSnapshotTokenX += 533;
+        liqTree.feeRateSnapshotTokenY += 234;
+
+        // trigger fees and undo to keep tree state the same
+        liqTree.addMLiq(LiqRange(1, 7), 200);
+        liqTree.removeMLiq(LiqRange(1, 7), 200);
+        liqTree.addMLiq(LiqRange(3, 5), 214);
+        liqTree.removeMLiq(LiqRange(3, 5), 214);
+
+        // verify node states
+        // (1-1)
+        assertEq(oneOne.mLiq, 200);
+        assertEq(oneOne.subtreeMLiq, 200);
+        assertEq(oneOne.tLiq, 4381);
+        assertEq(oneOne.tokenX.borrowed, 832e18);
+        assertEq(oneOne.tokenX.subtreeBorrowed, 832e18);
+        assertEq(oneOne.tokenY.borrowed, 928e6);
+        assertEq(oneOne.tokenY.subtreeBorrowed, 928e6);
+
+        // (2-3)
+        assertEq(twoThree.mLiq, 200);
+        assertEq(twoThree.subtreeMLiq, 283472);
+        assertEq(twoThree.tLiq, 4381);
+        assertEq(twoThree.tokenX.borrowed, 832e18);
+        assertEq(twoThree.tokenX.subtreeBorrowed, 832e18);
+        assertEq(twoThree.tokenY.borrowed, 928e6);
+        assertEq(twoThree.tokenY.subtreeBorrowed, 928e6);
+
+        // (4-7)
+        assertEq(fourSeven.mLiq, 200);
+        assertEq(fourSeven.subtreeMLiq, 283472);
+        assertEq(fourSeven.tLiq, 4381);
+        assertEq(fourSeven.tokenX.borrowed, 832e18);
+        assertEq(fourSeven.tokenX.subtreeBorrowed, 832e18);
+        assertEq(fourSeven.tokenY.borrowed, 928e6);
+        assertEq(fourSeven.tokenY.subtreeBorrowed, 928e6);
+
+
+        // (3-3)
+        assertEq(threeThree.mLiq, 214);
+        assertEq(threeThree.subtreeMLiq, 283472);
+        assertEq(threeThree.tLiq, 4381);
+        assertEq(threeThree.tokenX.borrowed, 832e18);
+        assertEq(threeThree.tokenX.subtreeBorrowed, 832e18);
+        assertEq(threeThree.tokenY.borrowed, 928e6);
+        assertEq(threeThree.tokenY.subtreeBorrowed, 928e6);
+
+        // (4-5)
+        assertEq(fourFive.mLiq, 214);
+        assertEq(fourFive.subtreeMLiq, 283472);
+        assertEq(fourFive.tLiq, 4381);
+        assertEq(fourFive.tokenX.borrowed, 832e18);
+        assertEq(fourFive.tokenX.subtreeBorrowed, 832e18);
+        assertEq(fourFive.tokenY.borrowed, 928e6);
+        assertEq(fourFive.tokenY.subtreeBorrowed, 928e6);
+
+    }
+
+    /*        
+    *                                                              0-15
+    *                                                      ____----    ----____
+    *                                  __________----------                    ----------__________
+    *                                0-7                                                          8-15
+    *                            __--  --__                                                    __--  --__
+    *                       __---          ---__                                          __---          ---__
+    *                     /                       \                                     /                       \
+    *                  0-3                          4-7                             8-11                         12-15
+    *                /   \                         /   \                           /   \                         /   \
+    *              /       \                     /       \                       /       \                     /       \
+    *            /           \                 /           \                   /           \                 /           \
+    *          0-1            2-3            4-5            6-7              8-9           10-11          12-13          14-15
+    *         /   \          /   \          /   \          /   \            /   \          /   \          /   \          /   \
+    *        /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
+    *       0       1      2       3      4       5      6       7        8       9      10      11    12      13      14     15
+    */
 
     function testSimpleFee() public {
         liqTree.addMLiq(LiqRange(8, 11), 1111);

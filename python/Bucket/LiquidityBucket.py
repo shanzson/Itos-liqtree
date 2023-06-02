@@ -1,9 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import List
 
 from ILiquidity import *
 from LiquidityExceptions import *
-from UnsignedDecimal import UnsignedDecimal, UnsignedDecimalIsSignedException
+from FloatingPoint.UnsignedDecimal import UnsignedDecimal, UnsignedDecimalIsSignedException
 
 
 @dataclass

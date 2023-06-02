@@ -1,71 +1,14 @@
 from unittest import TestCase
 
-from Bucket.LiquidityBucket import LiquidityBucket, Snapshot
+from Bucket.LiquidityBucket import LiquidityBucket
 from ILiquidity import *
-from UnsignedDecimal import UnsignedDecimal
-from LiquidityExceptions import *
+from FloatingPoint.UnsignedDecimal import UnsignedDecimal
+from FloatingPoint.FloatingPointTestCase import FloatingPointTestCase
 
 
-class TestLiquidityBucket(TestCase):
+class TestLiquidityBucket(FloatingPointTestCase):
     def setUp(self) -> None:
         self.liq_bucket = LiquidityBucket(size=16)
-
-    # region Floating Point Helpers
-        
-    def assertFloatingPointEqual(self, first: UnsignedDecimal, second: UnsignedDecimal) -> bool:
-        # self.assertAlmostEqual does a diff between the two numbers which may trigger the unsigned decimal exception
-
-        tolerance = UnsignedDecimal("1e-50")
-        pass_condition: bool = False
-
-        if first > second:
-            pass_condition = (second + tolerance >= first)
-        elif second > first:
-            pass_condition = (first + tolerance >= second)
-        else:
-            pass_condition = True
-
-        if not pass_condition:
-            self.fail("{0} not equal to {1}".format(first, second))
-
-    def testAssertFloatingPointEqualFirstPlusTolerance(self):
-        self.assertFloatingPointEqual(UnsignedDecimal("1.1") + UnsignedDecimal("1e-50"), UnsignedDecimal("1.1"))
-
-    def testAssertFloatingPointEqualFirstMinusTolerance(self):
-        self.assertFloatingPointEqual(UnsignedDecimal("1.1") - UnsignedDecimal("1e-50"), UnsignedDecimal("1.1"))
-
-    def testAssertFloatingPointEqualSecondPlusTolerance(self):
-        self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") + UnsignedDecimal("1e-50"))
-
-    def testAssertFloatingPointEqualSecondMinusTolerance(self):
-        self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") - UnsignedDecimal("1e-50"))
-
-    def testAssertFloatingPointEqualFirstPlusDeltaOverTolerance(self):
-        is_assert_thrown: bool = False
-        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1") + UnsignedDecimal("1e-49"), UnsignedDecimal("1.1"))
-        except AssertionError: is_assert_thrown = True
-        self.assertTrue(is_assert_thrown)
-
-    def testFailAssertFloatingPointEqualFirstMinusDeltaUnderTolerance(self):
-        is_assert_thrown: bool = False
-        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1") - UnsignedDecimal("1e-49"), UnsignedDecimal("1.1"))
-        except AssertionError: is_assert_thrown = True
-        self.assertTrue(is_assert_thrown)
-
-    def testFailAssertFloatingPointEqualSecondPlusDeltaOverTolerance(self):
-        is_assert_thrown: bool = False
-        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") + UnsignedDecimal("1e-49"))
-        except AssertionError: is_assert_thrown = True
-        self.assertTrue(is_assert_thrown)
-
-    def testFailAssertFloatingPointEqualSecondMinusDeltaUnderTolerance(self):
-        is_assert_thrown: bool = False
-        try: self.assertFloatingPointEqual(UnsignedDecimal("1.1"), UnsignedDecimal("1.1") - UnsignedDecimal("1e-49"))
-        except AssertionError: is_assert_thrown = True
-        self.assertTrue(is_assert_thrown)
-
-
-    # endregion
 
     # We can think of the liquidity tree as a state machine.
     # Describing that, each node has the following relationship.
