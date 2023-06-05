@@ -33,14 +33,14 @@ class LiqNode:
     t_liq: UnsignedDecimal = UnsignedDecimal(0)
     subtree_m_liq: UnsignedDecimal = UnsignedDecimal(0)
 
-    token_x_borrowed: UnsignedDecimal = UnsignedDecimal(0)
-    token_x_subtree_borrowed: UnsignedDecimal = UnsignedDecimal(0)
+    token_x_borrow: UnsignedDecimal = UnsignedDecimal(0)
+    token_x_subtree_borrow: UnsignedDecimal = UnsignedDecimal(0)
     token_x_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
     token_x_cumulative_earned_per_m_liq: UnsignedDecimal = UnsignedDecimal(0)
     token_x_cumulative_earned_per_m_subtree_liq: UnsignedDecimal = UnsignedDecimal(0)
 
-    token_y_borrowed: UnsignedDecimal = UnsignedDecimal(0)
-    token_y_subtree_borrowed: UnsignedDecimal = UnsignedDecimal(0)
+    token_y_borrow: UnsignedDecimal = UnsignedDecimal(0)
+    token_y_subtree_borrow: UnsignedDecimal = UnsignedDecimal(0)
     token_y_fee_rate_snapshot: UnsignedDecimal = UnsignedDecimal(0)
     token_y_cumulative_earned_per_m_liq: UnsignedDecimal = UnsignedDecimal(0)
     token_y_cumulative_earned_per_m_subtree_liq: UnsignedDecimal = UnsignedDecimal(0)
@@ -334,14 +334,14 @@ class LiquidityTree(ILiquidity):
             # Thought calculation was cool, might be useful in refactor
             # m_liq_per_tick: int = liq * (self.width >> low_node.depth)
             node.t_liq += liq
-            node.token_x_borrowed += amount_x_split
-            node.token_x_subtree_borrowed += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
-            node.token_y_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
-            node.token_y_subtree_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_x_borrow += amount_x_split
+            node.token_x_subtree_borrow += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_y_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_y_subtree_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
 
             print("1")
-            print(node.token_x_borrowed)
-            print(node.token_x_subtree_borrowed)
+            print(node.token_x_borrow)
+            print(node.token_x_subtree_borrow)
 
             if node.t_liq > node.m_liq:
                 raise LiquidityExceptionTLiqExceedsMLiq()
@@ -351,11 +351,11 @@ class LiquidityTree(ILiquidity):
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            node.token_x_subtree_borrowed += amount_x_split
-            node.token_y_subtree_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_x_subtree_borrow += amount_x_split
+            node.token_y_subtree_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
 
             print("2")
-            print(node.token_x_subtree_borrowed)
+            print(node.token_x_subtree_borrow)
 
             while current < stop_range:
                 if LiquidityKey.is_left(current):
@@ -364,14 +364,14 @@ class LiquidityTree(ILiquidity):
                     self.handle_fee(current, node)
 
                     node.t_liq += liq
-                    node.token_x_borrowed += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
-                    node.token_x_subtree_borrowed += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
-                    node.token_y_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
-                    node.token_y_subtree_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_x_borrow += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_x_subtree_borrow += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_y_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_y_subtree_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
 
                     print("3")
-                    print(node.token_x_borrowed)
-                    print(node.token_x_subtree_borrowed)
+                    print(node.token_x_borrow)
+                    print(node.token_x_subtree_borrow)
 
                     if node.t_liq > node.m_liq:
                         raise LiquidityExceptionTLiqExceedsMLiq()
@@ -381,12 +381,12 @@ class LiquidityTree(ILiquidity):
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
 
-                parent.token_x_subtree_borrowed = self.nodes[left].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-                parent.token_y_subtree_borrowed = self.nodes[left].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                parent.token_x_subtree_borrow = self.nodes[left].token_x_subtree_borrow + node.token_x_subtree_borrow + parent.token_x_borrow
+                parent.token_y_subtree_borrow = self.nodes[left].token_y_subtree_borrow + node.token_y_subtree_borrow + parent.token_y_borrow
                 current, node = up, parent
 
                 print("3")
-                print(node.token_x_subtree_borrowed)
+                print(node.token_x_subtree_borrow)
 
         if high < stop_range:
             current = high
@@ -396,14 +396,14 @@ class LiquidityTree(ILiquidity):
             amount_x_split = amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
 
             node.t_liq += liq
-            node.token_x_borrowed += amount_x_split
-            node.token_x_subtree_borrowed += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
-            node.token_y_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
-            node.token_y_subtree_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_x_borrow += amount_x_split
+            node.token_x_subtree_borrow += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_y_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_y_subtree_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
 
             print("4")
-            print(node.token_x_borrowed)
-            print(node.token_x_subtree_borrowed)
+            print(node.token_x_borrow)
+            print(node.token_x_subtree_borrow)
 
             if node.t_liq > node.m_liq:
                 raise LiquidityExceptionTLiqExceedsMLiq()
@@ -413,12 +413,12 @@ class LiquidityTree(ILiquidity):
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            node.token_x_subtree_borrowed += amount_x_split
-            node.token_y_subtree_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+            node.token_x_subtree_borrow += amount_x_split
+            node.token_y_subtree_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
 
             print("5")
-            print(node.token_x_borrowed)
-            print(node.token_x_subtree_borrowed)
+            print(node.token_x_borrow)
+            print(node.token_x_subtree_borrow)
 
             while current < stop_range:
                 if LiquidityKey.is_right(current):
@@ -427,14 +427,14 @@ class LiquidityTree(ILiquidity):
                     self.handle_fee(current, node)
 
                     node.t_liq += liq
-                    node.token_x_borrowed += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
-                    node.token_x_subtree_borrowed += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
-                    node.token_y_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
-                    node.token_y_subtree_borrowed += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_x_borrow += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_x_subtree_borrow += amount_x / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_y_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
+                    node.token_y_subtree_borrow += amount_y / liq_range.width() * UnsignedDecimal(current >> 24)
 
                     print("6")
-                    print(node.token_x_borrowed)
-                    print(node.token_x_subtree_borrowed)
+                    print(node.token_x_borrow)
+                    print(node.token_x_subtree_borrow)
 
                     if node.t_liq > node.m_liq:
                         raise LiquidityExceptionTLiqExceedsMLiq()
@@ -444,8 +444,8 @@ class LiquidityTree(ILiquidity):
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
 
-                parent.token_x_subtree_borrowed = self.nodes[right].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-                parent.token_y_subtree_borrowed = self.nodes[right].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                parent.token_x_subtree_borrow = self.nodes[right].token_x_subtree_borrow + node.token_x_subtree_borrow + parent.token_x_borrow
+                parent.token_y_subtree_borrow = self.nodes[right].token_y_subtree_borrow + node.token_y_subtree_borrow + parent.token_y_borrow
                 current, node = up, parent
 
         node = self.nodes[current]
@@ -455,8 +455,8 @@ class LiquidityTree(ILiquidity):
             parent = self.nodes[up]
             self.handle_fee(up, parent)
 
-            parent.token_x_subtree_borrowed = self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-            parent.token_y_subtree_borrowed = self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+            parent.token_x_subtree_borrow = self.nodes[other].token_x_subtree_borrow + node.token_x_subtree_borrow + parent.token_x_borrow
+            parent.token_y_subtree_borrow = self.nodes[other].token_y_subtree_borrow + node.token_y_subtree_borrow + parent.token_y_borrow
             current, node = up, parent
 
     def remove_t_liq(self, liq_range: LiqRange, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
@@ -486,18 +486,18 @@ class LiquidityTree(ILiquidity):
             # Thought calculation was cool, might be useful in refactor
             # m_liq_per_tick: int = liq * (self.width >> low_node.depth)
             node.t_liq = node.t_liq - liq
-            node.token_x_borrowed -= amount_x
-            node.token_x_subtree_borrowed -= amount_x
-            node.token_y_borrowed -= amount_y
-            node.token_y_subtree_borrowed -= amount_y
+            node.token_x_borrow -= amount_x
+            node.token_x_subtree_borrow -= amount_x
+            node.token_y_borrow -= amount_y
+            node.token_y_subtree_borrow -= amount_y
 
             # right propagate
             current, _ = LiquidityKey.right_up(current)
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            node.token_x_subtree_borrowed -= amount_x
-            node.token_y_subtree_borrowed -= amount_y
+            node.token_x_subtree_borrow -= amount_x
+            node.token_y_subtree_borrow -= amount_y
 
             while current < stop_range:
                 if LiquidityKey.is_left(current):
@@ -506,18 +506,18 @@ class LiquidityTree(ILiquidity):
                     self.handle_fee(current, node)
 
                     node.t_liq -= liq
-                    node.token_x_borrowed -= amount_x
-                    node.token_x_subtree_borrowed -= amount_x
-                    node.token_y_borrowed -= amount_y
-                    node.token_y_subtree_borrowed -= amount_y
+                    node.token_x_borrow -= amount_x
+                    node.token_x_subtree_borrow -= amount_x
+                    node.token_y_borrow -= amount_y
+                    node.token_y_subtree_borrow -= amount_y
 
                 # right propagate
                 up, left = LiquidityKey.right_up(current)
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
 
-                parent.token_x_subtree_borrowed = self.nodes[left].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-                parent.token_y_subtree_borrowed = self.nodes[left].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                parent.token_x_subtree_borrow = self.nodes[left].token_x_subtree_borrow + node.token_x_subtree_borrow + parent.token_x_borrow
+                parent.token_y_subtree_borrow = self.nodes[left].token_y_subtree_borrow + node.token_y_subtree_borrow + parent.token_y_borrow
                 current, node = up, parent
 
         if high < stop_range:
@@ -526,18 +526,18 @@ class LiquidityTree(ILiquidity):
             self.handle_fee(current, node)
 
             node.t_liq -= liq
-            node.token_x_borrowed -= amount_x
-            node.token_x_subtree_borrowed -= amount_x
-            node.token_y_borrowed -= amount_y
-            node.token_y_subtree_borrowed -= amount_y
+            node.token_x_borrow -= amount_x
+            node.token_x_subtree_borrow -= amount_x
+            node.token_y_borrow -= amount_y
+            node.token_y_subtree_borrow -= amount_y
 
             # left propagate
             current, _ = LiquidityKey.left_up(current)
             node = self.nodes[current]
             self.handle_fee(current, node)
 
-            node.token_x_subtree_borrowed -= amount_x
-            node.token_y_subtree_borrowed -= amount_y
+            node.token_x_subtree_borrow -= amount_x
+            node.token_y_subtree_borrow -= amount_y
 
             while current < stop_range:
                 if LiquidityKey.is_right(current):
@@ -546,18 +546,18 @@ class LiquidityTree(ILiquidity):
                     self.handle_fee(current, node)
 
                     node.t_liq -= liq
-                    node.token_x_borrowed -= amount_x
-                    node.token_x_subtree_borrowed -= amount_x
-                    node.token_y_borrowed -= amount_y
-                    node.token_y_subtree_borrowed -= amount_y
+                    node.token_x_borrow -= amount_x
+                    node.token_x_subtree_borrow -= amount_x
+                    node.token_y_borrow -= amount_y
+                    node.token_y_subtree_borrow -= amount_y
 
                 # left propogate
                 up, right = LiquidityKey.left_up(current)
                 parent = self.nodes[up]
                 self.handle_fee(up, parent)
 
-                parent.token_x_subtree_borrowed = self.nodes[right].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-                parent.token_y_subtree_borrowed = self.nodes[right].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+                parent.token_x_subtree_borrow = self.nodes[right].token_x_subtree_borrow + node.token_x_subtree_borrow + parent.token_x_borrow
+                parent.token_y_subtree_borrow = self.nodes[right].token_y_subtree_borrow + node.token_y_subtree_borrow + parent.token_y_borrow
                 current, node = up, parent
 
         node = self.nodes[current]
@@ -567,8 +567,8 @@ class LiquidityTree(ILiquidity):
             parent = self.nodes[up]
             self.handle_fee(up, parent)
 
-            parent.token_x_subtree_borrowed = self.nodes[other].token_x_subtree_borrowed + node.token_x_subtree_borrowed + parent.token_x_borrowed
-            parent.token_y_subtree_borrowed = self.nodes[other].token_y_subtree_borrowed + node.token_y_subtree_borrowed + parent.token_y_borrowed
+            parent.token_x_subtree_borrow = self.nodes[other].token_x_subtree_borrow + node.token_x_subtree_borrow + parent.token_x_borrow
+            parent.token_y_subtree_borrow = self.nodes[other].token_y_subtree_borrow + node.token_y_subtree_borrow + parent.token_y_borrow
             current, node = up, parent
 
     # endregion
@@ -585,11 +585,11 @@ class LiquidityTree(ILiquidity):
         if total_m_liq <= 0:
             return
 
-        node.token_x_cumulative_earned_per_m_liq += node.token_x_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        node.token_x_cumulative_earned_per_m_subtree_liq += node.token_x_subtree_borrowed * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_x_cumulative_earned_per_m_liq += node.token_x_borrow * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_x_cumulative_earned_per_m_subtree_liq += node.token_x_subtree_borrow * token_x_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
-        node.token_y_cumulative_earned_per_m_liq += node.token_y_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
-        node.token_y_cumulative_earned_per_m_subtree_liq += node.token_y_subtree_borrowed * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_y_cumulative_earned_per_m_liq += node.token_y_borrow * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
+        node.token_y_cumulative_earned_per_m_subtree_liq += node.token_y_subtree_borrow * token_y_fee_rate_diff / total_m_liq / TWO_POW_SIXTY_FOUR
 
         if self.sol_truncation:
             node.token_x_cumulative_earned_per_m_liq = UnsignedDecimal(int(node.token_x_cumulative_earned_per_m_liq))
@@ -713,7 +713,7 @@ class LiquidityTree(ILiquidity):
         """Returns the accumulated fee rates per mLiq for each token over the wide range."""
         raise NotImplementedError
 
-    # region Liquidity INF Range Methods
+    # region Liquidity Wide Range Methods
 
     def add_wide_m_liq(self, liq: UnsignedDecimal) -> None:
         self.handle_fee(self.root_key, self.root)
@@ -731,18 +731,18 @@ class LiquidityTree(ILiquidity):
         self.handle_fee(self.root_key, self.root)
 
         self.root.t_liq += liq
-        self.root.token_x_borrowed += amount_x
-        self.root.token_x_subtree_borrowed += amount_x
-        self.root.token_y_borrowed += amount_y
-        self.root.token_y_subtree_borrowed += amount_y
+        self.root.token_x_borrow += amount_x
+        self.root.token_x_subtree_borrow += amount_x
+        self.root.token_y_borrow += amount_y
+        self.root.token_y_subtree_borrow += amount_y
 
     def remove_wide_t_liq(self, liq: UnsignedDecimal, amount_x: UnsignedDecimal, amount_y: UnsignedDecimal) -> None:
         self.handle_fee(self.root_key, self.root)
 
         self.root.t_liq -= liq
-        self.root.token_x_borrowed -= amount_x
-        self.root.token_x_subtree_borrowed -= amount_x
-        self.root.token_y_borrowed -= amount_y
-        self.root.token_y_subtree_borrowed -= amount_y
+        self.root.token_x_borrow -= amount_x
+        self.root.token_x_subtree_borrow -= amount_x
+        self.root.token_y_borrow -= amount_y
+        self.root.token_y_subtree_borrow -= amount_y
 
     # endregion

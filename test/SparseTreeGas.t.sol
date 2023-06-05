@@ -31,19 +31,19 @@ contract SparseTreeGasTest is Test {
 
     }
 
-    function testAddInfRangeMLiq() public {
+    function testAddWideRangeMLiq() public {
 
     }
 
-    function testRemoveInfRangeMLiq() public {
+    function testRemoveWideRangeMLiq() public {
 
     }
 
-    function testAddInfRangeTLiq() public {
+    function testAddWideRangeTLiq() public {
 
     }
 
-    function testRemoveInfRangeTLiq() public {
+    function testRemoveWideRangeTLiq() public {
 
     }
 

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.18;
 
 struct LiqNodeTokenData {
-    uint256 borrowed;
-    uint256 subtreeBorrowed;
+    uint256 borrow;
+    uint256 subtreeBorrow;
     uint256 feeRateSnapshot;
     uint256 cumulativeEarnedPerMLiq;
     uint256 subtreeCumulativeEarnedPerMLiq;
@@ -50,17 +50,17 @@ library LiqNodeImpl {
     }
 
     function borrow(LiqNode storage self, uint256 amountX, uint256 amountY) external {
-        self.tokenX.borrowed += amountX;
-        self.tokenY.borrowed += amountY;
-        self.tokenX.subtreeBorrowed += amountX;
-        self.tokenY.subtreeBorrowed += amountY;
+        self.tokenX.borrow += amountX;
+        self.tokenY.borrow += amountY;
+        self.tokenX.subtreeBorrow += amountX;
+        self.tokenY.subtreeBorrow += amountY;
     }
 
     function repay(LiqNode storage self, uint256 amountX, uint256 amountY) external {
-        self.tokenX.borrowed -= amountX;
-        self.tokenY.borrowed -= amountY;
-        self.tokenX.subtreeBorrowed -= amountX;
-        self.tokenY.subtreeBorrowed -= amountY;
+        self.tokenX.borrow -= amountX;
+        self.tokenY.borrow -= amountY;
+        self.tokenX.subtreeBorrow -= amountX;
+        self.tokenY.subtreeBorrow -= amountY;
     }
 
 }

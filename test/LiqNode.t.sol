@@ -50,22 +50,22 @@ contract LiqNodeTest is Test {
 
     function testBorrow() public {
         node.borrow(220, 550);
-        assertEq(node.tokenX.borrowed, 220);
-        assertEq(node.tokenX.subtreeBorrowed, 220);
-        assertEq(node.tokenY.borrowed, 550);
-        assertEq(node.tokenY.subtreeBorrowed, 550);
+        assertEq(node.tokenX.borrow, 220);
+        assertEq(node.tokenX.subtreeBorrow, 220);
+        assertEq(node.tokenY.borrow, 550);
+        assertEq(node.tokenY.subtreeBorrow, 550);
     }
 
     function testRepay() public {
         node.borrow(220, 550);
         node.repay(100, 200);
-        assertEq(node.tokenX.borrowed, 120);
-        assertEq(node.tokenX.subtreeBorrowed, 120);
-        assertEq(node.tokenY.borrowed, 350);
-        assertEq(node.tokenY.subtreeBorrowed, 350);
+        assertEq(node.tokenX.borrow, 120);
+        assertEq(node.tokenX.subtreeBorrow, 120);
+        assertEq(node.tokenY.borrow, 350);
+        assertEq(node.tokenY.subtreeBorrow, 350);
     }
 
-    function testRevertRepayingMoreThanBorrowed() public {
+    function testRevertRepayingMoreThanborrow() public {
         vm.expectRevert(stdError.arithmeticError);
         node.repay(100, 200);
     }

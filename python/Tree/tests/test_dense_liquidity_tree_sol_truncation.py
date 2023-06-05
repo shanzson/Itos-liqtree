@@ -49,10 +49,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.m_liq, UnsignedDecimal("8430"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("134880"))
         self.assertEqual(root.t_liq, UnsignedDecimal("4381"))
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("832e18"))
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("832e18"))
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("928e6"))
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("928e6"))
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("832e18"))
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("832e18"))
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("928e6"))
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("928e6"))
 
         # Testing add_wide_m_liq
         liq_tree.add_wide_m_liq(UnsignedDecimal("9287"))
@@ -67,10 +67,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.m_liq, UnsignedDecimal("17717"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("283472"))
         self.assertEqual(root.t_liq, UnsignedDecimal("4381"))
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("832e18"))
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("832e18"))
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("928e6"))
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("928e6"))
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("832e18"))
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("832e18"))
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("928e6"))
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("928e6"))
 
         # Testing remove_wide_m_liq
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("74672420010376264941568")
@@ -88,10 +88,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.m_liq, UnsignedDecimal("14035"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("224560"))
         self.assertEqual(root.t_liq, UnsignedDecimal("4381"))
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("832e18"))
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("832e18"))
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("928e6"))
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("928e6"))
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("832e18"))
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("832e18"))
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("928e6"))
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("928e6"))
 
         # Testing add_wide_t_liq
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("6932491854677024")
@@ -109,10 +109,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.m_liq, UnsignedDecimal("14035"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("224560"))
         self.assertEqual(root.t_liq, UnsignedDecimal("11668"))
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("10016e18"))
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("10016e18"))
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("7927848e6"))
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("7927848e6"))
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("10016e18"))
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("10016e18"))
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("7927848e6"))
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("7927848e6"))
 
         # Testing remove_wide_t_liq
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("1055375100301031600000000")
@@ -130,10 +130,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.m_liq, UnsignedDecimal("14035"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("224560"))
         self.assertEqual(root.t_liq, UnsignedDecimal("6745"))
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("9794e18"))
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("9794e18"))
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("7927062e6"))
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("7927062e6"))
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("9794e18"))
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("9794e18"))
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("7927062e6"))
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("7927062e6"))
 
     def test_left_leg_only(self):
         # Mirrors test_right_leg_only
@@ -187,37 +187,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("287725557"))
         self.assertEqual(LLRR.subtree_m_liq, UnsignedDecimal("287634865"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("701e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("998e18"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("765e18"))
+        self.assertEqual(LR.token_x_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("53e18"))
+        self.assertEqual(LLRR.token_x_borrow, UnsignedDecimal("701e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))
-        self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("754e18"))
-        self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("2541e18"))
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("1519e18"))
+        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("754e18"))
+        self.assertEqual(LLRR.token_x_subtree_borrow, UnsignedDecimal("701e18"))
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("779531e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("353e6"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("99763e6"))
+        self.assertEqual(LR.token_y_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("8765e6"))
+        self.assertEqual(LLRR.token_y_borrow, UnsignedDecimal("779531e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))
-        self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))
-        self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("888964e6"))
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("888059e6"))
+        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("788296e6"))
+        self.assertEqual(LLRR.token_y_subtree_borrow, UnsignedDecimal("779531e6"))
 
         # T98273
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("4541239648278065")
@@ -391,37 +391,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLR.t_liq, UnsignedDecimal("5346"))
         self.assertEqual(LLRR.t_liq, UnsignedDecimal("7635865"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("1024e18"))
-        self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("1701e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("998e18"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("765e18"))
+        self.assertEqual(LR.token_x_borrow, UnsignedDecimal("1024e18"))
+        self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("53e18"))
+        self.assertEqual(LLRR.token_x_borrow, UnsignedDecimal("1701e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("5033e18"))
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("4541e18"))
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("2519e18"))
-        self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("1024e18"))
-        self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("1754e18"))
-        self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("1701e18"))
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("5033e18"))
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("4541e18"))
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("2519e18"))
+        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("1024e18"))
+        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("1754e18"))
+        self.assertEqual(LLRR.token_x_subtree_borrow, UnsignedDecimal("1701e18"))
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("1552e6"))
-        self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("780531e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("353e6"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("99763e6"))
+        self.assertEqual(LR.token_y_borrow, UnsignedDecimal("1552e6"))
+        self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("8765e6"))
+        self.assertEqual(LLRR.token_y_borrow, UnsignedDecimal("780531e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1145822e6"))
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("890964e6"))
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("889059e6"))
-        self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("1552e6"))
-        self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("789296e6"))
-        self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("780531e6"))
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1145822e6"))
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("890964e6"))
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("889059e6"))
+        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("1552e6"))
+        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("789296e6"))
+        self.assertEqual(LLRR.token_y_subtree_borrow, UnsignedDecimal("780531e6"))
 
         # T32876298273
         # 3.3) addTLiq
@@ -484,37 +484,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("287725557"))
         self.assertEqual(LLRR.subtree_m_liq, UnsignedDecimal("287634865"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("701e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("998e18"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("765e18"))
+        self.assertEqual(LR.token_x_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("53e18"))
+        self.assertEqual(LLRR.token_x_borrow, UnsignedDecimal("701e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))
-        self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("754e18"))
-        self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("2541e18"))
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("1519e18"))
+        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("754e18"))
+        self.assertEqual(LLRR.token_x_subtree_borrow, UnsignedDecimal("701e18"))
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("779531e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("353e6"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("99763e6"))
+        self.assertEqual(LR.token_y_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("8765e6"))
+        self.assertEqual(LLRR.token_y_borrow, UnsignedDecimal("779531e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))
-        self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))
-        self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("888964e6"))
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("888059e6"))
+        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("788296e6"))
+        self.assertEqual(LLRR.token_y_subtree_borrow, UnsignedDecimal("779531e6"))
 
     def test_simple_example(self):
         liq_tree: LiquidityTree = self.liq_tree
@@ -541,8 +541,8 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.add_t_liq(LiqRange(low=8, high=9), UnsignedDecimal("20"), UnsignedDecimal("14e18"), UnsignedDecimal("0"))
 
         self.assertEqual(RL.subtree_m_liq, 4488)
-        self.assertEqual(RL.token_x_borrowed, 24e18)
-        self.assertEqual(RL.token_x_subtree_borrowed, 42e18)
+        self.assertEqual(RL.token_x_borrow, 24e18)
+        self.assertEqual(RL.token_x_subtree_borrow, 42e18)
         self.assertEqual(RL.token_x_cumulative_earned_per_m_liq, 1316476441828)
         self.assertEqual(RL.token_x_cumulative_earned_per_m_subtree_liq, 2303833773200)
 
@@ -616,37 +616,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287725557"))   # 45346*2 + 287634865*1
         self.assertEqual(RRLL.subtree_m_liq, UnsignedDecimal("287634865"))  # 287634865*1
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(R.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(RR.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(RL.token_x_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(RRL.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(RRLL.token_x_borrowed, UnsignedDecimal("701e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+        self.assertEqual(R.token_x_borrow, UnsignedDecimal("998e18"))
+        self.assertEqual(RR.token_x_borrow, UnsignedDecimal("765e18"))
+        self.assertEqual(RL.token_x_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(RRL.token_x_borrow, UnsignedDecimal("53e18"))
+        self.assertEqual(RRLL.token_x_borrow, UnsignedDecimal("701e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(R.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(RR.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))    # 765e18 + 53e18 + 701e18
-        self.assertEqual(RL.token_x_subtree_borrowed, UnsignedDecimal("24e18"))      # 24e18
-        self.assertEqual(RRL.token_x_subtree_borrowed, UnsignedDecimal("754e18"))    # 53e18 + 701e18
-        self.assertEqual(RRLL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))   # 701e18
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("1519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("24e18"))      # 24e18
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("754e18"))    # 53e18 + 701e18
+        self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("701e18"))   # 701e18
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(R.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(RR.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(RL.token_y_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(RRL.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(RRLL.token_y_borrowed, UnsignedDecimal("779531e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+        self.assertEqual(R.token_y_borrow, UnsignedDecimal("353e6"))
+        self.assertEqual(RR.token_y_borrow, UnsignedDecimal("99763e6"))
+        self.assertEqual(RL.token_y_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(RRL.token_y_borrow, UnsignedDecimal("8765e6"))
+        self.assertEqual(RRLL.token_y_borrow, UnsignedDecimal("779531e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(R.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(RR.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
-        self.assertEqual(RL.token_y_subtree_borrowed, UnsignedDecimal("552e6"))        # 552e6
-        self.assertEqual(RRL.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))    # 8765e6 + 779531e6
-        self.assertEqual(RRLL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))   # 779531e6
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("552e6"))        # 552e6
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("788296e6"))    # 8765e6 + 779531e6
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))   # 779531e6
 
         # T98273
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("4541239648278065")   # 7.9% APR as Q192.64 T98273 - T0
@@ -947,37 +947,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRL.t_liq, UnsignedDecimal("5346"))
         self.assertEqual(RRLL.t_liq, UnsignedDecimal("7635865"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(R.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(RR.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(RL.token_x_borrowed, UnsignedDecimal("1024e18"))
-        self.assertEqual(RRL.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(RRLL.token_x_borrowed, UnsignedDecimal("1701e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+        self.assertEqual(R.token_x_borrow, UnsignedDecimal("998e18"))
+        self.assertEqual(RR.token_x_borrow, UnsignedDecimal("765e18"))
+        self.assertEqual(RL.token_x_borrow, UnsignedDecimal("1024e18"))
+        self.assertEqual(RRL.token_x_borrow, UnsignedDecimal("53e18"))
+        self.assertEqual(RRLL.token_x_borrow, UnsignedDecimal("1701e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("5033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(R.token_x_subtree_borrowed, UnsignedDecimal("4541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(RR.token_x_subtree_borrowed, UnsignedDecimal("2519e18"))    # 765e18 + 53e18 + 701e18
-        self.assertEqual(RL.token_x_subtree_borrowed, UnsignedDecimal("1024e18"))
-        self.assertEqual(RRL.token_x_subtree_borrowed, UnsignedDecimal("1754e18"))   # 53e18 + 701e18
-        self.assertEqual(RRLL.token_x_subtree_borrowed, UnsignedDecimal("1701e18"))  # 701e18
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("5033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("4541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("2519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("1024e18"))
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("1754e18"))   # 53e18 + 701e18
+        self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("1701e18"))  # 701e18
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(R.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(RR.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(RL.token_y_borrowed, UnsignedDecimal("1552e6"))
-        self.assertEqual(RRL.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(RRLL.token_y_borrowed, UnsignedDecimal("780531e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+        self.assertEqual(R.token_y_borrow, UnsignedDecimal("353e6"))
+        self.assertEqual(RR.token_y_borrow, UnsignedDecimal("99763e6"))
+        self.assertEqual(RL.token_y_borrow, UnsignedDecimal("1552e6"))
+        self.assertEqual(RRL.token_y_borrow, UnsignedDecimal("8765e6"))
+        self.assertEqual(RRLL.token_y_borrow, UnsignedDecimal("780531e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1145822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(R.token_y_subtree_borrowed, UnsignedDecimal("890964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(RR.token_y_subtree_borrowed, UnsignedDecimal("889059e6"))     # 99763e6 + 8765e6 + 779531e6
-        self.assertEqual(RL.token_y_subtree_borrowed, UnsignedDecimal("1552e6"))
-        self.assertEqual(RRL.token_y_subtree_borrowed, UnsignedDecimal("789296e6"))    # 8765e6 + 779531e6
-        self.assertEqual(RRLL.token_y_subtree_borrowed, UnsignedDecimal("780531e6"))   # 779531e6
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1145822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("890964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("889059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("1552e6"))
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("789296e6"))    # 8765e6 + 779531e6
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("780531e6"))   # 779531e6
 
         # T32876298273
         # 3.3) addTLiq
@@ -1082,37 +1082,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287725557"))   # 45346*2 + 287634865*1
         self.assertEqual(RRLL.subtree_m_liq, UnsignedDecimal("287634865"))  # 287634865*1
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-        self.assertEqual(R.token_x_borrowed, UnsignedDecimal("998e18"))
-        self.assertEqual(RR.token_x_borrowed, UnsignedDecimal("765e18"))
-        self.assertEqual(RL.token_x_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(RRL.token_x_borrowed, UnsignedDecimal("53e18"))
-        self.assertEqual(RRLL.token_x_borrowed, UnsignedDecimal("701e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+        self.assertEqual(R.token_x_borrow, UnsignedDecimal("998e18"))
+        self.assertEqual(RR.token_x_borrow, UnsignedDecimal("765e18"))
+        self.assertEqual(RL.token_x_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(RRL.token_x_borrow, UnsignedDecimal("53e18"))
+        self.assertEqual(RRLL.token_x_borrow, UnsignedDecimal("701e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(R.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(RR.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))    # 765e18 + 53e18 + 701e18
-        self.assertEqual(RL.token_x_subtree_borrowed, UnsignedDecimal("24e18"))
-        self.assertEqual(RRL.token_x_subtree_borrowed, UnsignedDecimal("754e18"))   # 53e18 + 701e18
-        self.assertEqual(RRLL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))  # 701e18
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("1519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("24e18"))
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("754e18"))   # 53e18 + 701e18
+        self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("701e18"))  # 701e18
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-        self.assertEqual(R.token_y_borrowed, UnsignedDecimal("353e6"))
-        self.assertEqual(RR.token_y_borrowed, UnsignedDecimal("99763e6"))
-        self.assertEqual(RL.token_y_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(RRL.token_y_borrowed, UnsignedDecimal("8765e6"))
-        self.assertEqual(RRLL.token_y_borrowed, UnsignedDecimal("779531e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+        self.assertEqual(R.token_y_borrow, UnsignedDecimal("353e6"))
+        self.assertEqual(RR.token_y_borrow, UnsignedDecimal("99763e6"))
+        self.assertEqual(RL.token_y_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(RRL.token_y_borrow, UnsignedDecimal("8765e6"))
+        self.assertEqual(RRLL.token_y_borrow, UnsignedDecimal("779531e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(R.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(RR.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
-        self.assertEqual(RL.token_y_subtree_borrowed, UnsignedDecimal("552e6"))
-        self.assertEqual(RRL.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))    # 8765e6 + 779531e6
-        self.assertEqual(RRLL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))   # 779531e6
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("552e6"))
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("788296e6"))    # 8765e6 + 779531e6
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))   # 779531e6
 
     def test_left_and_right_leg_stopping_below_peak(self):
         #   Range: (1, 4)
@@ -1197,49 +1197,49 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("2462"))             # 2462*1 = 2462
         self.assertEqual(LRLL.subtree_m_liq, UnsignedDecimal("45656756785"))      # 45656756785*1 = 45656756785
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("4357e18"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("293874927834e18"))
-        self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("23452e18"))
-        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("134235e18"))
-        self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("1233463e18"))
-        self.assertEqual(LRL.token_x_borrowed, UnsignedDecimal("45e18"))
-        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("4567e18"))
-        self.assertEqual(LRLL.token_x_borrowed, UnsignedDecimal("4564564e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("4357e18"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("293874927834e18"))
+        self.assertEqual(LR.token_x_borrow, UnsignedDecimal("23452e18"))
+        self.assertEqual(LLL.token_x_borrow, UnsignedDecimal("134235e18"))
+        self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("1233463e18"))
+        self.assertEqual(LRL.token_x_borrow, UnsignedDecimal("45e18"))
+        self.assertEqual(LLLR.token_x_borrow, UnsignedDecimal("4567e18"))
+        self.assertEqual(LRLL.token_x_borrow, UnsignedDecimal("4564564e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("293880892517e18"))     # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("293876300099e18"))    # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
-        self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("4588061e18"))         # 23452e18 + 45e18 + 4564564e18 = 4588061e18
-        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("138802e18"))         # 134235e18 + 4567e18 = 138802e18
-        self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("1233463e18"))        # 1233463e18
-        self.assertEqual(LRL.token_x_subtree_borrowed, UnsignedDecimal("4564609e18"))        # 45e18 + 4564564e18 = 4564609e18
-        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("4567e18"))          # 4567e18
-        self.assertEqual(LRLL.token_x_subtree_borrowed, UnsignedDecimal("4564564e18"))       # 4564564e18
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("293880892517e18"))     # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("293876300099e18"))    # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
+        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("4588061e18"))         # 23452e18 + 45e18 + 4564564e18 = 4588061e18
+        self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("138802e18"))         # 134235e18 + 4567e18 = 138802e18
+        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("1233463e18"))        # 1233463e18
+        self.assertEqual(LRL.token_x_subtree_borrow, UnsignedDecimal("4564609e18"))        # 45e18 + 4564564e18 = 4564609e18
+        self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("4567e18"))          # 4567e18
+        self.assertEqual(LRLL.token_x_subtree_borrow, UnsignedDecimal("4564564e18"))       # 4564564e18
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("345345345e6"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("2345346e6"))
-        self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("12341235e6"))
-        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("34534634e6"))
-        self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("2341356e6"))
-        self.assertEqual(LRL.token_y_borrowed, UnsignedDecimal("1324213563456457e6"))
-        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("1235146e6"))
-        self.assertEqual(LRLL.token_y_borrowed, UnsignedDecimal("6345135e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("345345345e6"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("2345346e6"))
+        self.assertEqual(LR.token_y_borrow, UnsignedDecimal("12341235e6"))
+        self.assertEqual(LLL.token_y_borrow, UnsignedDecimal("34534634e6"))
+        self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("2341356e6"))
+        self.assertEqual(LRL.token_y_borrow, UnsignedDecimal("1324213563456457e6"))
+        self.assertEqual(LLLR.token_y_borrow, UnsignedDecimal("1235146e6"))
+        self.assertEqual(LRLL.token_y_borrow, UnsignedDecimal("6345135e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("1324213967944654e6"))     # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("40456482e6"))            # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
-        self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("1324213582142827e6"))    # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
-        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("35769780e6"))           # 34534634e6 + 1235146e6 = 35769780e6
-        self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("2341356e6"))            # 2341356e6
-        self.assertEqual(LRL.token_y_subtree_borrowed, UnsignedDecimal("1324213569801592e6"))   # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
-        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("1235146e6"))           # 1235146e6
-        self.assertEqual(LRLL.token_y_subtree_borrowed, UnsignedDecimal("6345135e6"))           # 6345135e6
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("1324213967944654e6"))     # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("40456482e6"))            # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
+        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("1324213582142827e6"))    # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
+        self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("35769780e6"))           # 34534634e6 + 1235146e6 = 35769780e6
+        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("2341356e6"))            # 2341356e6
+        self.assertEqual(LRL.token_y_subtree_borrow, UnsignedDecimal("1324213569801592e6"))   # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
+        self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("1235146e6"))           # 1235146e6
+        self.assertEqual(LRLL.token_y_subtree_borrow, UnsignedDecimal("6345135e6"))           # 6345135e6
 
         # Test fees while targeting (1, 4)
         # 1) Trigger fee update through path L->LL->LLR by updating LLR
@@ -1535,49 +1535,49 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
     #     self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("2462"))             # 2462*1 = 2462
     #     self.assertEqual(LRLL.subtree_m_liq, UnsignedDecimal("45656756785"))      # 45656756785*1 = 45656756785
     #
-    #     # borrowed_x
-    #     self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
-    #     self.assertEqual(L.token_x_borrowed, UnsignedDecimal("4357e18"))
-    #     self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("293874927834e18"))
-    #     self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("23452e18"))
-    #     self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("134235e18"))
-    #     self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("1233463e18"))
-    #     self.assertEqual(LRL.token_x_borrowed, UnsignedDecimal("45e18"))
-    #     self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("4567e18"))
-    #     self.assertEqual(LRLL.token_x_borrowed, UnsignedDecimal("4564564e18"))
+    #     # borrow_x
+    #     self.assertEqual(root.token_x_borrow, UnsignedDecimal("0"))
+    #     self.assertEqual(L.token_x_borrow, UnsignedDecimal("4357e18"))
+    #     self.assertEqual(LL.token_x_borrow, UnsignedDecimal("293874927834e18"))
+    #     self.assertEqual(LR.token_x_borrow, UnsignedDecimal("23452e18"))
+    #     self.assertEqual(LLL.token_x_borrow, UnsignedDecimal("134235e18"))
+    #     self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("1233463e18"))
+    #     self.assertEqual(LRL.token_x_borrow, UnsignedDecimal("45e18"))
+    #     self.assertEqual(LLLR.token_x_borrow, UnsignedDecimal("4567e18"))
+    #     self.assertEqual(LRLL.token_x_borrow, UnsignedDecimal("4564564e18"))
     #
-    #     # subtree_borrowed_x
-    #     self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
-    #     self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("293880892517e18"))     # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
-    #     self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("293876300099e18"))    # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
-    #     self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("4588061e18"))         # 23452e18 + 45e18 + 4564564e18 = 4588061e18
-    #     self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("138802e18"))         # 134235e18 + 4567e18 = 138802e18
-    #     self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("1233463e18"))        # 1233463e18
-    #     self.assertEqual(LRL.token_x_subtree_borrowed, UnsignedDecimal("4564609e18"))        # 45e18 + 4564564e18 = 4564609e18
-    #     self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("4567e18"))          # 4567e18
-    #     self.assertEqual(LRLL.token_x_subtree_borrowed, UnsignedDecimal("4564564e18"))       # 4564564e18
+    #     # subtree_borrow_x
+    #     self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+    #     self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("293880892517e18"))     # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+    #     self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("293876300099e18"))    # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
+    #     self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("4588061e18"))         # 23452e18 + 45e18 + 4564564e18 = 4588061e18
+    #     self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("138802e18"))         # 134235e18 + 4567e18 = 138802e18
+    #     self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("1233463e18"))        # 1233463e18
+    #     self.assertEqual(LRL.token_x_subtree_borrow, UnsignedDecimal("4564609e18"))        # 45e18 + 4564564e18 = 4564609e18
+    #     self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("4567e18"))          # 4567e18
+    #     self.assertEqual(LRLL.token_x_subtree_borrow, UnsignedDecimal("4564564e18"))       # 4564564e18
     #
-    #     # borrowed_y
-    #     self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
-    #     self.assertEqual(L.token_y_borrowed, UnsignedDecimal("345345345e6"))
-    #     self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("2345346e6"))
-    #     self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("12341235e6"))
-    #     self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("34534634e6"))
-    #     self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("2341356e6"))
-    #     self.assertEqual(LRL.token_y_borrowed, UnsignedDecimal("1324213563456457e6"))
-    #     self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("1235146e6"))
-    #     self.assertEqual(LRLL.token_y_borrowed, UnsignedDecimal("6345135e6"))
+    #     # borrow_y
+    #     self.assertEqual(root.token_y_borrow, UnsignedDecimal("0"))
+    #     self.assertEqual(L.token_y_borrow, UnsignedDecimal("345345345e6"))
+    #     self.assertEqual(LL.token_y_borrow, UnsignedDecimal("2345346e6"))
+    #     self.assertEqual(LR.token_y_borrow, UnsignedDecimal("12341235e6"))
+    #     self.assertEqual(LLL.token_y_borrow, UnsignedDecimal("34534634e6"))
+    #     self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("2341356e6"))
+    #     self.assertEqual(LRL.token_y_borrow, UnsignedDecimal("1324213563456457e6"))
+    #     self.assertEqual(LLLR.token_y_borrow, UnsignedDecimal("1235146e6"))
+    #     self.assertEqual(LRLL.token_y_borrow, UnsignedDecimal("6345135e6"))
     #
-    #     # subtree_borrowed_y
-    #     self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
-    #     self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("1324213967944654e6"))     # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
-    #     self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("40456482e6"))            # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
-    #     self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("1324213582142827e6"))    # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
-    #     self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("35769780e6"))           # 34534634e6 + 1235146e6 = 35769780e6
-    #     self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("2341356e6"))            # 2341356e6
-    #     self.assertEqual(LRL.token_y_subtree_borrowed, UnsignedDecimal("1324213569801592e6"))   # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
-    #     self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("1235146e6"))           # 1235146e6
-    #     self.assertEqual(LRLL.token_y_subtree_borrowed, UnsignedDecimal("6345135e6"))           # 6345135e6
+    #     # subtree_borrow_y
+    #     self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+    #     self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("1324213967944654e6"))     # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+    #     self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("40456482e6"))            # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
+    #     self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("1324213582142827e6"))    # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
+    #     self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("35769780e6"))           # 34534634e6 + 1235146e6 = 35769780e6
+    #     self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("2341356e6"))            # 2341356e6
+    #     self.assertEqual(LRL.token_y_subtree_borrow, UnsignedDecimal("1324213569801592e6"))   # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
+    #     self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("1235146e6"))           # 1235146e6
+    #     self.assertEqual(LRLL.token_y_subtree_borrow, UnsignedDecimal("6345135e6"))           # 6345135e6
     #
     #     # Test fees while targeting (1, 4)
     #     # 1) Trigger fee update through path L->LL->LLR by updating LLR
@@ -1829,37 +1829,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLLL.subtree_m_liq, UnsignedDecimal("2582"))
         self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("1111"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("346e18"))
-        self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("100e18"))
-        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("234e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_x_borrow, UnsignedDecimal("346e18"))
+        self.assertEqual(LLLL.token_x_borrow, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_borrow, UnsignedDecimal("234e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))  # 346e18 + 100e18 + 234e18 = 680e18
-        self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("100e18"))
-        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("234e18"))
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("680e18"))  # 346e18 + 100e18 + 234e18 = 680e18
+        self.assertEqual(LLLL.token_x_subtree_borrow, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("234e18"))
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("132e6"))
-        self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("222e6"))
-        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("313e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_y_borrow, UnsignedDecimal("132e6"))
+        self.assertEqual(LLLL.token_y_borrow, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_borrow, UnsignedDecimal("313e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))  # 132e6 + 222e6 + 313e6 = 667e6
-        self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("222e6"))
-        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("313e6"))
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("667e6"))  # 132e6 + 222e6 + 313e6 = 667e6
+        self.assertEqual(LLLL.token_y_subtree_borrow, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("313e6"))
 
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("997278349210980290827452342352346")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("7978726162930599238079167453467080976862")
@@ -1950,37 +1950,37 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LLLL.subtree_m_liq, UnsignedDecimal("2582"))
         self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("1111"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("346e18"))
-        self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("100e18"))
-        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("234e18"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_x_borrow, UnsignedDecimal("346e18"))
+        self.assertEqual(LLLL.token_x_borrow, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_borrow, UnsignedDecimal("234e18"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("680e18"))
-        self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("100e18"))
-        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("234e18"))
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("680e18"))
+        self.assertEqual(LLLL.token_x_subtree_borrow, UnsignedDecimal("100e18"))
+        self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("234e18"))
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("0"))
-        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("132e6"))
-        self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("222e6"))
-        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("313e6"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("0"))
+        self.assertEqual(LLL.token_y_borrow, UnsignedDecimal("132e6"))
+        self.assertEqual(LLLL.token_y_borrow, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_borrow, UnsignedDecimal("313e6"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("667e6"))
-        self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("222e6"))
-        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("313e6"))
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("667e6"))
+        self.assertEqual(LLLL.token_y_subtree_borrow, UnsignedDecimal("222e6"))
+        self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("313e6"))
 
     def test_complete_tree(self):
         '''
@@ -1988,7 +1988,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         Now we trust python to yield correct results. And compare these directly to solidity. They should match.
 
         In this test, we first add m_liq and t_liq to each node individually. Then we apply the four methods:
-            add_m_liq, remove_m_liq, add_t_liq, remove_t_liq, (add_inf_m_liq, remove_inf_m_liq, add_inf_t_liq, remove_inf_t_liq)
+            add_m_liq, remove_m_liq, add_t_liq, remove_t_liq, (add_Wide_m_liq, remove_Wide_m_liq, add_Wide_t_liq, remove_Wide_t_liq)
         while accumulating fees.
 
         Entered values for liq, and borrow have no significance here, except for being different from one another.
@@ -2663,153 +2663,153 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRRL.subtree_m_liq, UnsignedDecimal("24534622447854143"))
         self.assertEqual(RRRR.subtree_m_liq, UnsignedDecimal("6345346534645746"))
 
-        # borrowed_x
-        self.assertEqual(root.token_x_borrowed, UnsignedDecimal("122757244859000000000000000000"))
+        # borrow_x
+        self.assertEqual(root.token_x_borrow, UnsignedDecimal("122757244859000000000000000000"))
 
-        self.assertEqual(L.token_x_borrowed, UnsignedDecimal("4564946112436545000000000000000000"))
-        self.assertEqual(R.token_x_borrowed, UnsignedDecimal("4214226187000000000000000000"))
+        self.assertEqual(L.token_x_borrow, UnsignedDecimal("4564946112436545000000000000000000"))
+        self.assertEqual(R.token_x_borrow, UnsignedDecimal("4214226187000000000000000000"))
 
-        self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("28591083251822194000000000000000000"))
-        self.assertEqual(LR.token_x_borrowed, UnsignedDecimal("872538470624167989000000000456468745"))
-        self.assertEqual(RL.token_x_borrowed, UnsignedDecimal("11350238408160809000000000000000000"))
-        self.assertEqual(RR.token_x_borrowed, UnsignedDecimal("498723597863764293000000000000000000"))
+        self.assertEqual(LL.token_x_borrow, UnsignedDecimal("28591083251822194000000000000000000"))
+        self.assertEqual(LR.token_x_borrow, UnsignedDecimal("872538470624167989000000000456468745"))
+        self.assertEqual(RL.token_x_borrow, UnsignedDecimal("11350238408160809000000000000000000"))
+        self.assertEqual(RR.token_x_borrow, UnsignedDecimal("498723597863764293000000000000000000"))
 
-        self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("45623798462966929913344000000000000000000"))
-        self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("298364785638480072406864000000000456468745"))
-        self.assertEqual(LRL.token_x_borrowed, UnsignedDecimal("27364762534827634534656283000000000000000000"))
-        self.assertEqual(LRR.token_x_borrowed, UnsignedDecimal("7653642903472903784290347000000000000000000"))
-        self.assertEqual(RLL.token_x_borrowed, UnsignedDecimal("23452367423432458653826000000000000000000"))
-        self.assertEqual(RLR.token_x_borrowed, UnsignedDecimal("2765723642783492000000000000000000"))
-        self.assertEqual(RRL.token_x_borrowed, UnsignedDecimal("28635482365337910060000000000000000000"))
-        self.assertEqual(RRR.token_x_borrowed, UnsignedDecimal("27364527863428346239867000000000000000000"))
+        self.assertEqual(LLL.token_x_borrow, UnsignedDecimal("45623798462966929913344000000000000000000"))
+        self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("298364785638480072406864000000000456468745"))
+        self.assertEqual(LRL.token_x_borrow, UnsignedDecimal("27364762534827634534656283000000000000000000"))
+        self.assertEqual(LRR.token_x_borrow, UnsignedDecimal("7653642903472903784290347000000000000000000"))
+        self.assertEqual(RLL.token_x_borrow, UnsignedDecimal("23452367423432458653826000000000000000000"))
+        self.assertEqual(RLR.token_x_borrow, UnsignedDecimal("2765723642783492000000000000000000"))
+        self.assertEqual(RRL.token_x_borrow, UnsignedDecimal("28635482365337910060000000000000000000"))
+        self.assertEqual(RRR.token_x_borrow, UnsignedDecimal("27364527863428346239867000000000000000000"))
 
-        self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("5730994510532853000000000000000000"))
-        self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("346456348776251331000000000456468745"))
-        self.assertEqual(LLRL.token_x_borrowed, UnsignedDecimal("82735476982561720575720000000000000000000"))
-        self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("2367452364752903485729403875000000000000000000"))
-        self.assertEqual(LRLL.token_x_borrowed, UnsignedDecimal("236452378374761357390655000000000000000000"))
-        self.assertEqual(LRLR.token_x_borrowed, UnsignedDecimal("8374278364628364000000000000000000"))
-        self.assertEqual(LRRL.token_x_borrowed, UnsignedDecimal("3456457409582626000000000000000000"))
-        self.assertEqual(LRRR.token_x_borrowed, UnsignedDecimal("236542867349237498000000000000000000"))
-        self.assertEqual(RLLL.token_x_borrowed, UnsignedDecimal("51427634238746298454880156000000000000000000"))
-        self.assertEqual(RLLR.token_x_borrowed, UnsignedDecimal("634529836428376523000000000000000000"))
-        self.assertEqual(RLRL.token_x_borrowed, UnsignedDecimal("1212312318064122113000000000000000000"))
-        self.assertEqual(RLRR.token_x_borrowed, UnsignedDecimal("287346234623487923642786000000000000000000"))
-        self.assertEqual(RRLL.token_x_borrowed, UnsignedDecimal("2837427354234552837898000000000000000000"))
-        self.assertEqual(RRLR.token_x_borrowed, UnsignedDecimal("82635472634823674000000000000000000"))
-        self.assertEqual(RRRL.token_x_borrowed, UnsignedDecimal("23645278463153819232000000000000000000"))
-        self.assertEqual(RRRR.token_x_borrowed, UnsignedDecimal("37465276342938487000000000000000000"))
+        self.assertEqual(LLLL.token_x_borrow, UnsignedDecimal("5730994510532853000000000000000000"))
+        self.assertEqual(LLLR.token_x_borrow, UnsignedDecimal("346456348776251331000000000456468745"))
+        self.assertEqual(LLRL.token_x_borrow, UnsignedDecimal("82735476982561720575720000000000000000000"))
+        self.assertEqual(LLRR.token_x_borrow, UnsignedDecimal("2367452364752903485729403875000000000000000000"))
+        self.assertEqual(LRLL.token_x_borrow, UnsignedDecimal("236452378374761357390655000000000000000000"))
+        self.assertEqual(LRLR.token_x_borrow, UnsignedDecimal("8374278364628364000000000000000000"))
+        self.assertEqual(LRRL.token_x_borrow, UnsignedDecimal("3456457409582626000000000000000000"))
+        self.assertEqual(LRRR.token_x_borrow, UnsignedDecimal("236542867349237498000000000000000000"))
+        self.assertEqual(RLLL.token_x_borrow, UnsignedDecimal("51427634238746298454880156000000000000000000"))
+        self.assertEqual(RLLR.token_x_borrow, UnsignedDecimal("634529836428376523000000000000000000"))
+        self.assertEqual(RLRL.token_x_borrow, UnsignedDecimal("1212312318064122113000000000000000000"))
+        self.assertEqual(RLRR.token_x_borrow, UnsignedDecimal("287346234623487923642786000000000000000000"))
+        self.assertEqual(RRLL.token_x_borrow, UnsignedDecimal("2837427354234552837898000000000000000000"))
+        self.assertEqual(RRLR.token_x_borrow, UnsignedDecimal("82635472634823674000000000000000000"))
+        self.assertEqual(RRRL.token_x_borrow, UnsignedDecimal("23645278463153819232000000000000000000"))
+        self.assertEqual(RRRR.token_x_borrow, UnsignedDecimal("37465276342938487000000000000000000"))
 
-        # subtree_borrowed_x
-        self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("2454902637693472541111720750000000001369406235"))
+        # subtree_borrow_x
+        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("2454902637693472541111720750000000001369406235"))
 
-        self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("2403133948136918240527296488000000001369406235"))
-        self.assertEqual(R.token_x_subtree_borrowed, UnsignedDecimal("51768689556554177827179403000000000000000000"))
+        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("2403133948136918240527296488000000001369406235"))
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("51768689556554177827179403000000000000000000"))
 
-        self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("2367879089194765920990906181000000000912937490"))
-        self.assertEqual(LR.token_x_subtree_borrowed, UnsignedDecimal("35254858937587373423953762000000000456468745"))
-        self.assertEqual(RL.token_x_subtree_borrowed, UnsignedDecimal("51738434701751335380619705000000000000000000"))
-        self.assertEqual(RR.token_x_subtree_borrowed, UnsignedDecimal("30254854802838232333511000000000000000000"))
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("2367879089194765920990906181000000000912937490"))
+        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("35254858937587373423953762000000000456468745"))
+        self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("51738434701751335380619705000000000000000000"))
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("30254854802838232333511000000000000000000"))
 
-        self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("45624150650310216697528000000000456468745"))
-        self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("2367833465015524527522386459000000000456468745"))
-        self.assertEqual(LRL.token_x_subtree_borrowed, UnsignedDecimal("27601214921576674256675302000000000000000000"))
-        self.assertEqual(LRR.token_x_subtree_borrowed, UnsignedDecimal("7653643143472228543110471000000000000000000"))
-        self.assertEqual(RLL.token_x_subtree_borrowed, UnsignedDecimal("51451087240699567341910505000000000000000000"))
-        self.assertEqual(RLR.token_x_subtree_borrowed, UnsignedDecimal("287347449701529630548391000000000000000000"))
-        self.assertEqual(RRL.token_x_subtree_borrowed, UnsignedDecimal("2866145472072525571632000000000000000000"))
-        self.assertEqual(RRR.token_x_subtree_borrowed, UnsignedDecimal("27388210607167842997586000000000000000000"))
+        self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("45624150650310216697528000000000456468745"))
+        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("2367833465015524527522386459000000000456468745"))
+        self.assertEqual(LRL.token_x_subtree_borrow, UnsignedDecimal("27601214921576674256675302000000000000000000"))
+        self.assertEqual(LRR.token_x_subtree_borrow, UnsignedDecimal("7653643143472228543110471000000000000000000"))
+        self.assertEqual(RLL.token_x_subtree_borrow, UnsignedDecimal("51451087240699567341910505000000000000000000"))
+        self.assertEqual(RLR.token_x_subtree_borrow, UnsignedDecimal("287347449701529630548391000000000000000000"))
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("2866145472072525571632000000000000000000"))
+        self.assertEqual(RRR.token_x_subtree_borrow, UnsignedDecimal("27388210607167842997586000000000000000000"))
 
-        self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("5730994510532853000000000000000000"))
-        self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("346456348776251331000000000456468745"))
-        self.assertEqual(LLRL.token_x_subtree_borrowed, UnsignedDecimal("82735476982561720575720000000000000000000"))
-        self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("2367452364752903485729403875000000000000000000"))
-        self.assertEqual(LRLL.token_x_subtree_borrowed, UnsignedDecimal("236452378374761357390655000000000000000000"))
-        self.assertEqual(LRLR.token_x_subtree_borrowed, UnsignedDecimal("8374278364628364000000000000000000"))
-        self.assertEqual(LRRL.token_x_subtree_borrowed, UnsignedDecimal("3456457409582626000000000000000000"))
-        self.assertEqual(LRRR.token_x_subtree_borrowed, UnsignedDecimal("236542867349237498000000000000000000"))
-        self.assertEqual(RLLL.token_x_subtree_borrowed, UnsignedDecimal("51427634238746298454880156000000000000000000"))
-        self.assertEqual(RLLR.token_x_subtree_borrowed, UnsignedDecimal("634529836428376523000000000000000000"))
-        self.assertEqual(RLRL.token_x_subtree_borrowed, UnsignedDecimal("1212312318064122113000000000000000000"))
-        self.assertEqual(RLRR.token_x_subtree_borrowed, UnsignedDecimal("287346234623487923642786000000000000000000"))
-        self.assertEqual(RRLL.token_x_subtree_borrowed, UnsignedDecimal("2837427354234552837898000000000000000000"))
-        self.assertEqual(RRLR.token_x_subtree_borrowed, UnsignedDecimal("82635472634823674000000000000000000"))
-        self.assertEqual(RRRL.token_x_subtree_borrowed, UnsignedDecimal("23645278463153819232000000000000000000"))
-        self.assertEqual(RRRR.token_x_subtree_borrowed, UnsignedDecimal("37465276342938487000000000000000000"))
+        self.assertEqual(LLLL.token_x_subtree_borrow, UnsignedDecimal("5730994510532853000000000000000000"))
+        self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("346456348776251331000000000456468745"))
+        self.assertEqual(LLRL.token_x_subtree_borrow, UnsignedDecimal("82735476982561720575720000000000000000000"))
+        self.assertEqual(LLRR.token_x_subtree_borrow, UnsignedDecimal("2367452364752903485729403875000000000000000000"))
+        self.assertEqual(LRLL.token_x_subtree_borrow, UnsignedDecimal("236452378374761357390655000000000000000000"))
+        self.assertEqual(LRLR.token_x_subtree_borrow, UnsignedDecimal("8374278364628364000000000000000000"))
+        self.assertEqual(LRRL.token_x_subtree_borrow, UnsignedDecimal("3456457409582626000000000000000000"))
+        self.assertEqual(LRRR.token_x_subtree_borrow, UnsignedDecimal("236542867349237498000000000000000000"))
+        self.assertEqual(RLLL.token_x_subtree_borrow, UnsignedDecimal("51427634238746298454880156000000000000000000"))
+        self.assertEqual(RLLR.token_x_subtree_borrow, UnsignedDecimal("634529836428376523000000000000000000"))
+        self.assertEqual(RLRL.token_x_subtree_borrow, UnsignedDecimal("1212312318064122113000000000000000000"))
+        self.assertEqual(RLRR.token_x_subtree_borrow, UnsignedDecimal("287346234623487923642786000000000000000000"))
+        self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("2837427354234552837898000000000000000000"))
+        self.assertEqual(RRLR.token_x_subtree_borrow, UnsignedDecimal("82635472634823674000000000000000000"))
+        self.assertEqual(RRRL.token_x_subtree_borrow, UnsignedDecimal("23645278463153819232000000000000000000"))
+        self.assertEqual(RRRR.token_x_subtree_borrow, UnsignedDecimal("37465276342938487000000000000000000"))
 
-        # borrowed_y
-        self.assertEqual(root.token_y_borrowed, UnsignedDecimal("111746265029000000"))
+        # borrow_y
+        self.assertEqual(root.token_y_borrow, UnsignedDecimal("111746265029000000"))
 
-        self.assertEqual(L.token_y_borrowed, UnsignedDecimal("168910846992000000"))
-        self.assertEqual(R.token_y_borrowed, UnsignedDecimal("20158676903000000"))
+        self.assertEqual(L.token_y_borrow, UnsignedDecimal("168910846992000000"))
+        self.assertEqual(R.token_y_borrow, UnsignedDecimal("20158676903000000"))
 
-        self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("1330115070330000000"))
-        self.assertEqual(LR.token_y_borrowed, UnsignedDecimal("25629380814000000"))
-        self.assertEqual(RL.token_y_borrowed, UnsignedDecimal("978614737019690000000"))
-        self.assertEqual(RR.token_y_borrowed, UnsignedDecimal("7856675879087000000"))
+        self.assertEqual(LL.token_y_borrow, UnsignedDecimal("1330115070330000000"))
+        self.assertEqual(LR.token_y_borrow, UnsignedDecimal("25629380814000000"))
+        self.assertEqual(RL.token_y_borrow, UnsignedDecimal("978614737019690000000"))
+        self.assertEqual(RR.token_y_borrow, UnsignedDecimal("7856675879087000000"))
 
-        self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("8725348768599465892504400000"))
-        self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("3465873661686981218000000"))
-        self.assertEqual(LRL.token_y_borrowed, UnsignedDecimal("56736409827636032519000000"))
-        self.assertEqual(LRR.token_y_borrowed, UnsignedDecimal("7834626734902734902368000000"))
-        self.assertEqual(RLL.token_y_borrowed, UnsignedDecimal("9834787362493137985000000"))
-        self.assertEqual(RLR.token_y_borrowed, UnsignedDecimal("98576798364725367423000000"))
-        self.assertEqual(RRL.token_y_borrowed, UnsignedDecimal("83764587364859345003508901000000"))
-        self.assertEqual(RRR.token_y_borrowed, UnsignedDecimal("9834657827356482367482369000000"))
+        self.assertEqual(LLL.token_y_borrow, UnsignedDecimal("8725348768599465892504400000"))
+        self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("3465873661686981218000000"))
+        self.assertEqual(LRL.token_y_borrow, UnsignedDecimal("56736409827636032519000000"))
+        self.assertEqual(LRR.token_y_borrow, UnsignedDecimal("7834626734902734902368000000"))
+        self.assertEqual(RLL.token_y_borrow, UnsignedDecimal("9834787362493137985000000"))
+        self.assertEqual(RLR.token_y_borrow, UnsignedDecimal("98576798364725367423000000"))
+        self.assertEqual(RRL.token_y_borrow, UnsignedDecimal("83764587364859345003508901000000"))
+        self.assertEqual(RRR.token_y_borrow, UnsignedDecimal("9834657827356482367482369000000"))
 
-        self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("76196798741476175000000"))
-        self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("26734872634892655597150111000000"))
-        self.assertEqual(LLRL.token_y_borrowed, UnsignedDecimal("763467253680744840679549000000"))
-        self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("987349053045739487000000"))
-        self.assertEqual(LRLL.token_y_borrowed, UnsignedDecimal("984764582781001178332000000"))
-        self.assertEqual(LRLR.token_y_borrowed, UnsignedDecimal("8763867548273647826000000"))
-        self.assertEqual(LRRL.token_y_borrowed, UnsignedDecimal("8726347825634871839691000000"))
-        self.assertEqual(LRRR.token_y_borrowed, UnsignedDecimal("798647852364627983000000"))
-        self.assertEqual(RLLL.token_y_borrowed, UnsignedDecimal("74986238502927037000000"))
-        self.assertEqual(RLLR.token_y_borrowed, UnsignedDecimal("868746576834678534000000"))
-        self.assertEqual(RLRL.token_y_borrowed, UnsignedDecimal("3423423619393235000000"))
-        self.assertEqual(RLRR.token_y_borrowed, UnsignedDecimal("827364826734823748963000000"))
-        self.assertEqual(RRLL.token_y_borrowed, UnsignedDecimal("73649082374024158406167000000"))
-        self.assertEqual(RRLR.token_y_borrowed, UnsignedDecimal("2387642836423689768000000"))
-        self.assertEqual(RRRL.token_y_borrowed, UnsignedDecimal("3542359995424161000000"))
-        self.assertEqual(RRRR.token_y_borrowed, UnsignedDecimal("23984623847623867000000"))
+        self.assertEqual(LLLL.token_y_borrow, UnsignedDecimal("76196798741476175000000"))
+        self.assertEqual(LLLR.token_y_borrow, UnsignedDecimal("26734872634892655597150111000000"))
+        self.assertEqual(LLRL.token_y_borrow, UnsignedDecimal("763467253680744840679549000000"))
+        self.assertEqual(LLRR.token_y_borrow, UnsignedDecimal("987349053045739487000000"))
+        self.assertEqual(LRLL.token_y_borrow, UnsignedDecimal("984764582781001178332000000"))
+        self.assertEqual(LRLR.token_y_borrow, UnsignedDecimal("8763867548273647826000000"))
+        self.assertEqual(LRRL.token_y_borrow, UnsignedDecimal("8726347825634871839691000000"))
+        self.assertEqual(LRRR.token_y_borrow, UnsignedDecimal("798647852364627983000000"))
+        self.assertEqual(RLLL.token_y_borrow, UnsignedDecimal("74986238502927037000000"))
+        self.assertEqual(RLLR.token_y_borrow, UnsignedDecimal("868746576834678534000000"))
+        self.assertEqual(RLRL.token_y_borrow, UnsignedDecimal("3423423619393235000000"))
+        self.assertEqual(RLRR.token_y_borrow, UnsignedDecimal("827364826734823748963000000"))
+        self.assertEqual(RRLL.token_y_borrow, UnsignedDecimal("73649082374024158406167000000"))
+        self.assertEqual(RRLR.token_y_borrow, UnsignedDecimal("2387642836423689768000000"))
+        self.assertEqual(RRRL.token_y_borrow, UnsignedDecimal("3542359995424161000000"))
+        self.assertEqual(RRRR.token_y_borrow, UnsignedDecimal("23984623847623867000000"))
 
-        # subtree_borrowed_y
-        self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("121198515219146561028675018400000"))
+        # subtree_borrow_y
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("121198515219146561028675018400000"))
 
-        self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("27524681804831584915445899400000"))
-        self.assertEqual(R.token_y_subtree_borrowed, UnsignedDecimal("93673833414314864366964090000000"))
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("27524681804831584915445899400000"))
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("93673833414314864366964090000000"))
 
-        self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("27507069766762843492989374400000"))
-        self.assertEqual(LR.token_y_subtree_borrowed, UnsignedDecimal("17612038068572511609533000000"))
-        self.assertEqual(RL.token_y_subtree_borrowed, UnsignedDecimal("936724547315736272867000000"))
-        self.assertEqual(RR.token_y_subtree_borrowed, UnsignedDecimal("93672896689767528472014320000000"))
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("27507069766762843492989374400000"))
+        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("17612038068572511609533000000"))
+        self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("936724547315736272867000000"))
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("93672896689767528472014320000000"))
 
-        self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("26743598059858053804518790400000"))
-        self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("763471706903459573400254000000"))
-        self.assertEqual(LRL.token_y_subtree_borrowed, UnsignedDecimal("1050264860156910858677000000"))
-        self.assertEqual(LRR.token_y_subtree_borrowed, UnsignedDecimal("16561773208389971370042000000"))
-        self.assertEqual(RLL.token_y_subtree_borrowed, UnsignedDecimal("10778520177830743556000000"))
-        self.assertEqual(RLR.token_y_subtree_borrowed, UnsignedDecimal("925945048523168509621000000"))
-        self.assertEqual(RRL.token_y_subtree_borrowed, UnsignedDecimal("83838238834876205585604836000000"))
-        self.assertEqual(RRR.token_y_subtree_borrowed, UnsignedDecimal("9834657854883466210530397000000"))
+        self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("26743598059858053804518790400000"))
+        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("763471706903459573400254000000"))
+        self.assertEqual(LRL.token_y_subtree_borrow, UnsignedDecimal("1050264860156910858677000000"))
+        self.assertEqual(LRR.token_y_subtree_borrow, UnsignedDecimal("16561773208389971370042000000"))
+        self.assertEqual(RLL.token_y_subtree_borrow, UnsignedDecimal("10778520177830743556000000"))
+        self.assertEqual(RLR.token_y_subtree_borrow, UnsignedDecimal("925945048523168509621000000"))
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("83838238834876205585604836000000"))
+        self.assertEqual(RRR.token_y_subtree_borrow, UnsignedDecimal("9834657854883466210530397000000"))
 
-        self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("76196798741476175000000"))
-        self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("26734872634892655597150111000000"))
-        self.assertEqual(LLRL.token_y_subtree_borrowed, UnsignedDecimal("763467253680744840679549000000"))
-        self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("987349053045739487000000"))
-        self.assertEqual(LRLL.token_y_subtree_borrowed, UnsignedDecimal("984764582781001178332000000"))
-        self.assertEqual(LRLR.token_y_subtree_borrowed, UnsignedDecimal("8763867548273647826000000"))
-        self.assertEqual(LRRL.token_y_subtree_borrowed, UnsignedDecimal("8726347825634871839691000000"))
-        self.assertEqual(LRRR.token_y_subtree_borrowed, UnsignedDecimal("798647852364627983000000"))
-        self.assertEqual(RLLL.token_y_subtree_borrowed, UnsignedDecimal("74986238502927037000000"))
-        self.assertEqual(RLLR.token_y_subtree_borrowed, UnsignedDecimal("868746576834678534000000"))
-        self.assertEqual(RLRL.token_y_subtree_borrowed, UnsignedDecimal("3423423619393235000000"))
-        self.assertEqual(RLRR.token_y_subtree_borrowed, UnsignedDecimal("827364826734823748963000000"))
-        self.assertEqual(RRLL.token_y_subtree_borrowed, UnsignedDecimal("73649082374024158406167000000"))
-        self.assertEqual(RRLR.token_y_subtree_borrowed, UnsignedDecimal("2387642836423689768000000"))
-        self.assertEqual(RRRL.token_y_subtree_borrowed, UnsignedDecimal("3542359995424161000000"))
-        self.assertEqual(RRRR.token_y_subtree_borrowed, UnsignedDecimal("23984623847623867000000"))
+        self.assertEqual(LLLL.token_y_subtree_borrow, UnsignedDecimal("76196798741476175000000"))
+        self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("26734872634892655597150111000000"))
+        self.assertEqual(LLRL.token_y_subtree_borrow, UnsignedDecimal("763467253680744840679549000000"))
+        self.assertEqual(LLRR.token_y_subtree_borrow, UnsignedDecimal("987349053045739487000000"))
+        self.assertEqual(LRLL.token_y_subtree_borrow, UnsignedDecimal("984764582781001178332000000"))
+        self.assertEqual(LRLR.token_y_subtree_borrow, UnsignedDecimal("8763867548273647826000000"))
+        self.assertEqual(LRRL.token_y_subtree_borrow, UnsignedDecimal("8726347825634871839691000000"))
+        self.assertEqual(LRRR.token_y_subtree_borrow, UnsignedDecimal("798647852364627983000000"))
+        self.assertEqual(RLLL.token_y_subtree_borrow, UnsignedDecimal("74986238502927037000000"))
+        self.assertEqual(RLLR.token_y_subtree_borrow, UnsignedDecimal("868746576834678534000000"))
+        self.assertEqual(RLRL.token_y_subtree_borrow, UnsignedDecimal("3423423619393235000000"))
+        self.assertEqual(RLRR.token_y_subtree_borrow, UnsignedDecimal("827364826734823748963000000"))
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("73649082374024158406167000000"))
+        self.assertEqual(RRLR.token_y_subtree_borrow, UnsignedDecimal("2387642836423689768000000"))
+        self.assertEqual(RRRL.token_y_subtree_borrow, UnsignedDecimal("3542359995424161000000"))
+        self.assertEqual(RRRR.token_y_subtree_borrow, UnsignedDecimal("23984623847623867000000"))
 
         # token_x_cumulative_earned_per_m_liq
         self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("1653162341"))
@@ -4652,49 +4652,49 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
     #     self.assertEqual(LLRL.subtree_m_liq, UnsignedDecimal("287634865"))
     #     self.assertEqual(LLRR.subtree_m_liq, UnsignedDecimal("287634865"))
     #
-    #     # borrowed_x
-    #     self.assertEqual(root.token_x_borrowed, UnsignedDecimal("492e18"))
-    #     self.assertEqual(L.token_x_borrowed, UnsignedDecimal("998e18"))
-    #     self.assertEqual(LL.token_x_borrowed, UnsignedDecimal("765e18"))
-    #     self.assertEqual(LLL.token_x_borrowed, UnsignedDecimal("24e18"))
-    #     self.assertEqual(LLR.token_x_borrowed, UnsignedDecimal("53e18"))
-    #     self.assertEqual(LLLL.token_x_borrowed, UnsignedDecimal("701e18"))
-    #     self.assertEqual(LLLR.token_x_borrowed, UnsignedDecimal("701e18"))
-    #     self.assertEqual(LLRL.token_x_borrowed, UnsignedDecimal("701e18"))
-    #     self.assertEqual(LLRR.token_x_borrowed, UnsignedDecimal("701e18"))
+    #     # borrow_x
+    #     self.assertEqual(root.token_x_borrow, UnsignedDecimal("492e18"))
+    #     self.assertEqual(L.token_x_borrow, UnsignedDecimal("998e18"))
+    #     self.assertEqual(LL.token_x_borrow, UnsignedDecimal("765e18"))
+    #     self.assertEqual(LLL.token_x_borrow, UnsignedDecimal("24e18"))
+    #     self.assertEqual(LLR.token_x_borrow, UnsignedDecimal("53e18"))
+    #     self.assertEqual(LLLL.token_x_borrow, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLLR.token_x_borrow, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRL.token_x_borrow, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRR.token_x_borrow, UnsignedDecimal("701e18"))
     #
-    #     # subtree_borrowed_x
-    #     self.assertEqual(root.token_x_subtree_borrowed, UnsignedDecimal("3033e18"))
-    #     self.assertEqual(L.token_x_subtree_borrowed, UnsignedDecimal("2541e18"))
-    #     self.assertEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("1519e18"))
-    #     self.assertEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("24e18"))
-    #     self.assertEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("754e18"))
-    #     self.assertEqual(LLLL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
-    #     self.assertEqual(LLLR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
-    #     self.assertEqual(LLRL.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
-    #     self.assertEqual(LLRR.token_x_subtree_borrowed, UnsignedDecimal("701e18"))
+    #     # subtree_borrow_x
+    #     self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))
+    #     self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("2541e18"))
+    #     self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("1519e18"))
+    #     self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("24e18"))
+    #     self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("754e18"))
+    #     self.assertEqual(LLLL.token_x_subtree_borrow, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRL.token_x_subtree_borrow, UnsignedDecimal("701e18"))
+    #     self.assertEqual(LLRR.token_x_subtree_borrow, UnsignedDecimal("701e18"))
     #
-    #     # borrowed_y
-    #     self.assertEqual(root.token_y_borrowed, UnsignedDecimal("254858e6"))
-    #     self.assertEqual(L.token_y_borrowed, UnsignedDecimal("353e6"))
-    #     self.assertEqual(LL.token_y_borrowed, UnsignedDecimal("99763e6"))
-    #     self.assertEqual(LLL.token_y_borrowed, UnsignedDecimal("552e6"))
-    #     self.assertEqual(LLR.token_y_borrowed, UnsignedDecimal("8765e6"))
-    #     self.assertEqual(LLLL.token_y_borrowed, UnsignedDecimal("779531e6"))
-    #     self.assertEqual(LLLR.token_y_borrowed, UnsignedDecimal("779531e6"))
-    #     self.assertEqual(LLRL.token_y_borrowed, UnsignedDecimal("779531e6"))
-    #     self.assertEqual(LLRR.token_y_borrowed, UnsignedDecimal("779531e6"))
+    #     # borrow_y
+    #     self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
+    #     self.assertEqual(L.token_y_borrow, UnsignedDecimal("353e6"))
+    #     self.assertEqual(LL.token_y_borrow, UnsignedDecimal("99763e6"))
+    #     self.assertEqual(LLL.token_y_borrow, UnsignedDecimal("552e6"))
+    #     self.assertEqual(LLR.token_y_borrow, UnsignedDecimal("8765e6"))
+    #     self.assertEqual(LLLL.token_y_borrow, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLLR.token_y_borrow, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRL.token_y_borrow, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRR.token_y_borrow, UnsignedDecimal("779531e6"))
     #
-    #     # subtree_borrowed_y
-    #     self.assertEqual(root.token_y_subtree_borrowed, UnsignedDecimal("1143822e6"))
-    #     self.assertEqual(L.token_y_subtree_borrowed, UnsignedDecimal("888964e6"))
-    #     self.assertEqual(LL.token_y_subtree_borrowed, UnsignedDecimal("888059e6"))
-    #     self.assertEqual(LLL.token_y_subtree_borrowed, UnsignedDecimal("552e6"))
-    #     self.assertEqual(LLR.token_y_subtree_borrowed, UnsignedDecimal("788296e6"))
-    #     self.assertEqual(LLLL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
-    #     self.assertEqual(LLLR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
-    #     self.assertEqual(LLRL.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
-    #     self.assertEqual(LLRR.token_y_subtree_borrowed, UnsignedDecimal("779531e6"))
+    #     # subtree_borrow_y
+    #     self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))
+    #     self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("888964e6"))
+    #     self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("888059e6"))
+    #     self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("552e6"))
+    #     self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("788296e6"))
+    #     self.assertEqual(LLLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))
+    #     self.assertEqual(LLRR.token_y_subtree_borrow, UnsignedDecimal("779531e6"))
 
 
 '''
