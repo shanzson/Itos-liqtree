@@ -523,19 +523,21 @@ library LiqTreeImpl {
 
             node.removeTLiq(liq);
 
-            node.tokenX.borrow -= amountX;
-            node.tokenY.borrow -= amountY;
-            node.tokenX.subtreeBorrow -= amountX;
-            node.tokenY.subtreeBorrow -= amountY;
+            (uint256 nodeRange,) = current.explode();
+            node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
+            node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
+            node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
+            node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
 
+            (nodeRange,) = current.explode();
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow -= amountX;
-            parent.tokenY.subtreeBorrow -= amountY;
+            parent.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
+            parent.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
             (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
@@ -548,10 +550,11 @@ library LiqTreeImpl {
 
                     node.removeTLiq(liq);
 
-                    node.tokenX.borrow -= amountX;
-                    node.tokenY.borrow -= amountY;
-                    node.tokenX.subtreeBorrow -= amountX;
-                    node.tokenY.subtreeBorrow -= amountY;
+                    (nodeRange,) = current.explode();
+                    node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
+                    node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
+                    node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
+                    node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
                 }
 
                 // neeed to calculate because blah blah blah
@@ -575,18 +578,19 @@ library LiqTreeImpl {
 
             node.removeTLiq(liq);
 
-            node.tokenX.borrow -= amountX;
-            node.tokenY.borrow -= amountY;
-            node.tokenX.subtreeBorrow -= amountX;
-            node.tokenY.subtreeBorrow -= amountY;
+            (uint256 nodeRange,) = current.explode();
+            node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
+            node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
+            node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
+            node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow -= amountX;
-            parent.tokenY.subtreeBorrow -= amountY;
+            parent.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
+            parent.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
             (current, node) = (up, parent);
 
             while(current.isLess(stopRange)) {
@@ -599,10 +603,11 @@ library LiqTreeImpl {
 
                     node.removeTLiq(liq);
 
-                    node.tokenX.borrow -= amountX;
-                    node.tokenY.borrow -= amountY;
-                    node.tokenX.subtreeBorrow -= amountX;
-                    node.tokenY.subtreeBorrow -= amountY;
+                    (nodeRange,) = current.explode();
+                    node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
+                    node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
+                    node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
+                    node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
                 }
 
                 // neeed to calculate because blah blah blah

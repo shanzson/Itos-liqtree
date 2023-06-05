@@ -32,7 +32,8 @@ contract TreeFeeTest is Test {
 
     function testBorrowAtRootNode() public {
         liqTree.addWideRangeMLiq(900);
-        liqTree.addWideRangeTLiq(200, 47e18, 289e6);
+        liqTree.addWideRangeTLiq(200, 57e18, 290e6);
+        liqTree.removeWideRangeTLiq(50, 10e18, 1e6);
 
         LiqNode storage root = liqTree.nodes[liqTree.root];
         assertEq(root.tokenX.borrow, 47e18);
@@ -43,7 +44,8 @@ contract TreeFeeTest is Test {
 
     function testBorrowAtSingleNode() public {
         liqTree.addMLiq(LiqRange(0, 3), 500);
-        liqTree.addTLiq(LiqRange(0, 3), 400, 23e18, 2e6);
+        liqTree.addTLiq(LiqRange(0, 3), 400, 43e18, 12e6);
+        liqTree.removeTLiq(LiqRange(0, 3), 20, 20e18, 10e6);
 
         LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
         assertEq(zeroThree.tokenX.borrow, 23e18);
@@ -54,7 +56,8 @@ contract TreeFeeTest is Test {
 
     function testBorrowAtLeafNode() public {
         liqTree.addMLiq(LiqRange(3, 3), 100);
-        liqTree.addTLiq(LiqRange(3, 3), 20, 2e18, 9e6);
+        liqTree.addTLiq(LiqRange(3, 3), 20, 22e18, 29e6);
+        liqTree.removeTLiq(LiqRange(3, 3), 20, 20e18, 20e6);
 
         LiqNode storage threeThree = liqTree.nodes[LKey.wrap(1 << 24 | 19)];
         assertEq(threeThree.tokenX.borrow, 2e18);
@@ -68,7 +71,8 @@ contract TreeFeeTest is Test {
         // 2nd traversal type, only left leg
 
         liqTree.addMLiq(LiqRange(1, 7), 100);
-        liqTree.addTLiq(LiqRange(1, 7), 20, 2e18, 9e6);
+        liqTree.addTLiq(LiqRange(1, 7), 20, 12e18, 19e6);
+        liqTree.removeTLiq(LiqRange(1, 7), 20, 10e18, 10e6);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
         LiqNode storage twoThree = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
@@ -98,7 +102,8 @@ contract TreeFeeTest is Test {
         // 1st traversal type, both legs below peak
 
         liqTree.addMLiq(LiqRange(1, 2), 100);
-        liqTree.addTLiq(LiqRange(1, 2), 20, 72e18, 19e6);
+        liqTree.addTLiq(LiqRange(1, 2), 20, 74e18, 21e6);
+        liqTree.removeTLiq(LiqRange(1, 2), 20, 2e18, 2e6);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
         LiqNode storage twoTwo = liqTree.nodes[LKey.wrap(1 << 24 | 18)];
@@ -118,7 +123,8 @@ contract TreeFeeTest is Test {
         // 3rd traversal type, only right leg
 
         liqTree.addMLiq(LiqRange(8, 14), 100);
-        liqTree.addTLiq(LiqRange(8, 14), 20, 472e18, 219e6);
+        liqTree.addTLiq(LiqRange(8, 14), 20, 474e18, 220e6);
+        liqTree.removeTLiq(LiqRange(8, 14), 20, 2e18, 1e6);
 
         LiqNode storage eightEleven = liqTree.nodes[LKey.wrap(4 << 24 | 24)];
         LiqNode storage twelveThirteen = liqTree.nodes[LKey.wrap(2 << 24 | 28)];
@@ -148,7 +154,8 @@ contract TreeFeeTest is Test {
         // 4th traversal type, both legs at or above peak
 
         liqTree.addMLiq(LiqRange(8, 15), 100);
-        liqTree.addTLiq(LiqRange(8, 15), 20, 1472e18, 5219e6);
+        liqTree.addTLiq(LiqRange(8, 15), 20, 1473e18, 5220e6);
+        liqTree.removeTLiq(LiqRange(8, 15), 20, 1e18, 1e6);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
 
