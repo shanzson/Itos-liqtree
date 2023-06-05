@@ -34,7 +34,7 @@ from Tree.LiquidityTree import *
 # note: maybe test 12-13 specifically? (two legs but one starts at the stop)
 class TestLiquidityTree(FloatingPointTestCase):
     def setUp(self) -> None:
-        self.liq_tree = LiquidityTree(depth=4, sol_truncation=False)
+        self.liq_tree = LiquidityTree(depth=4, sol_truncation=True)
 
     def test_fee(self):
         liq_tree: LiquidityTree = self.liq_tree
@@ -92,6 +92,17 @@ class TestLiquidityTree(FloatingPointTestCase):
         self.assertFloatingPointEqual(LLLR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("190.35714285714285714285714285714285714285714285714285714285714285"))
         self.assertFloatingPointEqual(LLLR.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("190.35714285714285714285714285714285714285714285714285714285714285"))
 
+        # (0-1)
+        # N.borrowX = 0
+        # N.subtreeBorrowX = 1 * 500 / 7 = 71.428571428571428571428571428571428571428571428571428571428571428
+        # totalMLiq = 0 + 200 * 1 + (0) * 1 = 200
+        # nodeEarnPerMLiqX += 0
+        # nodeSubtreeEarnPerMLiqX += (1 * 500 / 7) / 200 * 9832114591287191011328 / 2**64 = 190.35714285714285714285714285714285714285714285714285714285714285
+        self.assertFloatingPointEqual(LLL.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(LLL.token_x_subtree_borrowed, UnsignedDecimal("71.428571428571428571428571428571428571428571428571428571428571428"))
+        self.assertFloatingPointEqual(LLL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(LLL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("190.35714285714285714285714285714285714285714285714285714285714285"))
+
         # (2-3)
         # N.borrowX = 2 * 500 / 7 = 142.85714285714285714285714285714285714285714285714285714285714285
         # N.subtreeBorrowX = 2 * 500 / 7 + 1 * 98 / 3 = 175.52380952380952380952380952380952380952380952380952380952380952
@@ -102,6 +113,17 @@ class TestLiquidityTree(FloatingPointTestCase):
         self.assertFloatingPointEqual(LLR.token_x_subtree_borrowed, UnsignedDecimal("175.52380952380952380952380952380952380952380952380952380952380952"))
         self.assertFloatingPointEqual(LLR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("124.01116798510935318752908329455560725919032107957189390414146114"))
         self.assertFloatingPointEqual(LLR.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("152.36838839770435861641073367457732278579184116643400031022180859"))
+
+        # (0-3)
+        # N.borrowX = 0
+        # N.subtreeBorrowX = (0-1).subtreeBorrowX + (2-3).subtreeBorrowX = 71.428571428571428571428571428571428571428571428571428571428571428 + 175.52380952380952380952380952380952380952380952380952380952380952 = 246.95238095238095238095238095238095238095238095238095238095238094
+        # totalMLiq = 200*1 + 200*2 + 214*1 = 814
+        # nodeEarnPerMLiqX += 0
+        # nodeSubtreeEarnPerMLiqX += 246.95238095238095238095238095238095238095238095238095238095238094 * 9832114591287191011328 / 814 / 2**64 = 161.70223470223470223470223470223470223470223470223470223470223469
+        self.assertFloatingPointEqual(LL.token_x_borrowed, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(LL.token_x_subtree_borrowed, UnsignedDecimal("246.95238095238095238095238095238095238095238095238095238095238094"))
+        self.assertFloatingPointEqual(LL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("0"))
+        self.assertFloatingPointEqual(LL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("161.70223470223470223470223470223470223470223470223470223470223469"))
 
         # (4-7)
         # N.borrowX = 4 * 500 / 7 = 285.71428571428571428571428571428571428571428571428571428571428571
@@ -156,165 +178,41 @@ class TestLiquidityTree(FloatingPointTestCase):
         (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(5, 7))
         self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("166.06752869364397476562892226395979405468146439680216765615434358"))
 
+        # Q(4-7)
+        # acc_fee_rate_x = (4-7).nodeSubtreeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        #                = 152.36838839770435861641073367457732278579184116643400031022180859
+        (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(4, 7))
+        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("152.36838839770435861641073367457732278579184116643400031022180859"))
+
+        # Q(1-1)
+        # acc_fee_rate_x = (1-1).nodeSubtreeEarnPerMLiqX = 190.35714285714285714285714285714285714285714285714285714285714285
+        (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(1, 1))
+        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("190.35714285714285714285714285714285714285714285714285714285714285"))
+
+        # Q(0-0)
+        # acc_fee_rate_x = (0-0).nodeSubtreeEarnPerMLiqX + (0-1).nodeEarnPerMLiqX + (0-2).nodeEarnPerMLiqX + (0-4).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        #                = 0
+        (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(0, 0))
+        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("0"))
+
+        # Q(0-1)
+        # acc_fee_rate_x = (0-1).nodeSubtreeEarnPerMLiqX + (0-2).nodeEarnPerMLiqX + (0-4).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        #                = 190.35714285714285714285714285714285714285714285714285714285714285
+        (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(0, 1))
+        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("190.35714285714285714285714285714285714285714285714285714285714285"))
+
+        # Q(0-3)
+        # acc_fee_rate_x = (0-3).nodeSubtreeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        #                = 161.70223470223470223470223470223470223470223470223470223470223469
+        (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(0, 3))
+        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("161.70223470223470223470223470223470223470223470223470223470223469"))
+
         # Q(1-7)
-        # acc_fee_rate_x = (1-1).nodeSubtreeEarnPerMLiqX + (0-1).nodeEarnPerMLiqX + (2-3).nodeSubtreeEarnPerMLiqX + (0-3).nodeEarnPerMLiqX + (4-7).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
-        #                = 190.35714285714285714285714285714285714285714285714285714285714285 + 152.36838839770435861641073367457732278579184116643400031022180859 + 124.01116798510935318752908329455560725919032107957189390414146114
-        #                = 466.73669923995656894679695982627578718783930502357685745307895144
+        # acc_fee_rate_x = (1-1).nodeSubtreeEarnPerMLiqX + (0-1).nodeEarnPerMLiqX + (0-3).nodeEarnPerMLiqX + (2-3).nodeSubtreeEarnPerMLiqX + (4-7).nodeSubtreeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        #                = 190.35714285714285714285714285714285714285714285714285714285714285 + 152.36838839770435861641073367457732278579184116643400031022180859 + 152.36838839770435861641073367457732278579184116643400031022180859
+        #                = 495.09391965255157437567861020629750271444082519001085745307895143
         (acc_fee_rate_x, _) = liq_tree.query_accumulated_fee_rates(LiqRange(1, 7))
-        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("466.73669923995656894679695982627578718783930502357685745307895144"))
-        return
-
-        #     Q(3-3) = r * (
-        #         b1.borrowPerMLiq + b3.borrowPerMLiq
-        #     )
-        #
-        #     = 533 * (
-        #         (2*500/7) / (200+414) +
-        #         (1*98/3) / 414
-        #     )
-        #
-        #     = 166.06752869364397476562892226395979405468146439680216765615434359
-        #
-        #
-        #     ---------------------------
-        #
-        #     Q(2-3)
-        #         Tree
-        #             (2-3).nodeSubtreeEarnPerMLiqX = (2*500/7 + 1*98/3) * 533 / 614
-        #             = 152.36838839770435861641073367457732278579184116643400031022180859
-        #
-        #         Bucket
-        #             533 * (b1 + b1 + b3)
-        #             = (2*500/7) / (200+414) + (2*500/7) / (200+414) + (1*98/3) / 414
-        #             = 290.07869667875332795315800555851540131387178547637406156029580473
-        #
-        #             ...
-        #
-        #         [2] => b1
-        #         [3] => b1, b3
-        #
-        #         b1 borrow = 2*500/7
-        #         b1 mLiq in range (1, 1) = 200
-        #         borrowPerMLiq = 2*500/7 / 200
-        #
-        #         b3 borrow = 1*98/3
-        #         b3 mLiq in range (3, 3) = 414
-        #
-        #         533 * sum(b1, b3) = 533 * (2*500/7 / 200 + 1*98/3 / 414)
-        #         = 422.77064642282033586381412468368990108120542903151598803772716816
-        #
-        #
-        #
-        #         = sum(2*500/7 + 1*98/3) /
-        #           sum(200 + 414)
-        #
-        #         = 152.36838839770435861641073367457732278579184116643400031022180859
-        #
-        #     ---------------------------
-        #
-        #     Q(5, 7)
-        #
-        #     Tree
-        #
-        #         (5-5).nodeSubtreeEarnPerMLiqX + (4-5).nodeEarnPerMLiqX + (6-7).nodeSubtreeEarnPerMLiqX + (4-7).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
-        #         = 2*98/3 * 533 / 828  +  (4*500/7) * 533 / 1228
-        #         = 166.06752869364397476562892226395979405468146439680216765615434359
-        #
-        #     Bucket
-        #
-        #         [5] => b2, b4
-        #         [6] => b2
-        #         [7] => b2
-        #
-        #         b2 borrow = 4*500/7
-        #         b2 mLiq in range (4, 7) = 414 + 414 + 200 + 200 = 1228
-        #         borrowPerMLiq = 4*500/7 / 1228 = 285.71428571428571428571428571428571428571428571428571428571428571
-        #
-        #         b4 borrow = 2*98/3 = 65.333333333333333333333333333333333333333333333333333333333333333
-        #         b4 mLiq in range (4, 5) = 414 + 414 = 828
-        #         borrowPerMLiq = 2*98/3 / 828 = 0.0789049919484702093397745571658615136876006441223832528180354267
-        #
-        #         533 * sum(b2 + b4)
-        #         = 166.06752869364397476562892226395979405468146439680216765615434359
-        #
-        #         /////
-        #
-        #         sum(4*500/7 + 2*98/3) / sum(1228 + 828)
-        #
-        #         => 91.006021863998517695015749490457661663887344821196961274782286455
-        #
-        #     ---------------------------
-        #
-        #     Q(1 - 7) = r * (
-        #         b0.borrowPerMLiq +
-        #         b1.borrowPerMLiq +
-        #         b1.borrowPerMLiq + b3.borrowPerMLiq +
-        #         b2.borrowPerMLiq + b4.borrowPerMLiq +
-        #         b2.borrowPerMLiq + b4.borrowPerMLiq +
-        #         b2.borrowPerMLiq
-        #         b2.borrowPerMLiq)
-        #
-        #         = 533 * (
-        #         (1*500/7) / 200 +
-        #         (2*500/7) / (200+414) +
-        #         (2*500/7) / (200+414) + (1*98/3) / 414 +
-        #         (4*500/7) / (414*2 + 200*2) + (2*98/3) / (414*2)  +
-        #         (4*500/7) / (414*2 + 200*2) + (2*98/3) / (414*2) +
-        #         (4*500/7) / (414*2 + 200*2) +
-        #         (4*500/7) / (414*2 + 200*2))
-        #
-        #         = 533 * (
-        #         (1*500/7) / 200 +
-        #         (1*500/7) / (200+414) +
-        #         (1*500/7) / (200+414) + (1*98/3) / 414 +
-        #         (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2)  +
-        #         (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2) +
-        #         (1*500/7) / (414*2 + 200*2) +
-        #         (1*500/7) / (414*2 + 200*2))
-        #
-        #         533 * (
-        #         (1*500/7) / 200 +
-        #         (1*500/7) / (200+414) +
-        #         (1*500/7) / (200+414) + (1*98/3) / 414 +
-        #         (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2)  +
-        #         (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2) +
-        #         (1*500/7) / (414*2 + 200*2) +
-        #         (1*500/7) / (414*2 + 200*2))
-        #
-        #         0.6687142055361854257194860508838698896764326590130300652889521321
-        #         + 0.3115713483933282828623431937410127468192898018701729224318092750
-        #
-        #
-        #         = 533 * (
-        #             0.3571428571428571428571428571428571428571428571428571428571428571 +
-        #             0.2326663564448580735225686365751512331316891577477896696137738483 +
-        #             0.4049690939649868979992192001822365793474701561374837114817287597 +
-        #             0.4049690939649868979992192001822365793474701561374837114817287597 +
-        #             0.4049690939649868979992192001822365793474701561374837114817287597 +
-        #             0.0789049919484702093397745571658615136876006441223832528180354267 +
-        #             0.0789049919484702093397745571658615136876006441223832528180354267
-        #         )
-        #
-        #         ~=
-        #         533 * (0.35714285 + 0.23266635 + 0.40496909 + 0.40496909 + 0.40496909 + 0.07890499 + 0.07890499)
-        #
-        #         = 1046.0265
-        #
-        #
-        #
-        #         1-7
-        #
-        #         (1*500/7) * 533 / 200
-        #         (2*500/7 + 1*98/3) * 533 / 614
-        #         (4*500/7 + 2*98/3) * 533 / 1228
-        #
-        #
-        #         152.36838839770435861641073367457732278579184116643400031022180859 (2-3)
-        #         b1 + b1 + b3
-        #         (1*500/7) / (200+414) + (1*500/7) / (200+414) + (1*98/3) / 614
-        #         =
-
-
+        self.assertFloatingPointEqual(acc_fee_rate_x, UnsignedDecimal("495.09391965255157437567861020629750271444082519001085745307895143"))
 
     # region m_liq
     def test_adding_m_liq_root_only(self):

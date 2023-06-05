@@ -73,7 +73,497 @@ contract DenseTreeTreeStructureTest is Test {
         liqTree.init(4);
     }
 
+    function testFee() public {
+        uint256 accumulatedFeeRateX;
+
+        LiqNode storage root = liqTree.nodes[LKey.wrap(liqTree.root_key)];
+        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 16)];    // 0-7
+        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 16)];   // 0-3
+        LiqNode storage LR = liqTree.nodes[LKey.wrap((4 << 24) | 20)];   // 4-7
+        LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 16)];  // 0-1
+        LiqNode storage LLR = liqTree.nodes[LKey.wrap((2 << 24) | 18)];  // 2-3
+        LiqNode storage LRL = liqTree.nodes[LKey.wrap((2 << 24) | 20)];  // 4-5
+        LiqNode storage LRR = liqTree.nodes[LKey.wrap((2 << 24) | 22)];  // 6-7
+        LiqNode storage LLLL = liqTree.nodes[LKey.wrap((1 << 24) | 16)];  // 0-0
+        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 17)];  // 1-1
+        LiqNode storage LLRL = liqTree.nodes[LKey.wrap((1 << 24) | 18)];  // 2-2
+        LiqNode storage LLRR = liqTree.nodes[LKey.wrap((1 << 24) | 19)];  // 3-3
+        LiqNode storage LRLL = liqTree.nodes[LKey.wrap((1 << 24) | 19)];  // 4-4
+        LiqNode storage LRLR = liqTree.nodes[LKey.wrap((1 << 24) | 19)];  // 5-5
+        LiqNode storage LRRL = liqTree.nodes[LKey.wrap((1 << 24) | 19)];  // 6-6
+        LiqNode storage LRRR = liqTree.nodes[LKey.wrap((1 << 24) | 19)];  // 7-7
+        LiqNode storage RLLL = liqTree.nodes[LKey.wrap((1 << 24) | 19)];  // 8-8
+
+
+        liqTree.addMLiq(LiqRange(1, 7), 200);
+        liqTree.addTLiq(LiqRange(1, 7), 100, 500, 300);
+
+        liqTree.addMLiq(LiqRange(3, 5), 214);
+        liqTree.addTLiq(LiqRange(3, 5), 10, 98, 17);
+
+        liqTree.feeRateSnapshotTokenX += 9832114591287191011328;  // 533 as Q192.64
+        liqTree.feeRateSnapshotTokenY += 4316538113248035078144;  // 234 as Q192.64
+
+        // accumulate fees w/o changing node states
+        liqTree.addMLiq(LiqRange(1, 7), 200);
+        liqTree.removeMLiq(LiqRange(1, 7), 200);
+        liqTree.addMLiq(LiqRange(3, 5), 214);
+        liqTree.removeMLiq(LiqRange(3, 5), 214);
+
+        // before querying, let's verify node states
+        // Effected nodes (1-1), (2-3), (4-7), (3-3), (4-5)
+
+        // // totalMLiq = 200 * 1 + (0) * 1 = 200
+        // // N.borrowX = 1 * 500 / 7
+        // // N.subtreeBorrowX = 1 * 500 / 7
+        // // nodeEarnPerMLiqX += (1 * 500 / 7) * 533 / 200
+        // // nodeSubtreeEarnPerMLiqX += (1 * 500 / 7) * 533 / 200
+
+        // (1-1)
+        // N.borrowX = 1 * 500 / 7 = 71.428571428571428571428571428571428571428571428571428571428571428
+        // N.subtreeBorrowX = 1 * 500 / 7 = 71.428571428571428571428571428571428571428571428571428571428571428
+        // totalMLiq = 200 * 1 + (0) * 1 = 200
+        // nodeEarnPerMLiqX += (1 * 500 / 7) * 9832114591287191011328 / 200 / 2**64 = 190.35714285714285714285714285714285714285714285714285714285714285
+        // nodeSubtreeEarnPerMLiqX += (1 * 500 / 7) * 9832114591287191011328 / 200 / 2**64 = 190.35714285714285714285714285714285714285714285714285714285714285
+        assertEq(LLLR.tokenX.borrow, 71.428571428571428571428571428571428571428571428571428571428571428);
+        assertEq(LLLR.tokenX.subtreeBorrow, 71.428571428571428571428571428571428571428571428571428571428571428);
+        assertEq(LLLR.tokenX.cumulativeEarnedPerMLiq, 190.35714285714285714285714285714285714285714285714285714285714285);
+        assertEq(LLLR.tokenX.subtreeCumulativeEarnedPerMLiq, 190.35714285714285714285714285714285714285714285714285714285714285);
+
+        // (0-1)
+        // N.borrowX = 0
+        // N.subtreeBorrowX = 1 * 500 / 7 = 71.428571428571428571428571428571428571428571428571428571428571428
+        // totalMLiq = 0 + 200 * 1 + (0) * 1 = 200
+        // nodeEarnPerMLiqX += 0
+        // nodeSubtreeEarnPerMLiqX += (1 * 500 / 7) / 200 * 9832114591287191011328 / 2**64 = 190.35714285714285714285714285714285714285714285714285714285714285
+        assertEq(LLL.tokenX.borrow, 0);
+        assertEq(LLL.tokenX.subtreeBorrow, 71.428571428571428571428571428571428571428571428571428571428571428);
+        assertEq(LLL.tokenX.cumulativeEarnedPerMLiq, 0);
+        assertEq(LLL.tokenX.subtreeCumulativeEarnedPerMLiq, 190.35714285714285714285714285714285714285714285714285714285714285);
+
+        // (2-3)
+        // N.borrowX = 2 * 500 / 7 = 142.85714285714285714285714285714285714285714285714285714285714285
+        // N.subtreeBorrowX = 2 * 500 / 7 + 1 * 98 / 3 = 175.52380952380952380952380952380952380952380952380952380952380952
+        // totalMLiq = (200 * 2 + 214 * 1) + (0) * 2 = 614
+        // nodeEarnPerMLiqX += (2 * 500 / 7) * 9832114591287191011328 / 614 / 2**64 = 124.01116798510935318752908329455560725919032107957189390414146114
+        // nodeSubtreeEarnPerMLiqX += (2 * 500 / 7 + 1 * 98 / 3) * 9832114591287191011328 / 614 / 2**64 = 152.36838839770435861641073367457732278579184116643400031022180859
+        assertEq(LLR.tokenX.borrow, 142.85714285714285714285714285714285714285714285714285714285714285);
+        assertEq(LLR.tokenX.subtreeBorrow, 175.52380952380952380952380952380952380952380952380952380952380952);
+        assertEq(LLR.tokenX.cumulativeEarnedPerMLiq, 124.01116798510935318752908329455560725919032107957189390414146114);
+        assertEq(LLR.tokenX.subtreeCumulativeEarnedPerMLiq, 152.36838839770435861641073367457732278579184116643400031022180859);
+
+        // (0-3)
+        // N.borrowX = 0
+        // N.subtreeBorrowX = (0-1).subtreeBorrowX + (2-3).subtreeBorrowX = 71.428571428571428571428571428571428571428571428571428571428571428 + 175.52380952380952380952380952380952380952380952380952380952380952 = 246.95238095238095238095238095238095238095238095238095238095238094
+        // totalMLiq = 200*1 + 200*2 + 214*1 = 814
+        // nodeEarnPerMLiqX += 0
+        // nodeSubtreeEarnPerMLiqX += 246.95238095238095238095238095238095238095238095238095238095238094 * 9832114591287191011328 / 814 / 2**64 = 161.70223470223470223470223470223470223470223470223470223470223469
+        assertEq(LL.tokenX.borrow, 0);
+        assertEq(LL.tokenX.subtreeBorrow, 246.95238095238095238095238095238095238095238095238095238095238094);
+        assertEq(LL.tokenX.cumulativeEarnedPerMLiq, 0);
+        assertEq(LL.tokenX.subtreeCumulativeEarnedPerMLiq, 161.70223470223470223470223470223470223470223470223470223470223469);
+
+        // (4-7)
+        // N.borrowX = 4 * 500 / 7 = 285.71428571428571428571428571428571428571428571428571428571428571
+        // N.subtreeBorrowX = 4 * 500 / 7 + 2 * 98 / 3 = 351.04761904761904761904761904761904761904761904761904761904761904
+        // totalMLiq = (4 * 200 + 214 * 2) + (0) * 4 = 1228
+        // nodeEarnPerMLiqX += (4 * 500 / 7) * 9832114591287191011328 / 1228 / 2**64 = 124.01116798510935318752908329455560725919032107957189390414146114
+        // nodeSubtreeEarnPerMLiqX += (4 * 500 / 7 + 2 * 98 / 3) * 9832114591287191011328 / 1228 / 2**64 = 152.36838839770435861641073367457732278579184116643400031022180859
+        assertEq(LR.tokenX.borrow, 285.71428571428571428571428571428571428571428571428571428571428571);
+        assertEq(LR.tokenX.subtreeBorrow, 351.04761904761904761904761904761904761904761904761904761904761904);
+        assertEq(LLR.tokenX.cumulativeEarnedPerMLiq, 124.01116798510935318752908329455560725919032107957189390414146114);
+        assertEq(LLR.tokenX.subtreeCumulativeEarnedPerMLiq, 152.36838839770435861641073367457732278579184116643400031022180859);
+
+        // (3-3)
+        // N.borrowX = 1 * 98 / 3 = 32.666666666666666666666666666666666666666666666666666666666666666
+        // N.subtreeBorrowX = 1 * 98 / 3 = 32.666666666666666666666666666666666666666666666666666666666666666
+        // totalMLiq = 214 * 1 + (200) * 1 = 414
+        // nodeEarnPerMLiqX += 1 * 98 / 3 * 9832114591287191011328 / 414 / 2**64 = 42.056360708534621578099838969404186795491143317230273752012882447
+        // nodeSubtreeEarnPerMLiqX += 1 * 98 / 3 * 9832114591287191011328 / 41 = 42.056360708534621578099838969404186795491143317230273752012882447
+        assertEq(LLRR.tokenX.borrow, 32.666666666666666666666666666666666666666666666666666666666666666);
+        assertEq(LLRR.tokenX.subtreeBorrow, 32.666666666666666666666666666666666666666666666666666666666666666);
+        assertEq(LLRR.tokenX.cumulativeEarnedPerMLiq, 42.056360708534621578099838969404186795491143317230273752012882447);
+        assertEq(LLRR.tokenX.subtreeCumulativeEarnedPerMLiq, 42.056360708534621578099838969404186795491143317230273752012882447);
+
+        // (4-5)
+        // N.borrowX = 2 * 98 / 3 = 65.333333333333333333333333333333333333333333333333333333333333333
+        // N.subtreeBorrowX = 2 * 98 / 3 = 65.333333333333333333333333333333333333333333333333333333333333333
+        // totalMLiq = 214 * 2 + (200) * 2 = 828
+        // nodeEarnPerMLiqX += 2 * 98 / 3 * 9832114591287191011328 / 828 / 2**64 = 42.056360708534621578099838969404186795491143317230273752012882447
+        // nodeSubtreeEarnPerMLiqX += 2 * 98 / 3 * 9832114591287191011328 / 828 / 2**64 = 42.056360708534621578099838969404186795491143317230273752012882447
+        assertEq(LRL.tokenX.borrow, 65.333333333333333333333333333333333333333333333333333333333333333);
+        assertEq(LRL.tokenX.subtreeBorrow, 65.333333333333333333333333333333333333333333333333333333333333333);
+        assertEq(LLRR.tokenX.cumulativeEarnedPerMLiq, 42.056360708534621578099838969404186795491143317230273752012882447);
+        assertEq(LLRR.tokenX.subtreeCumulativeEarnedPerMLiq, 42.056360708534621578099838969404186795491143317230273752012882447);
+
+        // Querying
+        // Q(3-3)
+        // accumulatedFeeRateX = (3-3).nodeSubtreeEarnPerMLiqX + (2-3).nodeEarnPerMLiqX + (0-3).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 42.056360708534621578099838969404186795491143317230273752012882447 + 124.01116798510935318752908329455560725919032107957189390414146114
+        //                = 166.06752869364397476562892226395979405468146439680216765615434358
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(3, 3));
+        assertEq(accumulatedFeeRateX, 166.06752869364397476562892226395979405468146439680216765615434358);
+
+        // Q(2-3)
+        // accumulatedFeeRateX = (2-3).nodeSubtreeEarnPerMLiqX = 152.36838839770435861641073367457732278579184116643400031022180859
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(2, 3));
+        assertEq(accumulatedFeeRateX, 152.36838839770435861641073367457732278579184116643400031022180859);
+
+        // Q(5-7)
+        // accumulatedFeeRateX = (5-5).nodeSubtreeEarnPerMLiqX + (4-5).nodeEarnPerMLiqX + (6-7).nodeSubtreeEarnPerMLiqX + (4-7).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 42.056360708534621578099838969404186795491143317230273752012882447 + 124.01116798510935318752908329455560725919032107957189390414146114
+        //                = 166.06752869364397476562892226395979405468146439680216765615434358
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(5, 7));
+        assertEq(accumulatedFeeRateX, 166.06752869364397476562892226395979405468146439680216765615434358);
+
+        // Q(4-7)
+        // accumulatedFeeRateX = (4-7).nodeSubtreeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 152.36838839770435861641073367457732278579184116643400031022180859
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(4, 7));
+        assertEq(accumulatedFeeRateX, 152.36838839770435861641073367457732278579184116643400031022180859);
+
+        // Q(1-1)
+        // accumulatedFeeRateX = (1-1).nodeSubtreeEarnPerMLiqX = 190.35714285714285714285714285714285714285714285714285714285714285
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(1, 1));
+        assertEq(accumulatedFeeRateX, 190.35714285714285714285714285714285714285714285714285714285714285);
+
+        // Q(0-0)
+        // accumulatedFeeRateX = (0-0).nodeSubtreeEarnPerMLiqX + (0-1).nodeEarnPerMLiqX + (0-2).nodeEarnPerMLiqX + (0-4).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 0
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(0, 0));
+        assertEq(accumulatedFeeRateX, 0);
+
+        // Q(0-1)
+        // accumulatedFeeRateX = (0-1).nodeSubtreeEarnPerMLiqX + (0-2).nodeEarnPerMLiqX + (0-4).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 190.35714285714285714285714285714285714285714285714285714285714285
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(0, 1));
+        assertEq(accumulatedFeeRateX, 190.35714285714285714285714285714285714285714285714285714285714285);
+
+        // Q(0-3)
+        // accumulatedFeeRateX = (0-3).nodeSubtreeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 161.70223470223470223470223470223470223470223470223470223470223469
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(0, 3));
+        assertEq(accumulatedFeeRateX, 161.70223470223470223470223470223470223470223470223470223470223469);
+
+        // Q(1-7)
+        // accumulatedFeeRateX = (1-1).nodeSubtreeEarnPerMLiqX + (0-1).nodeEarnPerMLiqX + (0-3).nodeEarnPerMLiqX + (2-3).nodeSubtreeEarnPerMLiqX + (4-7).nodeSubtreeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                = 190.35714285714285714285714285714285714285714285714285714285714285 + 152.36838839770435861641073367457732278579184116643400031022180859 + 152.36838839770435861641073367457732278579184116643400031022180859
+        //                = 495.09391965255157437567861020629750271444082519001085745307895143
+        (accumulatedFeeRateX, ) = liqTree.queryAccumulatedFeeRates(LiqRange(1, 7));
+        assertEq(accumulatedFeeRateX, 495.09391965255157437567861020629750271444082519001085745307895143);
+    }
+
     function testFeesExampleOne() public {
+    /*
+
+    BUCKET
+
+    Borrows Per Node
+
+    (1-1)
+        b0 = Borrow(1 * 500/7, LiqRange(1, 1))
+
+    (2-3)
+        b1 = Borrow(2*500/7, LiqRange(2, 3))
+
+    (4-7) 
+        b2 = Borrow(4*500/7, LiqRange(4, 7))
+
+    (3-3)
+        b3 = Borrow(1*98/3, LiqRange(3, 3))
+
+    (4-5)
+        b4 = Borrow(2*98/3, LiqRange(4, 5))
+
+    NOTE: In order to match the snapshotting behavior in the tree, 
+    each borrow object will keep a running snapshot of the previous borrowPerMLiq
+    An instance of fee accumulation would be
+
+    cumulativeFeeRate = r * (b1/m1 + b2/m2 + b3/m3 + ...)
+
+    for all ticks over the range. b1 = (b1.currentBorrowPerMLiq = b1.snapCurrentBorrowPerMLiq)
+    m1 = b1.totalMLiq
+
+    r = (r.current - r.snapshot)
+
+
+    Ticks
+
+    [1] mLiq = 200, borrow = [b0]
+    [2] mLiq = 200, borrow = [b1]
+    [3] mLiq = 200+214 = 414, borrow = [b1, b3]
+    [4] mLiq = 200+214 = 414, borrow = [b2, b4]
+    [5] mLiq = 200+214 = 414, borrow = [b2, b4]
+    [6] mLiq = 200, borrows = [b2]
+    [7] mLiq = 200, borrows = [b2]
+
+    Accumulating Fees
+    1. Calculate borrowPerMLiq for each borrow in ticks over the given range
+
+    b0.borrowPerMLiq = (1*500/7) / 200 
+    b1.borrowPerMLiq = (2*500/7) / (200+414) 
+    b2.borrowPerMLiq = (4*500/7) / (414*2 + 200*2)
+    b3.borrowPerMLiq = (1*98/3) / 414
+    b4.borrowPerMLiq = (2*98/3) / (414*2)
+
+    sb0.borrowPerMLiq = (1*500/7) / 200              = 0.3571428571428571428571428571428571428571428571428571428571428571
+    sb1.borrowPerMLiq = (1*500/7) / (200+414)        = 0.2326663564448580735225686365751512331316891577477896696137738483
+    sb2.borrowPerMLiq = (1*500/7) / (414*2 + 200*2)  = 0.2326663564448580735225686365751512331316891577477896696137738483
+    sb3.borrowPerMLiq = (1*98/3) / 414               = 0.0789049919484702093397745571658615136876006441223832528180354267
+    sb4.borrowPerMLiq = (1*98/3) / (414*2)           = 0.0789049919484702093397745571658615136876006441223832528180354267
+
+    2. 
+
+
+    a) borrowSizePerMLiq = ^
+
+    b) feeEarnPerMLiq = sum(borrowSizePerMLiq @ tick) * r
+
+    c) query = sum(liq @ tick * feeEarnPerMLiq @ tick for all ticks in query range)
+
+
+    
+    Q(2-3)
+
+        [2].feeEarnPerMLiq = b1 * r = (2*500/7) / (200+414) * 533 = 124.01116798510935318752908329455560725919032107957189390414146114
+        [3].feeEarnPerMLiq = (b1 + b3) * r = ((2*500/7) / (200+414) + (1*98/3) / 414) * 533 = 166.06752869364397476562892226395979405468146439680216765615434359
+
+    = sum([2].feeEarnPerMLiq * [2].mLiq, [3].feeEarnPerMLiq * [3].mLiq)
+    = (2*500/7) / (200+414) * 533 * 200 + (((2*500/7) / (200+414) + (1*98/3) / 414) * 533) * 414
+    = 
+
+
+
+
+
+
+
+
+
+
+
+
+    Q(3-3)
+
+        => [b1, b3]
+
+        => r * (b1.borrow + b3.borrow) / (3-3).totalMLiq
+
+        = 533 * (2*500/7 + 1*98/3) / (414) = 
+
+    Q(0-1)
+
+
+    Q(1-1)
+
+
+    Q(5-7)
+
+
+    Q(4-7) [X]
+
+        = 
+
+
+    -------
+
+
+
+    Q(3-3)
+
+        = r * sum(b1, b3) = 533 * ((2*500/7) / (200+414) + (1*98/3) / 414)) = 166.06752869364397476562892226395979405468146439680216765615434359
+
+    Q(0-1)
+
+        = r * sum(b0) = 533 * (1*500/7) / 200 = 190.35714285714285714285714285714285714285714285714285714285714285
+
+    Q(1-1)
+
+        = r * sum(b0) = 533 * (1*500/7) / 200 = 190.35714285714285714285714285714285714285714285714285714285714285
+
+    Q(5-7)
+
+        = r * sum(unique(b2, b4, b2, b2)) = 533 * ((4*500/7) / (414*2 + 200*2) + (2*98/3) / (414*2)) = 166.06752869364397476562892226395979405468146439680216765615434359
+
+    Q(4-7) [X]
+
+        = r * sum(unique(b2, b4, b2, b4, b2, b2)) = 533 * ((4*500/7) / (414*2 + 200*2) + (2*98/3) / (414*2)) = 166.06752869364397476562892226395979405468146439680216765615434359
+
+    Q(2-3) [X]
+
+        = r * sum(b1, b1, b3) = 533 * ((2*500/7) / (200+414) + (1*98/3) / 414) = 166.06752869364397476562892226395979405468146439680216765615434359
+
+
+
+        b1.borrowSizePerMLiq = (2*500/7) / (200+414) 
+        b3.borrowSizePerMLiq = (1*98/3) / 414
+
+        [2] feeEarn = b1.borrowSizePerMLiq * r                          = (2*500/7) / (200+414)  * 533                   = 124.01116798510935318752908329455560725919032107957189390414146114
+        [3] feeEarn = b1.borrowSizePerMLiq + b3.borrowSizePerMLiq * r   = ((1*98/3) / 414 + (2*500/7) / (200+414)) * 533 = 166.06752869364397476562892226395979405468146439680216765615434359
+
+        Q(2-3) = sum([2].feeEarn + [3].feeEarn) / liq(2-3)
+               = ((2*500/7) / (200+414)  * 533 + ((1*98/3) / 414 + (2*500/7) / (200+414)) * 533) * (614)
+
+
+
+    
+    Q(3-3) = r * (
+        b1.borrowPerMLiq + b3.borrowPerMLiq
+    )
+
+    = 533 * (
+        (2*500/7) / (200+414) + 
+        (1*98/3) / 414 
+    )
+
+    = 166.06752869364397476562892226395979405468146439680216765615434359
+
+
+    ---------------------------
+
+    Q(2-3)
+        Tree
+            (2-3).nodeSubtreeEarnPerMLiqX = (2*500/7 + 1*98/3) * 533 / 614
+            = 152.36838839770435861641073367457732278579184116643400031022180859
+
+        Bucket
+            533 * (b1 + b1 + b3)
+            = (2*500/7) / (200+414) + (2*500/7) / (200+414) + (1*98/3) / 414
+            = 290.07869667875332795315800555851540131387178547637406156029580473
+
+            ...
+
+        [2] => b1
+        [3] => b1, b3
+
+        b1 borrow = 2*500/7
+        b1 mLiq in range (1, 1) = 200
+        borrowPerMLiq = 2*500/7 / 200
+
+        b3 borrow = 1*98/3
+        b3 mLiq in range (3, 3) = 414
+
+        533 * sum(b1, b3) = 533 * (2*500/7 / 200 + 1*98/3 / 414)
+        = 422.77064642282033586381412468368990108120542903151598803772716816
+
+
+
+        = sum(2*500/7 + 1*98/3) / 
+          sum(200 + 414)
+    
+        = 152.36838839770435861641073367457732278579184116643400031022180859
+
+    ---------------------------
+
+    Q(5, 7) 
+
+    Tree
+
+        (5-5).nodeSubtreeEarnPerMLiqX + (4-5).nodeEarnPerMLiqX + (6-7).nodeSubtreeEarnPerMLiqX + (4-7).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        = 2*98/3 * 533 / 828  +  (4*500/7) * 533 / 1228
+        = 166.06752869364397476562892226395979405468146439680216765615434359
+
+    Bucket
+
+        [5] => b2, b4
+        [6] => b2
+        [7] => b2
+
+        b2 borrow = 4*500/7
+        b2 mLiq in range (4, 7) = 414 + 414 + 200 + 200 = 1228
+        borrowPerMLiq = 4*500/7 / 1228 = 285.71428571428571428571428571428571428571428571428571428571428571
+
+        b4 borrow = 2*98/3 = 65.333333333333333333333333333333333333333333333333333333333333333
+        b4 mLiq in range (4, 5) = 414 + 414 = 828
+        borrowPerMLiq = 2*98/3 / 828 = 0.0789049919484702093397745571658615136876006441223832528180354267
+
+        533 * sum(b2 + b4)
+        = 166.06752869364397476562892226395979405468146439680216765615434359
+
+        /////
+
+        sum(4*500/7 + 2*98/3) / sum(1228 + 828)
+
+        => 91.006021863998517695015749490457661663887344821196961274782286455
+
+    ---------------------------
+    
+    Q(1 - 7) = r * (
+        b0.borrowPerMLiq + 
+        b1.borrowPerMLiq +
+        b1.borrowPerMLiq + b3.borrowPerMLiq + 
+        b2.borrowPerMLiq + b4.borrowPerMLiq +
+        b2.borrowPerMLiq + b4.borrowPerMLiq +
+        b2.borrowPerMLiq
+        b2.borrowPerMLiq)
+
+        = 533 * (
+        (1*500/7) / 200 +
+        (2*500/7) / (200+414) +
+        (2*500/7) / (200+414) + (1*98/3) / 414 +
+        (4*500/7) / (414*2 + 200*2) + (2*98/3) / (414*2)  +
+        (4*500/7) / (414*2 + 200*2) + (2*98/3) / (414*2) +
+        (4*500/7) / (414*2 + 200*2) + 
+        (4*500/7) / (414*2 + 200*2))
+
+        = 533 * (
+        (1*500/7) / 200 +
+        (1*500/7) / (200+414) +
+        (1*500/7) / (200+414) + (1*98/3) / 414 +
+        (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2)  +
+        (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2) +
+        (1*500/7) / (414*2 + 200*2) + 
+        (1*500/7) / (414*2 + 200*2))
+
+        533 * (
+        (1*500/7) / 200 +
+        (1*500/7) / (200+414) +
+        (1*500/7) / (200+414) + (1*98/3) / 414 +
+        (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2)  +
+        (1*500/7) / (414*2 + 200*2) + (1*98/3) / (414*2) +
+        (1*500/7) / (414*2 + 200*2) + 
+        (1*500/7) / (414*2 + 200*2))
+
+        0.6687142055361854257194860508838698896764326590130300652889521321
+        + 0.3115713483933282828623431937410127468192898018701729224318092750
+
+
+        = 533 * (
+            0.3571428571428571428571428571428571428571428571428571428571428571 + 
+            0.2326663564448580735225686365751512331316891577477896696137738483 + 
+            0.4049690939649868979992192001822365793474701561374837114817287597 + 
+            0.4049690939649868979992192001822365793474701561374837114817287597 + 
+            0.4049690939649868979992192001822365793474701561374837114817287597 + 
+            0.0789049919484702093397745571658615136876006441223832528180354267 + 
+            0.0789049919484702093397745571658615136876006441223832528180354267
+        )
+
+        ~=
+        533 * (0.35714285 + 0.23266635 + 0.40496909 + 0.40496909 + 0.40496909 + 0.07890499 + 0.07890499)
+
+        = 1046.0265
+
+
+
+        1-7
+
+        (1*500/7) * 533 / 200
+        (2*500/7 + 1*98/3) * 533 / 614
+        (4*500/7 + 2*98/3) * 533 / 1228
+
+
+        152.36838839770435861641073367457732278579184116643400031022180859 (2-3)
+        b1 + b1 + b3
+        (1*500/7) / (200+414) + (1*500/7) / (200+414) + (1*98/3) / 614
+        = 
+
+
+
+
+
+
+    */
+
     /*        
     *                                                              0-15
     *                                                      ____----    ----
@@ -113,52 +603,58 @@ contract DenseTreeTreeStructureTest is Test {
         liqTree.removeMLiq(LiqRange(3, 5), 214);
 
         // verify node states
+        // totalMLiq = N.subtreeMLiq + A[] * N.range
+        // nodeEarnPerMLiq += N.borrow * rate / totalMLiq
+        // nodeSubtreeEarnPerMLiq += N.subtreeBorrow * rate / totalMLiq
+
         // (1-1)
-        assertEq(oneOne.mLiq, 200);
-        assertEq(oneOne.subtreeMLiq, 200);
-        assertEq(oneOne.tLiq, 4381);
-        assertEq(oneOne.tokenX.borrowed, 832e18);
-        assertEq(oneOne.tokenX.subtreeBorrowed, 832e18);
-        assertEq(oneOne.tokenY.borrowed, 928e6);
-        assertEq(oneOne.tokenY.subtreeBorrowed, 928e6);
+        //     totalMLiq = 200*1 + (0) * 1 = 200
+        //     N.borrowX = 1*500/7
+        //     N.subtreeBorrowX = 1*500/7
+        //     nodeEarnPerMLiqX += (1*500/7) * 533 / 200
+        //     nodeSubtreeEarnPerMLiqX += (1*500/7) * 533 / 200
 
         // (2-3)
-        assertEq(twoThree.mLiq, 200);
-        assertEq(twoThree.subtreeMLiq, 283472);
-        assertEq(twoThree.tLiq, 4381);
-        assertEq(twoThree.tokenX.borrowed, 832e18);
-        assertEq(twoThree.tokenX.subtreeBorrowed, 832e18);
-        assertEq(twoThree.tokenY.borrowed, 928e6);
-        assertEq(twoThree.tokenY.subtreeBorrowed, 928e6);
+        //     totalMLiq = 200*2 + (0) * 2 = 400
+        //     N.borrowX = 2*500/7
+        //     N.subtreeBorrowX = 2*500/7 + 1*98/3
+        //     nodeEarnPerMLiqX += (2*500/7) * 533 / 400
+        //     nodeSubtreeEarnPerMLiqX += (2*500/7 + 1*98/3) * 533 / 400
 
         // (4-7)
-        assertEq(fourSeven.mLiq, 200);
-        assertEq(fourSeven.subtreeMLiq, 283472);
-        assertEq(fourSeven.tLiq, 4381);
-        assertEq(fourSeven.tokenX.borrowed, 832e18);
-        assertEq(fourSeven.tokenX.subtreeBorrowed, 832e18);
-        assertEq(fourSeven.tokenY.borrowed, 928e6);
-        assertEq(fourSeven.tokenY.subtreeBorrowed, 928e6);
-
+        //     totalMLiq = 4*200 + (0) * 4 = 1600
+        //     N.borrowX = 4*500/7
+        //     N.subtreeBorrowX = 4*500/7 + 2*98/3
+        //     nodeEarnPerMLiqX += (4*500/7) * 533 / 1600
+        //     nodeSubtreeEarnPerMLiqX += (4*500/7 + 2*98/3) * 533 / 1600
 
         // (3-3)
-        assertEq(threeThree.mLiq, 214);
-        assertEq(threeThree.subtreeMLiq, 283472);
-        assertEq(threeThree.tLiq, 4381);
-        assertEq(threeThree.tokenX.borrowed, 832e18);
-        assertEq(threeThree.tokenX.subtreeBorrowed, 832e18);
-        assertEq(threeThree.tokenY.borrowed, 928e6);
-        assertEq(threeThree.tokenY.subtreeBorrowed, 928e6);
+        //     totalMLiq = 214*1 + (200) * 1 = 414
+        //     N.borrowX = 1*98/3
+        //     N.subtreeBorrowX = 1*98/3
+        //     nodeEarnPerMLiqX += 1*98/3 * 533 / 414
+        //     nodeSubtreeEarnPerMLiqX += 1*98/3 * 533 / 414
 
         // (4-5)
-        assertEq(fourFive.mLiq, 214);
-        assertEq(fourFive.subtreeMLiq, 283472);
-        assertEq(fourFive.tLiq, 4381);
-        assertEq(fourFive.tokenX.borrowed, 832e18);
-        assertEq(fourFive.tokenX.subtreeBorrowed, 832e18);
-        assertEq(fourFive.tokenY.borrowed, 928e6);
-        assertEq(fourFive.tokenY.subtreeBorrowed, 928e6);
+        //     totalMLiq = 214*2 + (200) * 1 = 628
+        //     N.borrowX = 2*98/3
+        //     N.subtreeBorrowX = 2*98/3
+        //     nodeEarnPerMLiqX += 2*98/3 * 533 / 628
+        //     nodeSubtreeEarnPerMLiqX += 2*98/3 * 533 / 628
 
+
+        // querying fees
+        // 1-7
+        //
+        // nodeEarnPerMLiqX = (1-1).nodeSubtreeEarnPerMLiqX + (0-1).nodeEarnPerMLiqX + (2-3).nodeSubtreeEarnPerMLiqX + (0-3).nodeEarnPerMLiqX + (4-7).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX
+        //                  = (1*500/7) * 533 / 200    +  0  +  (2*500/7 + 1*98/3) * 533 / 400  +  0  +  (4*500/7) * 533 / 1600  +   0  +  0 
+        //                  = 519.42119047619047619047619047619047619047619047619047619047619047
+        //
+        // 3-3
+        // 
+        // nodeEarnPerMLiqX = (3-3).nodeSubtreeEarnPerMLiqX + (2-3).nodeEarnPerMLiqX + (0-3).nodeEarnPerMLiqX + (0-7).nodeEarnPerMLiqX + (0-15).nodeEarnPerMLiqX 
+        //                  = 1*98/3 * 533 / 414   +   (2*500/7) * 533 / 400   +   0   +   0   +   0
+        //                  = 232.41350356567747872095698182654704393834828617437313089487002530
     }
 
     /*        
@@ -2619,7 +3115,7 @@ contract DenseTreeTreeStructureTest is Test {
     //     assertEq(RRRL.tokenX.cumulativeEarnedPerMLiq, 6665049232753208950);
     //     assertEq(RRRR.tokenX.cumulativeEarnedPerMLiq, 0);
 
-    //     // token_x_cumulative_earned_per_m_subtree_liq
+    //     // tokenX.subtreeCumulativeEarnedPerMLiq
     //     assertEq(root.tokenX.subtreecumulativeEarnedPerMLiq, 43756288901278965565289120);
 
     //     assertEq(L.tokenX.subtreecumulativeEarnedPerMLiq, 114172069341113006721615069516);
