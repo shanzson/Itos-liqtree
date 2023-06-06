@@ -396,7 +396,6 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
 
-            (nodeRange,) = up.explode();
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
             parent.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
             parent.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1) * nodeRange;
@@ -449,7 +448,6 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
 
             _handleFee(self, up, parent);
-            (nodeRange,) = up.explode();
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
             parent.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
             parent.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1) * nodeRange;
@@ -534,7 +532,6 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
 
-            (nodeRange,) = current.explode();
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
             parent.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
             parent.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
