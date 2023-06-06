@@ -168,7 +168,6 @@ contract TreeFeeTest is Test {
 
     // Subtree Borrow
 
-    // BROKEN
     function testSubtreeBorrowAtRootNode() public {
         liqTree.addWideRangeMLiq(900);
         liqTree.addWideRangeTLiq(200, 57e18, 290e6);
@@ -176,7 +175,7 @@ contract TreeFeeTest is Test {
 
         liqTree.addMLiq(LiqRange(4, 7), 100);
         liqTree.addTLiq(LiqRange(4, 7), 10, 200e18, 200e6);
-        // liqTree.removeTLiq(LiqRange(4, 7), 10, 100e18, 100e6);
+        liqTree.removeTLiq(LiqRange(4, 7), 10, 100e18, 100e6);
 
         LiqNode storage root = liqTree.nodes[liqTree.root];
         assertEq(root.tokenX.subtreeBorrow, 247e18);
@@ -256,20 +255,42 @@ contract TreeFeeTest is Test {
         LiqNode storage fourSeven = liqTree.nodes[LKey.wrap(4 << 24 | 20)];
 
         // 1-1
-        assertEq(oneOne.tokenX.borrow, 285714285714285714); // 2e18/7*1 = 285714285714285714.285714285714285714285714285714285714285714
-        assertEq(oneOne.tokenY.borrow, 1285714);  // 9e6/7*1 = 1285714.2857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142
+        assertEq(oneOne.tokenX.subtreeBorrow, 285714285714285714); // 2e18/7*1 = 285714285714285714.285714285714285714285714285714285714285714
+        assertEq(oneOne.tokenY.subtreeBorrow, 1285714);  // 9e6/7*1 = 1285714.2857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142
 
         // 2-3
-        assertEq(twoThree.tokenX.borrow, 571428571428571428); // 2e18/7*2 = 571428571428571428.571428571428571428571428571428571428571428
-        assertEq(twoThree.tokenY.borrow, 2571428); // 9e6/7*2 = 2571428.57142857142857142857142857142857142857142857142857142
+        assertEq(twoThree.tokenX.subtreeBorrow, 571428571428571428); // 2e18/7*2 = 571428571428571428.571428571428571428571428571428571428571428
+        assertEq(twoThree.tokenY.subtreeBorrow, 2571428); // 9e6/7*2 = 2571428.57142857142857142857142857142857142857142857142857142
 
         // 4-7
         // x: 2e18/7 = 285714285714285714.285714285714285714285714285714285714285714
         //   floor() = 285714285714285714 * 4 = 1142857142857142856
         // y: 9e6/7  = 1285714.28571428571428571428571428571428571428571428571428571
         //   floor() = 1285714 * 4 = 5142856
-        assertEq(fourSeven.tokenX.borrow, 1142857142857142856); // 2e18/7*4 = 1142857142857142857.14285714285714285714285714285714285714285 (1 wei lost in rounding)
-        assertEq(fourSeven.tokenY.borrow, 5142856); // 9e6/7*4 = 5142857.14285714285714285714285714285714285714285714285714285 (1 wei lost in rounding)
+        assertEq(fourSeven.tokenX.subtreeBorrow, 1142857142857142856); // 2e18/7*4 = 1142857142857142857.14285714285714285714285714285714285714285 (1 wei lost in rounding)
+        assertEq(fourSeven.tokenY.subtreeBorrow, 5142856); // 9e6/7*4 = 5142857.14285714285714285714285714285714285714285714285714285 (1 wei lost in rounding)
+
+        // nodes above should include this amount
+
+        // 0-1 (from 1-1)
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
+        assertEq(zeroOne.tokenX.subtreeBorrow, 285714285714285714);
+        assertEq(zeroOne.tokenY.subtreeBorrow, 1285714);
+
+        // 0-3 (from 1-1 and 2-3)
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
+        assertEq(zeroThree.tokenX.subtreeBorrow, 857142857142857142); // 285714285714285714 + 571428571428571428 = 857142857142857142
+        assertEq(zeroThree.tokenY.subtreeBorrow, 3857142); // 1285714 + 2571428 = 3857142
+
+        // 0-7 (from 1-1, 2-3, and 4-7)
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
+        assertEq(zeroSeven.tokenX.subtreeBorrow, 1999999999999999998); // 857142857142857142 + 1142857142857142856 = 1999999999999999998
+        assertEq(zeroSeven.tokenY.subtreeBorrow, 8999998); // 3857142 + 5142856 = 8999998
+
+        // 0-15 (from 1-1, 2-3, and 4-7)
+        LiqNode storage zeroFifteen = liqTree.nodes[liqTree.root];
+        assertEq(zeroFifteen.tokenX.subtreeBorrow, 1999999999999999998);
+        assertEq(zeroFifteen.tokenY.subtreeBorrow, 8999998);
 
         // other borrows should be empty
     }
@@ -286,12 +307,41 @@ contract TreeFeeTest is Test {
         LiqNode storage twoTwo = liqTree.nodes[LKey.wrap(1 << 24 | 18)];
 
         // 1-1
-        assertEq(oneOne.tokenX.borrow, 36000000000000000000); // 72e18/2*1 = 36000000000000000000
-        assertEq(oneOne.tokenY.borrow, 9500000);  // 19e6/2*1 = 9500000
+        assertEq(oneOne.tokenX.subtreeBorrow, 36000000000000000000); // 72e18/2*1 = 36000000000000000000
+        assertEq(oneOne.tokenY.subtreeBorrow, 9500000);  // 19e6/2*1 = 9500000
 
         // 2-2
-        assertEq(twoTwo.tokenX.borrow, 36000000000000000000); 
-        assertEq(twoTwo.tokenY.borrow, 9500000);
+        assertEq(twoTwo.tokenX.subtreeBorrow, 36000000000000000000); 
+        assertEq(twoTwo.tokenY.subtreeBorrow, 9500000);
+
+        // nodes above should include this amount
+
+        // 0-1 (from 1-1)
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
+        assertEq(zeroOne.tokenX.subtreeBorrow, 36e18);
+        assertEq(zeroOne.tokenY.subtreeBorrow, 9.5e6);
+
+        // 2-3 (from 2-2)
+        LiqNode storage twoThree = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
+        assertEq(twoThree.tokenX.subtreeBorrow, 36e18); 
+        assertEq(twoThree.tokenY.subtreeBorrow, 9.5e6);
+
+        // 0-3 (from 1-1 and 2-2)
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
+        assertEq(zeroThree.tokenX.subtreeBorrow, 72e18); 
+        assertEq(zeroThree.tokenY.subtreeBorrow, 19e6);
+
+        // 0-7 (from 1-1 and 2-2)
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
+        assertEq(zeroSeven.tokenX.subtreeBorrow, 72e18);
+        assertEq(zeroSeven.tokenY.subtreeBorrow, 19e6);
+
+        // 0-15 (from 1-1 and 2-2)
+        LiqNode storage zeroFifteen = liqTree.nodes[liqTree.root];
+        assertEq(zeroFifteen.tokenX.subtreeBorrow, 72e18);
+        assertEq(zeroFifteen.tokenY.subtreeBorrow, 19e6);
+
+        // all other nodes should have 0
 
     }
 
@@ -310,20 +360,44 @@ contract TreeFeeTest is Test {
         // 8-11
         // x: floor(472e18/7) = 67428571428571428571 * 4 = 269714285714285714284
         // y: floor(219e6/7) = 31285714 * 4 = 125142856
-        assertEq(eightEleven.tokenX.borrow, 269714285714285714284); // 472e18/7*4 = 269714285714285714285.714285714285714285714285714285714285714 (1 wei lost)
-        assertEq(eightEleven.tokenY.borrow, 125142856);  // 219e6/7*4 = 125142857.142857142857142857142857142857142857142857142857142 (1 wei lost)
+        assertEq(eightEleven.tokenX.subtreeBorrow, 269714285714285714284); // 472e18/7*4 = 269714285714285714285.714285714285714285714285714285714285714 (1 wei lost)
+        assertEq(eightEleven.tokenY.subtreeBorrow, 125142856);  // 219e6/7*4 = 125142857.142857142857142857142857142857142857142857142857142 (1 wei lost)
 
         // 12-13
         // x: floor(472e18/7) * 2 = 134857142857142857142
         // y: floor(219e6/7) * 2 = 62571428
-        assertEq(twelveThirteen.tokenX.borrow, 134857142857142857142); // 472e18/7*2 = 134857142857142857142.857142857142857142857142857142857142857
-        assertEq(twelveThirteen.tokenY.borrow, 62571428);  // 219e6/7*2 = 62571428.5714285714285714285714285714285714285714285714285714
+        assertEq(twelveThirteen.tokenX.subtreeBorrow, 134857142857142857142); // 472e18/7*2 = 134857142857142857142.857142857142857142857142857142857142857
+        assertEq(twelveThirteen.tokenY.subtreeBorrow, 62571428);  // 219e6/7*2 = 62571428.5714285714285714285714285714285714285714285714285714
 
         // 14-14
         // x: floor(472e18/7) * 1 = 67428571428571428571
         // y: floor(219e6/7) * 1 = 31285714
-        assertEq(fourteenFourteen.tokenX.borrow, 67428571428571428571); // 472e18/7*1 = 67428571428571428571.4285714285714285714285714285714285714285
-        assertEq(fourteenFourteen.tokenY.borrow, 31285714); // 219e6/7*1 = 31285714.2857142857142857142857142857142857142857142857142857
+        assertEq(fourteenFourteen.tokenX.subtreeBorrow, 67428571428571428571); // 472e18/7*1 = 67428571428571428571.4285714285714285714285714285714285714285
+        assertEq(fourteenFourteen.tokenY.subtreeBorrow, 31285714); // 219e6/7*1 = 31285714.2857142857142857142857142857142857142857142857142857
+
+        // nodes above should include this amount
+
+        // 14-15 (from 14-14)
+        LiqNode storage fourteenFifteen = liqTree.nodes[LKey.wrap(2 << 24 | 30)];
+        assertEq(fourteenFifteen.tokenX.subtreeBorrow, 67428571428571428571);
+        assertEq(fourteenFifteen.tokenY.subtreeBorrow, 31285714);
+
+        // 12-15 (from 12-13 and 14-14)
+        LiqNode storage tweleveFifteen = liqTree.nodes[LKey.wrap(4 << 24 | 28)];
+        assertEq(tweleveFifteen.tokenX.subtreeBorrow, 202285714285714285713); // 67428571428571428571 + 134857142857142857142 = 202285714285714285713
+        assertEq(tweleveFifteen.tokenY.subtreeBorrow, 93857142); // 31285714 + 62571428 = 93857142
+
+        // 8-15 (from 8-11, 12-13, and 14-14)
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.subtreeBorrow, 471999999999999999997); // 202285714285714285713 + 269714285714285714284 = 471999999999999999997
+        assertEq(eightFifteen.tokenY.subtreeBorrow, 218999998); // 93857142 + 125142856 = 218999998
+
+        // 0-15 (from 8-11, 12-13, and 14-14)
+        LiqNode storage zeroFifteen = liqTree.nodes[liqTree.root];
+        assertEq(zeroFifteen.tokenX.subtreeBorrow, 471999999999999999997);
+        assertEq(zeroFifteen.tokenY.subtreeBorrow, 218999998);
+
+        // all other nodes should have 0
     }
 
     function testSubtreeBorrowSplitAcrossSeveralNodesWalkingBothLegsAtOrAbovePeak() public {
@@ -341,6 +415,15 @@ contract TreeFeeTest is Test {
         // y: floor(5219e6/8) * 8 = 5219e6
         assertEq(eightFifteen.tokenX.borrow, 1472e18);
         assertEq(eightFifteen.tokenY.borrow, 5219e6);
+
+        // nodes above should include this amount
+
+        // 0-15
+        LiqNode storage zeroFifteen = liqTree.nodes[liqTree.root];
+        assertEq(zeroFifteen.tokenX.subtreeBorrow, 1472e18);
+        assertEq(zeroFifteen.tokenY.subtreeBorrow, 5219e6);
+
+        // all other nodes should have 0
     }
 
 
