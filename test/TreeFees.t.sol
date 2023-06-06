@@ -178,8 +178,8 @@ contract TreeFeeTest is Test {
         liqTree.removeTLiq(LiqRange(4, 7), 10, 100e18, 100e6);
 
         LiqNode storage root = liqTree.nodes[liqTree.root];
-        assertEq(root.tokenX.subtreeBorrow, 247e18);
-        assertEq(root.tokenY.subtreeBorrow, 489e6);
+        assertEq(root.tokenX.subtreeBorrow, 147e18);
+        assertEq(root.tokenY.subtreeBorrow, 389e6);
 
         // (almost all other) borrows should be empty
     }
@@ -426,8 +426,6 @@ contract TreeFeeTest is Test {
         // all other nodes should have 0
     }
 
-
-
     // subtreeMLiq
 
     // A[]
@@ -435,4 +433,188 @@ contract TreeFeeTest is Test {
     // N.range
 
     // r
+
+    function testTreeInitialRates() public {
+        assertEq(liqTree.feeRateSnapshotTokenX, 0);
+        assertEq(liqTree.feeRateSnapshotTokenY, 0);
+    }
+
+    function testTreeRateAccumulation() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        assertEq(liqTree.feeRateSnapshotTokenX, 1);
+        assertEq(liqTree.feeRateSnapshotTokenY, 1);
+    }
+
+    function testTreeMultiRateAccumulation() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.feeRateSnapshotTokenX += 2378467856789361026348;
+        liqTree.feeRateSnapshotTokenY += 7563853478956240629035625248956723456;
+
+        assertEq(liqTree.feeRateSnapshotTokenX, 2378467856789361026349);
+        assertEq(liqTree.feeRateSnapshotTokenY, 7563853478956240629035625248956723457);
+    }
+
+    function testNodeInitialRates() public {
+        // test all nodes?
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+
+    function testNodeRateAccumulationAddingMLiq() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
+    }
+
+    function testNodeMultiRateAccumulationAddingMLiq() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.feeRateSnapshotTokenX += 8726349723049235689236;
+        liqTree.feeRateSnapshotTokenY += 827369027349823649072634587236582365;
+
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
+    }
+
+    function testNodeRateDoesNotAccumulateWhenAddingMLiqToOtherNodes() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(0, 0), 100);
+        
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+    
+    function testNodeRateAccumulationRemovingMLiq() public {
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.removeMLiq(LiqRange(15, 15), 20);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
+    }
+
+    function testNodeMultiRateAccumulationRemovingMLiq() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+
+        liqTree.feeRateSnapshotTokenX += 8726349723049235689236;
+        liqTree.feeRateSnapshotTokenY += 827369027349823649072634587236582365;
+
+        liqTree.removeMLiq(LiqRange(15, 15), 20);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
+    }
+
+    function testNodeRateDoesNotAccumulateWhenRemovingMLiqFromOtherNodes() public {
+        liqTree.addMLiq(LiqRange(0, 0), 100);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.removeMLiq(LiqRange(0, 0), 100);
+        
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+
+    function testNodeRateAccumulationAddingTLiq() public {
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
+    }
+
+    function testNodeMultiRateAccumulationAddingTLiq() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+
+        liqTree.feeRateSnapshotTokenX += 8726349723049235689236;
+        liqTree.feeRateSnapshotTokenY += 827369027349823649072634587236582365;
+
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
+    }
+
+    function testNodeRateDoesNotAccumulateWhenAddingTLiqToOtherNodes() public {
+        liqTree.addMLiq(LiqRange(0, 0), 100);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.addTLiq(LiqRange(0, 0), 10, 1, 1);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+
+    function testNodeRateAccumulationRemovingTLiq() public {
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.removeTLiq(LiqRange(15, 15), 10, 1, 1);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
+    }
+
+    function testNodeMultiRateAccumulationRemovingTLiq() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(15, 15), 100);
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+
+        liqTree.feeRateSnapshotTokenX += 8726349723049235689236;
+        liqTree.feeRateSnapshotTokenY += 827369027349823649072634587236582365;
+
+        liqTree.removeTLiq(LiqRange(15, 15), 10, 1, 1);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
+    }
+
+    function testNodeRateDoesNotAccumulateWhenRemovingTLiqFromOtherNodes() public {
+        liqTree.addMLiq(LiqRange(0, 0), 100);
+        liqTree.addTLiq(LiqRange(0, 0), 10, 1, 1);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.removeTLiq(LiqRange(0, 0), 10, 1, 1);
+        
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
 }
