@@ -430,8 +430,144 @@ contract TreeFeeTest is Test {
 
     // A[]
 
-    // N.range
+    function _allocateAuxillaryArrays() internal {
+        // Allocate mLiq to each node, such that any combination of sums can only be one distinct set of nodes.
+        // This way, when testing for the sum X, we know it must only be this unique set.
+        // Lets use 1024, then add 1 for each node
 
+        uint128 mLiq = 16384;
+        liqTree.addWideRangeMLiq(mLiq);
+        
+        uint24 range = 0;
+        for (uint24 j = 1; j < 16; j *= 2) {
+            mLiq = 1024 * j;
+            for (uint24 i = 0; i < 16;) {
+                liqTree.addMLiq(LiqRange(i, i+j-1), mLiq);
+                i += j;
+                mLiq += 1;
+            }
+        }
+    }
+
+    function testAuxAllocation() public {
+        _allocateAuxillaryArrays();
+
+        assertEq(liqTree.nodes[LKey.wrap(16 << 24 | 16)].mLiq, 16384);
+
+        assertEq(liqTree.nodes[LKey.wrap(8 << 24 | 16)].mLiq, 8192);
+        assertEq(liqTree.nodes[LKey.wrap(8 << 24 | 24)].mLiq, 8193);
+
+        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 16)].mLiq, 4096);
+        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 20)].mLiq, 4097);
+        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 24)].mLiq, 4098);
+        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 28)].mLiq, 4099);
+
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 16)].mLiq, 2048);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 18)].mLiq, 2049);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 20)].mLiq, 2050);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 22)].mLiq, 2051);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 24)].mLiq, 2052);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 26)].mLiq, 2053);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 28)].mLiq, 2054);
+        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 30)].mLiq, 2055);
+
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 16)].mLiq, 1024);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 17)].mLiq, 1025);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 18)].mLiq, 1026);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 19)].mLiq, 1027);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 20)].mLiq, 1028);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 21)].mLiq, 1029);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 22)].mLiq, 1030);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 23)].mLiq, 1031);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 24)].mLiq, 1032);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 25)].mLiq, 1033);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 26)].mLiq, 1034);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 27)].mLiq, 1035);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 28)].mLiq, 1036);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 29)].mLiq, 1037);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 30)].mLiq, 1038);
+        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 31)].mLiq, 1039);
+    }
+
+    function testAuxAtNodeOfRangeOne() public {
+        _allocateAuxillaryArrays();
+
+        LiqNode storage rangeOne = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
+
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(0, 0), 100);
+        liqTree.addTLiq(LiqRange(0, 0), 100, 1, 1);
+
+        assertEq(rangeOne.tokenX.cumulativeEarnedPerMLiq, 1);
+        assertEq(rangeOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1);
+    }
+
+    function testAuxAtNodeOfRangeTwo() public {
+        _allocateAuxillaryArrays();
+
+        LiqNode storage rangeTwo = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
+
+    }
+
+    function testAuxAtNodeOfRangeFour() public {
+        _allocateAuxillaryArrays();
+
+        LiqNode storage rangeFour = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
+
+    }
+
+    function testAuxAtNodeOfRangeEight() public {
+        _allocateAuxillaryArrays();
+
+        LiqNode storage rangeEight = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
+
+    }
+
+    function testAuxAtNodeOfRangeSixteen() public {
+        _allocateAuxillaryArrays();
+
+        LiqNode storage rangeSixteen = liqTree.nodes[liqTree.root];
+
+    }
+
+
+    // N.range
+/*
+    function testNodeRangeOfOneInFeeCalculation() public {
+        LiqNode storage rangeOne = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
+
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addMLiq(LiqRange(0, 0), 100);
+        liqTree.addTLiq(LiqRange(0, 0), 100, 1, 1);
+
+        assertEq(rangeOne.tokenX.cumulativeEarnedPerMLiq, 1);
+        assertEq(rangeOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1);
+    }
+
+    function testNodeRangeOfTwoInFeeCalculation() public {
+        LiqNode storage rangeTwo = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
+
+    }
+
+    function testNodeRangeOfFourInFeeCalculation() public {
+        LiqNode storage rangeFour = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
+
+    }
+
+    function testNodeRangeOfEightInFeeCalculation() public {
+        LiqNode storage rangeEight = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
+
+    }
+
+    function testNodeRangeOfSixteenInFeeCalculation() public {
+        LiqNode storage rangeSixteen = liqTree.nodes[liqTree.root];
+
+    }
+*/
     // r
 
     function testTreeInitialRates() public {
