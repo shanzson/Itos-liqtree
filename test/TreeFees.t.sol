@@ -428,6 +428,93 @@ contract TreeFeeTest is Test {
 
     // subtreeMLiq
 
+    // note: different from subtreeMLiq on the node
+    function _calculateSubtreeMLiqForNode(LKey key) internal returns (uint256 subtreeMLiq) {
+        (uint24 range,) = key.explode();
+
+        LiqNode storage node = liqTree.nodes[key];
+        uint256 subtreeMLiqForNode = node.mLiq * range;
+        if (range == 1) {
+            return subtreeMLiqForNode;
+        }
+
+        (LKey left, LKey right) = key.children();
+        return subtreeMLiqForNode + _calculateSubtreeMLiqForNode(left) + _calculateSubtreeMLiqForNode(right);
+    }
+
+    function testSubtreeMLiqAtSingleNode() public {
+        liqTree.addMLiq(LiqRange(0, 3), 500);
+
+        LKey key = LKey.wrap(4 << 24 | 16); // 0-3
+        assertEq(_calculateSubtreeMLiqForNode(key), 2000); // 500*4
+    } 
+
+    function testSubtreeMLiqAtLeafNode() public {
+        liqTree.addMLiq(LiqRange(3, 3), 100);
+
+        LKey key = LKey.wrap(1 << 24 | 19); // 3-3
+        assertEq(_calculateSubtreeMLiqForNode(key), 100);
+    }
+
+    function testSubtreeMLiqForMLiqSplitAcrossSeveralNodesWalkingLeftLeg() public {
+        // 1-7 => Nodes: 1-1, 2-3, 4-7 
+        // 2nd traversal type, only left leg
+
+        liqTree.addMLiq(LiqRange(1, 7), 200);
+
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 17)), 200); // 1-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 18)), 400); // 2-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 20)), 800); // 4-7
+
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 16)), 200); // 0-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 16)), 600); // 0-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 16)), 1400); // 0-7
+        assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 1400); // 0-15
+
+    }
+
+    function testSubtreeMLiqForMLiqSplitAcrossSeveralNodesWalkingBothLegsBelowPeak() public {
+        // 1-2 => Node: 1-1, 2-2
+        // 1st traversal type, both legs below peak
+
+        liqTree.addMLiq(LiqRange(1, 2), 70);
+
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 17)), 70); // 1-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 18)), 70); // 2-2
+        
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 16)), 70); // 0-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 18)), 70); // 2-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 16)), 140); // 0-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 16)), 140); // 0-7
+        assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 140); // 0-15
+    }
+
+    function testSubtreeMLiqForMLiqSplitAcrossSeveralNodesWalkingRightLeg() public {
+        // 8-14 => Node: 8-11, 12-13, 14-14
+        // 3rd traversal type, only right leg
+
+        liqTree.addMLiq(LiqRange(8, 14), 9);
+
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 24)), 36); // 8-11
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 28)), 18); // 12-13
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 30)), 9); // 14-14
+
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 30)), 9); // 14-15
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 28)), 27); // 12-15
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 24)), 63); // 8-15
+        assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 63); // 0-15
+    }
+
+    function testSubtreeMLiqForMLiqSplitAcrossSeveralNodesWalkingBothLegsAtOrAbovePeak() public {
+        // 8-15 => Node: 8-15
+        // 4th traversal type, both legs at or above peak
+
+        liqTree.addMLiq(LiqRange(8, 15), 100);
+
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 24)), 800); // 8-15
+        assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 800); // 0-15
+    }
+
     // A[]
     // NOTE: Below section of tests have the following in common
     //  1. borrow and subtreeBorrow values will be the same
