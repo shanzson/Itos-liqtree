@@ -1,5 +1,9 @@
 from unittest import TestCase
 
+from FloatingPoint.UnsignedDecimal import UnsignedDecimal
+from Tree.LiquidityTree import LiquidityTree, LiqNode, LiqRange
+
+
 # NOTE: all numbers must be given as UnsignedDecimal numbers to avoid precision errors.
 #       each UnsignedDecimal number must be created using a string! Otherwise precision is lost when the input variable is created
 #       For instance, 7927848e16 yields 79278479999999997378560 as an integer. While the type 7.927848e+22 looks ok, when passed to
@@ -26,9 +30,6 @@ from unittest import TestCase
 #          /   \          /   \          /   \          /   \            /   \          /   \          /   \          /   \
 #         /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
 #   LLLL(0) LLLR(1) LLRL(2) LLRR(3) LRLL(4) LRLR(5) LRRL(6) LRRR(7) RLLL(8) RLLR(9) RLRL(10) RLRR(11) RRLL(12) RRLR(13) RRRL(14) RRRR(15)
-
-from Tree.LiquidityTree import LiquidityTree, LiqNode, LiqRange
-from FloatingPoint.UnsignedDecimal import UnsignedDecimal
 
 
 class TestDenseLiquidityTreeSolTruncation(TestCase):
@@ -80,7 +81,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # earn_x      = 74672420010376264941568 * 832e18 / 283472 / 2**64 = 11881018231077496190.0999040469605463678952418581023875373934
         # earn_y      = 74672420010376264941568 * 928e6 / 283472 / 2**64  = 13251904.9500479765197268160523790709488062313032680476378619
-        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("11881018269102163474"))          # 11881018231077496190 + 38024667284 = 11881018269102163474
+        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("11881018269102163474"))  # 11881018231077496190 + 38024667284 = 11881018269102163474
         self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("11881018269102163474"))  # 11881018231077496190 + 38024667284 = 11881018269102163474
         self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("13251904"))
         self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("13251904"))
@@ -101,8 +102,8 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # earn_x      = 6932491854677024 * 832e18 / 224560 / 2**64 = 1392388963085.50927075184684754182568989829487082029858389739
         # earn_y      = 6932491854677024 * 928e6 / 224560 / 2**64  = 1.5530492280569141866078291761043440387327135097611022666547915924
-        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("11881019661491126559"))           # 11881018269102163474 + 1392388963085 = 11881019661491126559
-        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("11881019661491126559"))   # 11881018269102163474 + 1392388963085 = 11881019661491126559
+        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("11881019661491126559"))  # 11881018269102163474 + 1392388963085 = 11881019661491126559
+        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("11881019661491126559"))  # 11881018269102163474 + 1392388963085 = 11881019661491126559
         self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("13251905"))
         self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("13251905"))
 
@@ -122,10 +123,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # earn_x      = 1055375100301031600000000 * 10016e18 / 224560 / 2**64  = 2551814126505030241953.87164028103035638433335980020216618053
         # earn_y      = 1055375100301031600000000 * 7927848e6 / 224560 / 2**64 = 2019807759503.25988354767545683493270255599285721099372431609
-        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2563695146166521368512"))          # 2551814126505030241953 + 11881019661491126559 = 2563695146166521368512
-        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2563695146166521368512"))  # 2551814126505030241953 + 11881019661491126559 = 2563695146166521368512
-        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2019821011408"))                   # 2019807759503 + 13251905 = 2019821011408
-        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2019821011408"))           # 2019807759503 + 13251905 = 2019821011408
+        self.assertEqual(root.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("2563695146166521368512"))  # 2551814126505030241953 + 11881019661491126559 = 2563695146166521368512
+        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("2563695146166521368512"))  # 2551814126505030241953 + 11881019661491126559 = 2563695146166521368512
+        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2019821011408"))  # 2019807759503 + 13251905 = 2019821011408
+        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2019821011408"))  # 2019807759503 + 13251905 = 2019821011408
 
         self.assertEqual(root.m_liq, UnsignedDecimal("14035"))
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("224560"))
@@ -578,18 +581,18 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         RRLL: LiqNode = liq_tree.nodes[(1 << 24) | 28]
 
         # T0 - populate tree with data excluding fee calculations
-        liq_tree.add_wide_m_liq(UnsignedDecimal("8430"))                        # root
-        liq_tree.add_m_liq(LiqRange(low=8, high=15), UnsignedDecimal("377"))         # R
-        liq_tree.add_m_liq(LiqRange(low=12, high=15), UnsignedDecimal("9082734"))    # RR
-        liq_tree.add_m_liq(LiqRange(low=8, high=11), UnsignedDecimal("1111"))        # RL
-        liq_tree.add_m_liq(LiqRange(low=12, high=13), UnsignedDecimal("45346"))      # RRL
+        liq_tree.add_wide_m_liq(UnsignedDecimal("8430"))  # root
+        liq_tree.add_m_liq(LiqRange(low=8, high=15), UnsignedDecimal("377"))  # R
+        liq_tree.add_m_liq(LiqRange(low=12, high=15), UnsignedDecimal("9082734"))  # RR
+        liq_tree.add_m_liq(LiqRange(low=8, high=11), UnsignedDecimal("1111"))  # RL
+        liq_tree.add_m_liq(LiqRange(low=12, high=13), UnsignedDecimal("45346"))  # RRL
         liq_tree.add_m_liq(LiqRange(low=12, high=12), UnsignedDecimal("287634865"))  # RRLL
 
-        liq_tree.add_wide_t_liq(UnsignedDecimal("4430"), UnsignedDecimal("492e18"), UnsignedDecimal("254858e6"))                      # root
-        liq_tree.add_t_liq(LiqRange(low=8, high=15), UnsignedDecimal("77"), UnsignedDecimal("998e18"), UnsignedDecimal("353e6"))           # R
-        liq_tree.add_t_liq(LiqRange(low=12, high=15), UnsignedDecimal("82734"), UnsignedDecimal("765e18"), UnsignedDecimal("99763e6"))     # RR
-        liq_tree.add_t_liq(LiqRange(low=8, high=11), UnsignedDecimal("111"), UnsignedDecimal("24e18"), UnsignedDecimal("552e6"))           # RL
-        liq_tree.add_t_liq(LiqRange(low=12, high=13), UnsignedDecimal("5346"), UnsignedDecimal("53e18"), UnsignedDecimal("8765e6"))        # RRL
+        liq_tree.add_wide_t_liq(UnsignedDecimal("4430"), UnsignedDecimal("492e18"), UnsignedDecimal("254858e6"))  # root
+        liq_tree.add_t_liq(LiqRange(low=8, high=15), UnsignedDecimal("77"), UnsignedDecimal("998e18"), UnsignedDecimal("353e6"))  # R
+        liq_tree.add_t_liq(LiqRange(low=12, high=15), UnsignedDecimal("82734"), UnsignedDecimal("765e18"), UnsignedDecimal("99763e6"))  # RR
+        liq_tree.add_t_liq(LiqRange(low=8, high=11), UnsignedDecimal("111"), UnsignedDecimal("24e18"), UnsignedDecimal("552e6"))  # RL
+        liq_tree.add_t_liq(LiqRange(low=12, high=13), UnsignedDecimal("5346"), UnsignedDecimal("53e18"), UnsignedDecimal("8765e6"))  # RRL
         liq_tree.add_t_liq(LiqRange(low=12, high=12), UnsignedDecimal("7634865"), UnsignedDecimal("701e18"), UnsignedDecimal("779531e6"))  # RRLL
 
         # m_liq
@@ -610,10 +613,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_m_liq
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("324198833"))  # 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(R.subtree_m_liq, UnsignedDecimal("324063953"))     # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(RR.subtree_m_liq, UnsignedDecimal("324056493"))    # 9082734*4 + 45346*2 + 287634865*1
-        self.assertEqual(RL.subtree_m_liq, UnsignedDecimal("4444"))         # 1111*4
-        self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287725557"))   # 45346*2 + 287634865*1
+        self.assertEqual(R.subtree_m_liq, UnsignedDecimal("324063953"))  # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        self.assertEqual(RR.subtree_m_liq, UnsignedDecimal("324056493"))  # 9082734*4 + 45346*2 + 287634865*1
+        self.assertEqual(RL.subtree_m_liq, UnsignedDecimal("4444"))  # 1111*4
+        self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287725557"))  # 45346*2 + 287634865*1
         self.assertEqual(RRLL.subtree_m_liq, UnsignedDecimal("287634865"))  # 287634865*1
 
         # borrow_x
@@ -626,11 +629,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_borrow_x
         self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("1519e18"))    # 765e18 + 53e18 + 701e18
-        self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("24e18"))      # 24e18
-        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("754e18"))    # 53e18 + 701e18
-        self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("701e18"))   # 701e18
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("2541e18"))  # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("1519e18"))  # 765e18 + 53e18 + 701e18
+        self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("24e18"))  # 24e18
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("754e18"))  # 53e18 + 701e18
+        self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("701e18"))  # 701e18
 
         # borrow_y
         self.assertEqual(root.token_y_borrow, UnsignedDecimal("254858e6"))
@@ -642,14 +645,14 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_borrow_y
         self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
-        self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("552e6"))        # 552e6
-        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("788296e6"))    # 8765e6 + 779531e6
-        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))   # 779531e6
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("888964e6"))  # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("888059e6"))  # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("552e6"))  # 552e6
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("788296e6"))  # 8765e6 + 779531e6
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))  # 779531e6
 
         # T98273
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("4541239648278065")   # 7.9% APR as Q192.64 T98273 - T0
+        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("4541239648278065")  # 7.9% APR as Q192.64 T98273 - T0
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("13278814667749784")  # 23.1% APR as Q192.64 T98273 - T0
 
         # Apply change that requires fee calculation
@@ -745,14 +748,14 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_m_liq
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("324212503"))  # 8430*16 + 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
-        self.assertEqual(R.subtree_m_liq, UnsignedDecimal("324077623"))     # 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
-        self.assertEqual(RR.subtree_m_liq, UnsignedDecimal("324059227"))    # 9082734*4 + 45346*2 + 287637599*1
-        self.assertEqual(RL.subtree_m_liq, UnsignedDecimal("15380"))        # 3845*4
-        self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287728291"))   # 45346*2 + 287637599*1
+        self.assertEqual(R.subtree_m_liq, UnsignedDecimal("324077623"))  # 377*8 + 9082734*4 + 3845*4 + 45346*2 + 287637599*1
+        self.assertEqual(RR.subtree_m_liq, UnsignedDecimal("324059227"))  # 9082734*4 + 45346*2 + 287637599*1
+        self.assertEqual(RL.subtree_m_liq, UnsignedDecimal("15380"))  # 3845*4
+        self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287728291"))  # 45346*2 + 287637599*1
         self.assertEqual(RRLL.subtree_m_liq, UnsignedDecimal("287637599"))  # 287637599*1
 
         # T2876298273
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("16463537718422861220174597")    # 978567.9% APR as Q192.64 T2876298273 - T98273
+        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("16463537718422861220174597")  # 978567.9% APR as Q192.64 T2876298273 - T98273
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("3715979586694123491881712207")  # 220872233.1% APR as Q192.64 T2876298273 - T98273
 
         # Apply change that requires fee calculation
@@ -767,10 +770,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 3715979586694123491881712207 * 254858e6 / 324212503 / 2**64  = 158351473403.760477087118657111090258803416110827691474619042
         #           earn_y_sub  = 3715979586694123491881712207 * 1143822e6 / 324212503 / 2**64 = 710693401861.570429112455707155049015549996557766096092261976
-        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("1354374549844117328"))          # 373601278 + 1354374549470516050 = 1354374549844117328
+        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("1354374549844117328"))  # 373601278 + 1354374549470516050 = 1354374549844117328
         self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("8349223596904894020"))  # 2303115199 + 8349223594601778821 = 8349223596904894020
-        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("158351473403"))                 # 0 + 158351473403 = 158351473403
-        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("710693401863"))         # 2 + 710693401861 = 710693401863
+        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("158351473403"))  # 0 + 158351473403 = 158351473403
+        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("710693401863"))  # 2 + 710693401861 = 710693401863
 
         # R
         #           total_m_liq = 324077623 + 8430 * 8 = 324145063
@@ -780,10 +783,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 3715979586694123491881712207 * 353e6 / 324145063 / 2**64    = 219375887.687723491736647414380713113554572979392890952782027
         #           earn_y_sub  = 3715979586694123491881712207 * 888964e6 / 324145063 / 2**64 = 552456845955.890725518915105035513462543703722529807118835474
-        self.assertEqual(R.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2747859799935140577"))          # 757991165 + 2747859799177149412 = 2747859799935140577
+        self.assertEqual(R.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2747859799935140577"))  # 757991165 + 2747859799177149412 = 2747859799935140577
         self.assertEqual(R.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("6996304360355904016"))  # 1929915382 + 6996304358425988634 = 6996304360355904016
-        self.assertEqual(R.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("219375887"))                    # 0 + 219375887 = 219375887 = 219375887
-        self.assertEqual(R.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552456845956"))         # 1 + 552456845955 = 552456845956
+        self.assertEqual(R.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("219375887"))  # 0 + 219375887 = 219375887 = 219375887
+        self.assertEqual(R.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552456845956"))  # 1 + 552456845955 = 552456845956
 
         # RR
         #           total_m_liq = 324059227 + (377 + 8430) * 4 = 324094455
@@ -793,10 +796,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 3715979586694123491881712207 * 99763e6 / 324094455 / 2**64  = 62008538706.1288411875002441524622314240784801570453009535875
         #           earn_y_sub  = 3715979586694123491881712207 * 888059e6 / 324094455 / 2**64 = 551980602776.841840924293368501262560029627326862519099461143
-        self.assertEqual(RR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2106654304686669588"))          # 581096415 + 2106654304105573173 = 2106654304686669588
+        self.assertEqual(RR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2106654304686669588"))  # 581096415 + 2106654304105573173 = 2106654304686669588
         self.assertEqual(RR.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("4183016848129478568"))  # 1153837196 + 4183016846975641372 = 4183016848129478568
-        self.assertEqual(RR.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("62008538706"))                  # 0 + 62008538706 = 62008538706
-        self.assertEqual(RR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("551980602777"))         # 1 + 551980602776 = 551980602777
+        self.assertEqual(RR.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("62008538706"))  # 0 + 62008538706 = 62008538706
+        self.assertEqual(RR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("551980602777"))  # 1 + 551980602776 = 551980602777
 
         # RL
         #           total_m_liq = 15380 + (377 + 8430) * 4 = 50608
@@ -806,10 +809,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 3715979586694123491881712207 * 552e6 / 50608 / 2**64 = 2197219781185.45157550848350683783177940360867452683580030548
         #           earn_y_sub  = 3715979586694123491881712207 * 552e6 / 50608 / 2**64 = 2197219781185.45157550848350683783177940360867452683580030548
-        self.assertEqual(RL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("423248578107618890129"))          # 148929881804 + 423248577958689008325 = 423248578107618890129
+        self.assertEqual(RL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("423248578107618890129"))  # 148929881804 + 423248577958689008325 = 423248578107618890129
         self.assertEqual(RL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("423248578107618890129"))  # 148929881804 + 423248577958689008325 = 423248578107618890129
-        self.assertEqual(RL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2197219781195"))                  # 10 + 2197219781185 = 2197219781195
-        self.assertEqual(RL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2197219781195"))          # 10 + 2197219781185 = 2197219781195
+        self.assertEqual(RL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2197219781195"))  # 10 + 2197219781185 = 2197219781195
+        self.assertEqual(RL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2197219781195"))  # 10 + 2197219781185 = 2197219781195
 
         # RRL
         #           total_m_liq = 287728291 + (9082734 + 377 + 8430) * 2 = 305911373
@@ -819,10 +822,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 3715979586694123491881712207 * 8765e6 / 305911373 / 2**64 = 5771781665.52844938596716448955303604219154769320799186650875
         #           earn_y_sub  = 3715979586694123491881712207 * 788296e6 / 305911373 / 2**64 = 519095539054.126016789546137872983468330339792397614050929992
-        self.assertEqual(RRL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("154626415017241476"))           # 42651943 + 154626414974589533 = 154626415017241476 (sol losses 1 wei)
+        self.assertEqual(RRL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("154626415017241476"))  # 42651943 + 154626414974589533 = 154626415017241476 (sol losses 1 wei)
         self.assertEqual(RRL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2199779564584907057"))  # 606784254 + 2199779563978122803 = 2199779564584907057
-        self.assertEqual(RRL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("5771781665"))                   # 0 + 5771781665 = 5771781665
-        self.assertEqual(RRL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("519095539055"))         # 1 + 519095539054 = 519095539055
+        self.assertEqual(RRL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("5771781665"))  # 0 + 5771781665 = 5771781665
+        self.assertEqual(RRL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("519095539055"))  # 1 + 519095539054 = 519095539055
 
         # RRLL
         #           total_m_liq = 287637599 + (45346 + 9082734 + 377 + 8430) * 1 = 296774486
@@ -832,10 +835,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 3715979586694123491881712207 * 779531e6 / 296774486 / 2**64 = 529127613134.050803777279185858502873428448836282593499892809
         #           earn_y_sub  = 3715979586694123491881712207 * 779531e6 / 296774486 / 2**64 = 529127613134.050803777279185858502873428448836282593499892809
-        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2108117905996538332"))          # 581500584 + 2108117905415037748 = 2108117905996538332
+        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2108117905996538332"))  # 581500584 + 2108117905415037748 = 2108117905996538332
         self.assertEqual(RRLL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2108117905996538332"))  # 581500584 + 2108117905415037748 = 2108117905996538332
-        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("529127613135"))                 # 1 + 529127613134 = 529127613135
-        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("529127613135"))         # 1 + 529127613134 = 529127613135
+        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("529127613135"))  # 1 + 529127613134 = 529127613135
+        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("529127613135"))  # 1 + 529127613134 = 529127613135
 
         # m_liq
         self.assertEqual(root.m_liq, UnsignedDecimal("8430"))
@@ -854,7 +857,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRLL.subtree_m_liq, UnsignedDecimal("287634865"))
 
         # T9214298113
-        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("11381610389149375791104")   # 307% APR as Q192.64 T9214298113 - T2876298273
+        liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("11381610389149375791104")  # 307% APR as Q192.64 T9214298113 - T2876298273
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("185394198934916215865344")  # 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
         # Apply change that requires fee calculation
@@ -869,10 +872,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 185394198934916215865344 * 254858e6 / 324198833 / 2**64  = 7900657.61872699474175109887651599451346454839027751836478695
         #           earn_y_sub  = 185394198934916215865344 * 1143822e6 / 324198833 / 2**64 = 35458749.5733606501640098620374258523427949943453374491326438
-        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("1355310898622008714"))          # 373601278 + 1354374549470516050 + 936348777891386 = 1355310898622008714
-        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("8354995844553968361"))  # 2303115199 + 8349223594601778821 + 5772247649074341 = 8354995844553968361
-        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("158359374060"))                 # 0 + 158351473403 + 7900657 = 158359374060
-        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("710728860612"))         # 2 + 710693401861 + 35458749 = 710728860612
+        self.assertEqual(root.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("1355310898622008714"))  # 373601278 + 1354374549470516050 + 936348777891386 = 1355310898622008714
+        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("8354995844553968361"))  # 2303115199 + 8349223594601778821 + 5772247649074341 = 8354995844553968361
+        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("158359374060"))  # 0 + 158351473403 + 7900657 = 158359374060
+        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("710728860612"))  # 2 + 710693401861 + 35458749 = 710728860612
 
         # R
         #           total_m_liq = 324063953 + 8430 * 8 = 324131393
@@ -882,10 +887,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 185394198934916215865344 * 353e6 / 324131393 / 2**64    = 10945.359436035932129843115196215424291564802240553108041589788249
         #           earn_y_sub  = 185394198934916215865344 * 888964e6 / 324131393 / 2**64 = 27563825.7951735024642318840149814403397354471925525584619938
-        self.assertEqual(R.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2749759536746020654"))          # 757991165 + 2747859799177149412 + 1899736810880077 = 2749759536746020654
-        self.assertEqual(R.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("7001141265402443371"))  # 1929915382 + 6996304358425988634 + 4836905046539355 = 7001141265402443371
-        self.assertEqual(R.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("219386832"))                    # 0 + 219375887 + 10945 = 219386832
-        self.assertEqual(R.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552484409781"))         # 1 + 552456845955 + 27563825 = 552484409781
+        self.assertEqual(R.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2749759536746020654"))  # 757991165 + 2747859799177149412 + 1899736810880077 = 2749759536746020654
+        self.assertEqual(R.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("7001141265402443371"))  # 1929915382 + 6996304358425988634 + 4836905046539355 = 7001141265402443371
+        self.assertEqual(R.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("219386832"))  # 0 + 219375887 + 10945 = 219386832
+        self.assertEqual(R.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552484409781"))  # 1 + 552456845955 + 27563825 = 552484409781
 
         # RR
         #           total_m_liq = 324056493 + (377 + 8430) * 4 = 324091721
@@ -895,10 +901,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 185394198934916215865344 * 99763e6 / 324091721 / 2**64  = 3093698.46401352576654665825318763474490453834363760251685046
         #           earn_y_sub  = 185394198934916215865344 * 888059e6 / 324091721 / 2**64 = 27539135.3934162733549879091613880669579421169863823827823111
-        self.assertEqual(RR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2108110694023652835"))          # 581096415 + 2106654304105573173+ 1456389336983247 = 2108110694023652835
-        self.assertEqual(RR.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("4185908685257423082"))  # 1153837196 + 4183016846975641372 + 2891837127944514 = 4185908685257423082
-        self.assertEqual(RR.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("62011632404"))                  # 0 + 62008538706 + 3093698 = 62011632404
-        self.assertEqual(RR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552008141912"))         # 1 + 551980602776 + 27539135 = 552008141912
+        self.assertEqual(RR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2108110694023652835"))  # 581096415 + 2106654304105573173+ 1456389336983247 = 2108110694023652835
+        self.assertEqual(RR.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("4185908685257423082"))  # 1153837196 + 4183016846975641372 + 2891837127944514 = 4185908685257423082
+        self.assertEqual(RR.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("62011632404"))  # 0 + 62008538706 + 3093698 = 62011632404
+        self.assertEqual(RR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552008141912"))  # 1 + 551980602776 + 27539135 = 552008141912
 
         # RL
         #           total_m_liq = 4444 + (377 + 8430) * 4 = 39672
@@ -908,10 +915,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 185394198934916215865344 * 552e6 / 39672 / 2**64 = 139839995.304998697233270837982279275016069267997580157289776
         #           earn_y_sub  = 185394198934916215865344 * 552e6 / 39672 / 2**64 = 139839995.304998697233270837982279275016069267997580157289776
-        self.assertEqual(RL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("423621837838722923425"))          # 148929881804 + 423248577958689008325 + 373259731104033296 = 423621837838722923425
-        self.assertEqual(RL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("423621837838722923425"))  # 148929881804 + 423248577958689008325 + 373259731104033296 = 423621837838722923425
-        self.assertEqual(RL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2197359621190"))                  # 10 + 2197219781185 + 139839995 = 2197359621190
-        self.assertEqual(RL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2197359621190"))          # 10 + 2197219781185 + 139839995 = 2197359621190
+        self.assertEqual(RL.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("423621837838722923425"))  # 148929881804 + 423248577958689008325 + 373259731104033296 = 423621837838722923425
+        self.assertEqual(RL.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("423621837838722923425"))  # 148929881804 + 423248577958689008325 + 373259731104033296 = 423621837838722923425
+        self.assertEqual(RL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2197359621190"))  # 10 + 2197219781185 + 139839995 = 2197359621190
+        self.assertEqual(RL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2197359621190"))  # 10 + 2197219781185 + 139839995 = 2197359621190
 
         # RRL
         #           total_m_liq = 287725557 + (9082734 + 377 + 8430) * 2 = 305908639
@@ -921,10 +930,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 185394198934916215865344 * 8765e6 / 305908639 / 2**64   = 287962.93864210284405202260308978443477406072046236000546555339354
         #           earn_y_sub  = 185394198934916215865344 * 788296e6 / 305908639 / 2**64 = 25898463.5116731435886860479093285465823905270619049107665115
-        self.assertEqual(RRL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("154733312657952738"))           # 42651943 + 154626414974589533 + 106897640711262 = 154733312657952738
-        self.assertEqual(RRL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2201300334794271053"))  # 606784254 + 2199779563978122803 + 1520770209363996 = 2201300334794271053
-        self.assertEqual(RRL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("5772069627"))                   # 0 + 5771781665 + 287962 = 5772069627
-        self.assertEqual(RRL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("519121437518"))         # 1 + 519095539054 + 25898463 = 519121437518
+        self.assertEqual(RRL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("154733312657952738"))  # 42651943 + 154626414974589533 + 106897640711262 = 154733312657952738
+        self.assertEqual(RRL.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("2201300334794271053"))  # 606784254 + 2199779563978122803 + 1520770209363996 = 2201300334794271053
+        self.assertEqual(RRL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("5772069627"))  # 0 + 5771781665 + 287962 = 5772069627
+        self.assertEqual(RRL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("519121437518"))  # 1 + 519095539054 + 25898463 = 519121437518
 
         # RRLL
         #           total_m_liq = 287634865 + (45346 + 9082734 + 377 + 8430) * 1 = 296771752
@@ -934,10 +944,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 185394198934916215865344 * 779531e6 / 296771752 / 2**64 = 26398986.1622835510939886934876573358559478744206759947961624
         #           earn_y_sub  = 185394198934916215865344 * 779531e6 / 296771752 / 2**64 = 26398986.1622835510939886934876573358559478744206759947961624
-        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2109575308294031901"))          # 581500584 + 2108117905415037748 + 1457402297493569 = 2109575308294031901
-        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2109575308294031901"))  # 581500584 + 2108117905415037748 + 1457402297493569 = 2109575308294031901
-        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("529154012121"))                 # 1 + 529127613134 + 26398986 = 529154012121
-        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("529154012121"))         # 1 + 529127613134 + 26398986 = 529154012121
+        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("2109575308294031901"))  # 581500584 + 2108117905415037748 + 1457402297493569 = 2109575308294031901
+        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("2109575308294031901"))  # 581500584 + 2108117905415037748 + 1457402297493569 = 2109575308294031901
+        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("529154012121"))  # 1 + 529127613134 + 26398986 = 529154012121
+        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("529154012121"))  # 1 + 529127613134 + 26398986 = 529154012121
 
         # t_liq
         self.assertEqual(root.t_liq, UnsignedDecimal("4430"))
@@ -957,10 +969,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_borrow_x
         self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("5033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("4541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("2519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("4541e18"))  # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("2519e18"))  # 765e18 + 53e18 + 701e18
         self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("1024e18"))
-        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("1754e18"))   # 53e18 + 701e18
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("1754e18"))  # 53e18 + 701e18
         self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("1701e18"))  # 701e18
 
         # borrow_y
@@ -973,11 +985,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_borrow_y
         self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1145822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("890964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("889059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("890964e6"))  # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("889059e6"))  # 99763e6 + 8765e6 + 779531e6
         self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("1552e6"))
-        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("789296e6"))    # 8765e6 + 779531e6
-        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("780531e6"))   # 779531e6
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("789296e6"))  # 8765e6 + 779531e6
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("780531e6"))  # 779531e6
 
         # T32876298273
         # 3.3) addTLiq
@@ -996,10 +1008,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 6117681147286553534438 * 254858e6 / 324198833 / 2**64  = 260707.74837037839600245251693715160678794344236990061534290681026
         #           earn_y_sub  = 6117681147286553534438 * 1145822e6 / 324198833 / 2**64 = 1172122.01952947804057287645615189999290967884478087508680692
-        self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("1355504472799662735"))         # 373601278 + 1354374549470516050 + 936348777891386 + 193574177654021 = 1355504472799662735
-        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("8356976045440416914")) # 2303115199 + 8349223594601778821 + 5772247649074341 + 1980200886448553 = 8356976045440416914
-        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("158359634767"))                # 0 + 158351473403 + 7900657 + 260707 = 158359634767
-        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("710730032734"))        # 2 + 710693401861 + 35458749 + 1172122 = 710730032734
+        self.assertEqual(root.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("1355504472799662735"))  # 373601278 + 1354374549470516050 + 936348777891386 + 193574177654021 = 1355504472799662735
+        self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("8356976045440416914"))  # 2303115199 + 8349223594601778821 + 5772247649074341 + 1980200886448553 = 8356976045440416914
+        self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("158359634767"))  # 0 + 158351473403 + 7900657 + 260707 = 158359634767
+        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("710730032734"))  # 2 + 710693401861 + 35458749 + 1172122 = 710730032734
 
         # R
         #           total_m_liq = 324063953 + 8430 * 8 = 324131393
@@ -1009,10 +1023,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 6117681147286553534438 * 353e6 / 324131393 / 2**64    = 361.17753121077324707993230558447820693195086120933424789750836934
         #           earn_y_sub  = 6117681147286553534438 * 890964e6 / 324131393 / 2**64 = 911603.90344950531249667084054608793530005288132156736216361373026
-        self.assertEqual(R.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2750152275007241346"))          # 757991165 + 2747859799177149412 + 1899736810880077 + 392738261220692 = 2750152275007241346
-        self.assertEqual(R.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("7002928263843528706"))  # 1929915382 + 6996304358425988634 + 4836905046539355 + 1786998441085335 = 7002928263843528706
-        self.assertEqual(R.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("219387193"))                    # 0 + 219375887 + 10945 + 361 = 219387193
-        self.assertEqual(R.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552485321384"))         # 1 + 552456845955 + 27563825 + 911603 = 552485321384
+        self.assertEqual(R.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("2750152275007241346"))  # 757991165 + 2747859799177149412 + 1899736810880077 + 392738261220692 = 2750152275007241346
+        self.assertEqual(R.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("7002928263843528706"))  # 1929915382 + 6996304358425988634 + 4836905046539355 + 1786998441085335 = 7002928263843528706
+        self.assertEqual(R.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("219387193"))  # 0 + 219375887 + 10945 + 361 = 219387193
+        self.assertEqual(R.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552485321384"))  # 1 + 552456845955 + 27563825 + 911603 = 552485321384
 
         # RR
         #           total_m_liq = 324056493 + (377 + 8430) * 4 = 324091721
@@ -1022,10 +1038,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 6117681147286553534438 * 99763e6 / 324091721 / 2**64  = 102086.58565055261555338276382365173781133864709615634713615821960
         #           earn_y_sub  = 6117681147286553534438 * 889059e6 / 324091721 / 2**64 = 909766.12323100405793004346924503062625232727813579850073199172604
-        self.assertEqual(RR.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2108411777738297592"))          # 581096415 + 2106654304105573173+ 1456389336983247 + 301083714644757 = 2108411777738297592
-        self.assertEqual(RR.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("4186900096861593203"))  # 1153837196 + 4183016846975641372 + 2891837127944514 + 991411604170121 = 4186900096861593203
-        self.assertEqual(RR.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("62011734490"))                  # 0 + 62008538706 + 3093698 + 102086 = 62011734490
-        self.assertEqual(RR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552009051678"))         # 1 + 551980602776 + 27539135 + 909766 = 552009051678
+        self.assertEqual(RR.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("2108411777738297592"))  # 581096415 + 2106654304105573173+ 1456389336983247 + 301083714644757 = 2108411777738297592
+        self.assertEqual(RR.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("4186900096861593203"))  # 1153837196 + 4183016846975641372 + 2891837127944514 + 991411604170121 = 4186900096861593203
+        self.assertEqual(RR.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("62011734490"))  # 0 + 62008538706 + 3093698 + 102086 = 62011734490
+        self.assertEqual(RR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("552009051678"))  # 1 + 551980602776 + 27539135 + 909766 = 552009051678
 
         # RL
         #           total_m_liq = 4444 + (377 + 8430) * 4 = 39672
@@ -1035,10 +1053,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 6117681147286553534438 * 1552e6 / 39672 / 2**64 = 12974025.1961037381208809794236997935340918048320067315891063
         #           earn_y_sub  = 6117681147286553534438 * 1552e6 / 39672 / 2**64 = 12974025.1961037381208809794236997935340918048320067315891063
-        self.assertEqual(RL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("426914215366679462837"))          # 148929881804 + 423248577958689008325 + 373259731104033296 + 3292377527956539412 = 426914215366679462837
-        self.assertEqual(RL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("426914215366679462837"))  # 148929881804 + 423248577958689008325 + 373259731104033296 + 3292377527956539412 = 426914215366679462837
-        self.assertEqual(RL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2197372595215"))                  # 10 + 2197219781185 + 139839995 + 12974025 = 2197372595215
-        self.assertEqual(RL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2197372595215"))          # 10 + 2197219781185 + 139839995 + 12974025 = 2197372595215
+        self.assertEqual(RL.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("426914215366679462837"))  # 148929881804 + 423248577958689008325 + 373259731104033296 + 3292377527956539412 = 426914215366679462837
+        self.assertEqual(RL.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("426914215366679462837"))  # 148929881804 + 423248577958689008325 + 373259731104033296 + 3292377527956539412 = 426914215366679462837
+        self.assertEqual(RL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("2197372595215"))  # 10 + 2197219781185 + 139839995 + 12974025 = 2197372595215
+        self.assertEqual(RL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2197372595215"))  # 10 + 2197219781185 + 139839995 + 12974025 = 2197372595215
 
         # RRL
         #           total_m_liq = 287725557 + (9082734 + 377 + 8430) * 2 = 305908639
@@ -1048,10 +1068,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 6117681147286553534438 * 8765e6 / 305908639 / 2**64   = 9502.2684149166432853337655386227368949210477797554902569919214852
         #           earn_y_sub  = 6117681147286553534438 * 789296e6 / 305908639 / 2**64 = 855687.67265488270148782656070425233773115839456587443672363898010
-        self.assertEqual(RRL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("154755411926283537"))           # 42651943 + 154626414974589533 + 106897640711262 + 22099268330799 = 154755411926283537
-        self.assertEqual(RRL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2202031695485822406"))  # 606784254 + 2199779563978122803 + 1520770209363996 + 731360691551353 = 2202031695485822406
-        self.assertEqual(RRL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("5772079129"))                   # 0 + 5771781665 + 287962 + 9502 = 5772079129
-        self.assertEqual(RRL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("519122293205"))         # 1 + 519095539054 + 25898463 + 855687 = 519122293205
+        self.assertEqual(RRL.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("154755411926283537"))  # 42651943 + 154626414974589533 + 106897640711262 + 22099268330799 = 154755411926283537
+        self.assertEqual(RRL.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("2202031695485822406"))  # 606784254 + 2199779563978122803 + 1520770209363996 + 731360691551353 = 2202031695485822406
+        self.assertEqual(RRL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("5772079129"))  # 0 + 5771781665 + 287962 + 9502 = 5772079129
+        self.assertEqual(RRL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("519122293205"))  # 1 + 519095539054 + 25898463 + 855687 = 519122293205
 
         # RRLL
         #           total_m_liq = 287634865 + (45346 + 9082734 + 377 + 8430) * 1 = 296771752
@@ -1061,10 +1083,12 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #           earn_y      = 6117681147286553534438 * 780531e6 / 296771752 / 2**64 = 872237.41346080959306032387265895687662997868016869971844802082307
         #           earn_y_sub  = 6117681147286553534438 * 780531e6 / 296771752 / 2**64 = 872237.41346080959306032387265895687662997868016869971844802082307
-        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("2110306406167095651"))          # 581500584 + 2108117905415037748 + 1457402297493569 + 731097873063750 = 2110306406167095651
-        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("2110306406167095651"))  # 581500584 + 2108117905415037748 + 1457402297493569 + 731097873063750 = 2110306406167095651
-        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("529154884358"))                 # 1 + 529127613134 + 26398986 + 872237 = 529154884358
-        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("529154884358"))         # 1 + 529127613134 + 26398986 + 872237 = 529154884358
+        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_liq,
+                         UnsignedDecimal("2110306406167095651"))  # 581500584 + 2108117905415037748 + 1457402297493569 + 731097873063750 = 2110306406167095651
+        self.assertEqual(RRLL.token_x_cumulative_earned_per_m_subtree_liq,
+                         UnsignedDecimal("2110306406167095651"))  # 581500584 + 2108117905415037748 + 1457402297493569 + 731097873063750 = 2110306406167095651
+        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("529154884358"))  # 1 + 529127613134 + 26398986 + 872237 = 529154884358
+        self.assertEqual(RRLL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("529154884358"))  # 1 + 529127613134 + 26398986 + 872237 = 529154884358
 
         # t_liq
         self.assertEqual(root.t_liq, UnsignedDecimal("4430"))
@@ -1076,10 +1100,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_m_liq
         self.assertEqual(root.subtree_m_liq, UnsignedDecimal("324198833"))  # 8430*16 + 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(R.subtree_m_liq, UnsignedDecimal("324063953"))     # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
-        self.assertEqual(RR.subtree_m_liq, UnsignedDecimal("324056493"))    # 9082734*4 + 45346*2 + 287634865*1
-        self.assertEqual(RL.subtree_m_liq, UnsignedDecimal("4444"))         # 1111*4
-        self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287725557"))   # 45346*2 + 287634865*1
+        self.assertEqual(R.subtree_m_liq, UnsignedDecimal("324063953"))  # 377*8 + 9082734*4 + 1111*4 + 45346*2 + 287634865*1
+        self.assertEqual(RR.subtree_m_liq, UnsignedDecimal("324056493"))  # 9082734*4 + 45346*2 + 287634865*1
+        self.assertEqual(RL.subtree_m_liq, UnsignedDecimal("4444"))  # 1111*4
+        self.assertEqual(RRL.subtree_m_liq, UnsignedDecimal("287725557"))  # 45346*2 + 287634865*1
         self.assertEqual(RRLL.subtree_m_liq, UnsignedDecimal("287634865"))  # 287634865*1
 
         # borrow_x
@@ -1092,10 +1116,10 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_borrow_x
         self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("3033e18"))  # 492e18 + 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("2541e18"))     # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
-        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("1519e18"))    # 765e18 + 53e18 + 701e18
+        self.assertEqual(R.token_x_subtree_borrow, UnsignedDecimal("2541e18"))  # 998e18 + 765e18 + 53e18 + 701e18 + 24e18
+        self.assertEqual(RR.token_x_subtree_borrow, UnsignedDecimal("1519e18"))  # 765e18 + 53e18 + 701e18
         self.assertEqual(RL.token_x_subtree_borrow, UnsignedDecimal("24e18"))
-        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("754e18"))   # 53e18 + 701e18
+        self.assertEqual(RRL.token_x_subtree_borrow, UnsignedDecimal("754e18"))  # 53e18 + 701e18
         self.assertEqual(RRLL.token_x_subtree_borrow, UnsignedDecimal("701e18"))  # 701e18
 
         # borrow_y
@@ -1108,11 +1132,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # subtree_borrow_y
         self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1143822e6"))  # 254858e6 + 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("888964e6"))      # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
-        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("888059e6"))     # 99763e6 + 8765e6 + 779531e6
+        self.assertEqual(R.token_y_subtree_borrow, UnsignedDecimal("888964e6"))  # 353e6 + 99763e6 + 8765e6 + 779531e6 + 552e6
+        self.assertEqual(RR.token_y_subtree_borrow, UnsignedDecimal("888059e6"))  # 99763e6 + 8765e6 + 779531e6
         self.assertEqual(RL.token_y_subtree_borrow, UnsignedDecimal("552e6"))
-        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("788296e6"))    # 8765e6 + 779531e6
-        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))   # 779531e6
+        self.assertEqual(RRL.token_y_subtree_borrow, UnsignedDecimal("788296e6"))  # 8765e6 + 779531e6
+        self.assertEqual(RRLL.token_y_subtree_borrow, UnsignedDecimal("779531e6"))  # 779531e6
 
     def test_left_and_right_leg_stopping_below_peak(self):
         #   Range: (1, 4)
@@ -1145,23 +1169,23 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
 
         # Pre-populate nodes w/o fee calculation
         liq_tree.add_wide_m_liq(UnsignedDecimal("432"))
-        liq_tree.add_m_liq(LiqRange(low=0, high=7), UnsignedDecimal("98237498262"))      # L
-        liq_tree.add_m_liq(LiqRange(low=0, high=3), UnsignedDecimal("932141354"))        # LL
-        liq_tree.add_m_liq(LiqRange(low=4, high=7), UnsignedDecimal("151463465"))        # LR
-        liq_tree.add_m_liq(LiqRange(low=0, high=1), UnsignedDecimal("45754683688356"))   # LLL
+        liq_tree.add_m_liq(LiqRange(low=0, high=7), UnsignedDecimal("98237498262"))  # L
+        liq_tree.add_m_liq(LiqRange(low=0, high=3), UnsignedDecimal("932141354"))  # LL
+        liq_tree.add_m_liq(LiqRange(low=4, high=7), UnsignedDecimal("151463465"))  # LR
+        liq_tree.add_m_liq(LiqRange(low=0, high=1), UnsignedDecimal("45754683688356"))  # LLL
         liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("245346257245745"))  # LLR
-        liq_tree.add_m_liq(LiqRange(low=4, high=5), UnsignedDecimal("243457472"))        # LRL
-        liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("2462"))             # LLLR
-        liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))      # LRLL
+        liq_tree.add_m_liq(LiqRange(low=4, high=5), UnsignedDecimal("243457472"))  # LRL
+        liq_tree.add_m_liq(LiqRange(low=1, high=1), UnsignedDecimal("2462"))  # LLLR
+        liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))  # LRLL
 
-        liq_tree.add_t_liq(LiqRange(low=0, high=7), UnsignedDecimal("5645645"), UnsignedDecimal("4357e18"), UnsignedDecimal("345345345e6"))        # L
+        liq_tree.add_t_liq(LiqRange(low=0, high=7), UnsignedDecimal("5645645"), UnsignedDecimal("4357e18"), UnsignedDecimal("345345345e6"))  # L
         liq_tree.add_t_liq(LiqRange(low=0, high=3), UnsignedDecimal("3456835"), UnsignedDecimal("293874927834e18"), UnsignedDecimal("2345346e6"))  # LL
-        liq_tree.add_t_liq(LiqRange(low=4, high=7), UnsignedDecimal("51463465"), UnsignedDecimal("23452e18"), UnsignedDecimal("12341235e6"))       # LR
-        liq_tree.add_t_liq(LiqRange(low=0, high=1), UnsignedDecimal("23453467234"), UnsignedDecimal("134235e18"), UnsignedDecimal("34534634e6"))   # LLL
-        liq_tree.add_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("456756745"), UnsignedDecimal("1233463e18"), UnsignedDecimal("2341356e6"))     # LLR
-        liq_tree.add_t_liq(LiqRange(low=4, high=5), UnsignedDecimal("3457472"), UnsignedDecimal("45e18"), UnsignedDecimal("1324213563456457e6"))   # LRL
-        liq_tree.add_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("262"), UnsignedDecimal("4567e18"), UnsignedDecimal("1235146e6"))              # LLLR
-        liq_tree.add_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("4564573"), UnsignedDecimal("4564564e18"), UnsignedDecimal("6345135e6"))       # LRLL
+        liq_tree.add_t_liq(LiqRange(low=4, high=7), UnsignedDecimal("51463465"), UnsignedDecimal("23452e18"), UnsignedDecimal("12341235e6"))  # LR
+        liq_tree.add_t_liq(LiqRange(low=0, high=1), UnsignedDecimal("23453467234"), UnsignedDecimal("134235e18"), UnsignedDecimal("34534634e6"))  # LLL
+        liq_tree.add_t_liq(LiqRange(low=2, high=3), UnsignedDecimal("456756745"), UnsignedDecimal("1233463e18"), UnsignedDecimal("2341356e6"))  # LLR
+        liq_tree.add_t_liq(LiqRange(low=4, high=5), UnsignedDecimal("3457472"), UnsignedDecimal("45e18"), UnsignedDecimal("1324213563456457e6"))  # LRL
+        liq_tree.add_t_liq(LiqRange(low=1, high=1), UnsignedDecimal("262"), UnsignedDecimal("4567e18"), UnsignedDecimal("1235146e6"))  # LLLR
+        liq_tree.add_t_liq(LiqRange(low=4, high=4), UnsignedDecimal("4564573"), UnsignedDecimal("4564564e18"), UnsignedDecimal("6345135e6"))  # LRLL
 
         # Verify initial state
         # m_liq
@@ -1187,15 +1211,17 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LRLL.t_liq, UnsignedDecimal("4564573"))
 
         # subtree_m_liq
-        self.assertEqual(root.subtree_m_liq, UnsignedDecimal("583038259954677"))  # 432*16 + 98237498262*8 + 932141354*4 + 151463465*4 + 45754683688356*2 + 245346257245745*2 + 243457472*2 + 2462*1 + 45656756785*1 = 583038259954677
-        self.assertEqual(L.subtree_m_liq, UnsignedDecimal("583038259947765"))     # 98237498262*8 + 932141354*4 + 151463465*4 + 45754683688356*2 + 245346257245745*2 + 243457472*2 + 2462*1 + 45656756785*1 = 583038259947765
-        self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("582205610436080"))    # 932141354*4 + 45754683688356*2 + 245346257245745*2 + 2462*1 = 582205610436080
-        self.assertEqual(LR.subtree_m_liq, UnsignedDecimal("46749525589"))        # 151463465*4 + 243457472*2 + 45656756785*1 = 46749525589
-        self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("91509367379174"))    # 45754683688356*2 + 2462*1 = 91509367379174
-        self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("490692514491490"))   # 245346257245745*2 = 490692514491490
-        self.assertEqual(LRL.subtree_m_liq, UnsignedDecimal("46143671729"))       # 243457472*2 + 45656756785*1 = 46143671729
-        self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("2462"))             # 2462*1 = 2462
-        self.assertEqual(LRLL.subtree_m_liq, UnsignedDecimal("45656756785"))      # 45656756785*1 = 45656756785
+        self.assertEqual(root.subtree_m_liq, UnsignedDecimal(
+            "583038259954677"))  # 432*16 + 98237498262*8 + 932141354*4 + 151463465*4 + 45754683688356*2 + 245346257245745*2 + 243457472*2 + 2462*1 + 45656756785*1 = 583038259954677
+        self.assertEqual(L.subtree_m_liq, UnsignedDecimal(
+            "583038259947765"))  # 98237498262*8 + 932141354*4 + 151463465*4 + 45754683688356*2 + 245346257245745*2 + 243457472*2 + 2462*1 + 45656756785*1 = 583038259947765
+        self.assertEqual(LL.subtree_m_liq, UnsignedDecimal("582205610436080"))  # 932141354*4 + 45754683688356*2 + 245346257245745*2 + 2462*1 = 582205610436080
+        self.assertEqual(LR.subtree_m_liq, UnsignedDecimal("46749525589"))  # 151463465*4 + 243457472*2 + 45656756785*1 = 46749525589
+        self.assertEqual(LLL.subtree_m_liq, UnsignedDecimal("91509367379174"))  # 45754683688356*2 + 2462*1 = 91509367379174
+        self.assertEqual(LLR.subtree_m_liq, UnsignedDecimal("490692514491490"))  # 245346257245745*2 = 490692514491490
+        self.assertEqual(LRL.subtree_m_liq, UnsignedDecimal("46143671729"))  # 243457472*2 + 45656756785*1 = 46143671729
+        self.assertEqual(LLLR.subtree_m_liq, UnsignedDecimal("2462"))  # 2462*1 = 2462
+        self.assertEqual(LRLL.subtree_m_liq, UnsignedDecimal("45656756785"))  # 45656756785*1 = 45656756785
 
         # borrow_x
         self.assertEqual(root.token_x_borrow, UnsignedDecimal("0"))
@@ -1209,15 +1235,17 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LRLL.token_x_borrow, UnsignedDecimal("4564564e18"))
 
         # subtree_borrow_x
-        self.assertEqual(root.token_x_subtree_borrow, UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
-        self.assertEqual(L.token_x_subtree_borrow, UnsignedDecimal("293880892517e18"))     # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
-        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("293876300099e18"))    # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
-        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("4588061e18"))         # 23452e18 + 45e18 + 4564564e18 = 4588061e18
-        self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("138802e18"))         # 134235e18 + 4567e18 = 138802e18
-        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("1233463e18"))        # 1233463e18
-        self.assertEqual(LRL.token_x_subtree_borrow, UnsignedDecimal("4564609e18"))        # 45e18 + 4564564e18 = 4564609e18
-        self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("4567e18"))          # 4567e18
-        self.assertEqual(LRLL.token_x_subtree_borrow, UnsignedDecimal("4564564e18"))       # 4564564e18
+        self.assertEqual(root.token_x_subtree_borrow,
+                         UnsignedDecimal("293880892517e18"))  # 0 + 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+        self.assertEqual(L.token_x_subtree_borrow,
+                         UnsignedDecimal("293880892517e18"))  # 4357e18 + 293874927834e18 + 23452e18 + 134235e18 + 1233463e18 + 45e18 + 4567e18 + 4564564e18 = 293880892517e18
+        self.assertEqual(LL.token_x_subtree_borrow, UnsignedDecimal("293876300099e18"))  # 293874927834e18 + 134235e18 + 1233463e18 + 4567e18 = 293876300099e18
+        self.assertEqual(LR.token_x_subtree_borrow, UnsignedDecimal("4588061e18"))  # 23452e18 + 45e18 + 4564564e18 = 4588061e18
+        self.assertEqual(LLL.token_x_subtree_borrow, UnsignedDecimal("138802e18"))  # 134235e18 + 4567e18 = 138802e18
+        self.assertEqual(LLR.token_x_subtree_borrow, UnsignedDecimal("1233463e18"))  # 1233463e18
+        self.assertEqual(LRL.token_x_subtree_borrow, UnsignedDecimal("4564609e18"))  # 45e18 + 4564564e18 = 4564609e18
+        self.assertEqual(LLLR.token_x_subtree_borrow, UnsignedDecimal("4567e18"))  # 4567e18
+        self.assertEqual(LRLL.token_x_subtree_borrow, UnsignedDecimal("4564564e18"))  # 4564564e18
 
         # borrow_y
         self.assertEqual(root.token_y_borrow, UnsignedDecimal("0"))
@@ -1231,22 +1259,24 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(LRLL.token_y_borrow, UnsignedDecimal("6345135e6"))
 
         # subtree_borrow_y
-        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal("1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
-        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal("1324213967944654e6"))     # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
-        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("40456482e6"))            # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
-        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("1324213582142827e6"))    # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
-        self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("35769780e6"))           # 34534634e6 + 1235146e6 = 35769780e6
-        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("2341356e6"))            # 2341356e6
-        self.assertEqual(LRL.token_y_subtree_borrow, UnsignedDecimal("1324213569801592e6"))   # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
-        self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("1235146e6"))           # 1235146e6
-        self.assertEqual(LRLL.token_y_subtree_borrow, UnsignedDecimal("6345135e6"))           # 6345135e6
+        self.assertEqual(root.token_y_subtree_borrow, UnsignedDecimal(
+            "1324213967944654e6"))  # 0 + 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+        self.assertEqual(L.token_y_subtree_borrow, UnsignedDecimal(
+            "1324213967944654e6"))  # 345345345e6 + 2345346e6 + 12341235e6 + 34534634e6 + 2341356e6 + 1324213563456457e6 + 1235146e6 + 6345135e6 = 1324213967944654e6
+        self.assertEqual(LL.token_y_subtree_borrow, UnsignedDecimal("40456482e6"))  # 2345346e6 + 34534634e6 + 2341356e6 + 1235146e6 = 40456482e6
+        self.assertEqual(LR.token_y_subtree_borrow, UnsignedDecimal("1324213582142827e6"))  # 12341235e6 + 1324213563456457e6 + 6345135e6 = 1324213582142827e6
+        self.assertEqual(LLL.token_y_subtree_borrow, UnsignedDecimal("35769780e6"))  # 34534634e6 + 1235146e6 = 35769780e6
+        self.assertEqual(LLR.token_y_subtree_borrow, UnsignedDecimal("2341356e6"))  # 2341356e6
+        self.assertEqual(LRL.token_y_subtree_borrow, UnsignedDecimal("1324213569801592e6"))  # 1324213563456457e6 + 6345135e6 = 1324213569801592e6
+        self.assertEqual(LLLR.token_y_subtree_borrow, UnsignedDecimal("1235146e6"))  # 1235146e6
+        self.assertEqual(LRLL.token_y_subtree_borrow, UnsignedDecimal("6345135e6"))  # 6345135e6
 
         # Test fees while targeting (1, 4)
         # 1) Trigger fee update through path L->LL->LLR by updating LLR
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("997278349210980290827452342352346")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("7978726162930599238079167453467080976862")
 
-        liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("564011300817682367503451461"))     # LLR
+        liq_tree.add_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("564011300817682367503451461"))  # LLR
         liq_tree.remove_m_liq(LiqRange(low=2, high=3), UnsignedDecimal("564011300817682367503451461"))  # LLR
 
         # LLR
@@ -1292,7 +1322,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(L.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673901053899051127131"))
 
         # 2) Trigger fee update through path L->LR->LRL->LRLL by updating LRLL
-        liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))     # LRLL
+        liq_tree.add_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))  # LRLL
         liq_tree.remove_m_liq(LiqRange(low=4, high=4), UnsignedDecimal("45656756785"))  # LRLL
 
         # LRLL
@@ -1351,7 +1381,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("129987217567345826")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("234346579834678237846892")
 
-        liq_tree.add_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))     # LLLR, LLL
+        liq_tree.add_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))  # LLLR, LLL
         liq_tree.remove_t_liq(LiqRange(low=1, high=3), UnsignedDecimal("32"), UnsignedDecimal("8687384723"), UnsignedDecimal("56758698"))  # LLLR, LLL
 
         # LLLR
@@ -1406,9 +1436,9 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #
         #   acc_y       = 51 + 1741210798541653346 = 1741210798541653397
         #   acc_y_sub   = 882 + 30035339489101405447 = 30035339489101406329
-        self.assertEqual(LL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("27270292518041240906363696036"))          # 1 wei lost
+        self.assertEqual(LL.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("27270292518041240906363696036"))  # 1 wei lost
         self.assertEqual(LL.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("27270419858159154634352856276"))
-        self.assertEqual(LL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("1741210798541653397"))                        # 1 wei lost
+        self.assertEqual(LL.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("1741210798541653397"))  # 1 wei lost
         self.assertEqual(LL.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("30035339489101406329"))
 
         # L
@@ -1435,7 +1465,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         #   acc_y_sub   = 28853599999 + 982369673901053899051127131 = 982369673901053927904727130
         self.assertEqual(L.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("404005403049228421672"))
         self.assertEqual(L.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("27250279648794482866527228371"))
-        self.assertEqual(L.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("256194846273571647264"))                 # 1 wei lost
+        self.assertEqual(L.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("256194846273571647264"))  # 1 wei lost
         self.assertEqual(L.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673901053927904727130"))  # 1 wei lost
 
         # 4) Confirm root fees are correct (although behavior leading to this state should have been previously tested at L and LL
@@ -1449,8 +1479,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(root.token_x_cumulative_earned_per_m_liq, UnsignedDecimal("0"))
         self.assertEqual(root.token_x_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("27250279648632954930995939801"))
         self.assertEqual(root.token_y_cumulative_earned_per_m_liq, UnsignedDecimal("0"))
-        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673895230863062865875"))       # 1 wei lost
-
+        self.assertEqual(root.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("982369673895230863062865875"))  # 1 wei lost
 
     # def test_left_and_right_leg_stopping_below_peak(self):
     #     #   Range: (1, 4)
@@ -2042,7 +2071,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.add_wide_m_liq(UnsignedDecimal("837205720"))  # root
         liq_tree.add_wide_t_liq(UnsignedDecimal("137205720"), UnsignedDecimal("92749012637e18"), UnsignedDecimal("936252847e6"))
 
-        liq_tree.add_m_liq(LiqRange(0, 7), UnsignedDecimal("628294582176"))   # L
+        liq_tree.add_m_liq(LiqRange(0, 7), UnsignedDecimal("628294582176"))  # L
         liq_tree.add_t_liq(LiqRange(0, 7), UnsignedDecimal("28294582176"), UnsignedDecimal("41423892459e18"), UnsignedDecimal("178263465237e6"))
         liq_tree.add_m_liq(LiqRange(8, 15), UnsignedDecimal("9846145183924"))  # R
         liq_tree.add_t_liq(LiqRange(8, 15), UnsignedDecimal("846145183924"), UnsignedDecimal("2983456295e18"), UnsignedDecimal("297562903e6"))
@@ -2069,9 +2098,11 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.add_m_liq(LiqRange(10, 11), UnsignedDecimal("78724563469237853906739487"))  # RLR
         liq_tree.add_t_liq(LiqRange(10, 11), UnsignedDecimal("8724563469237853906739487"), UnsignedDecimal("2765723642783492e18"), UnsignedDecimal("98576798364725367423e6"))
         liq_tree.add_m_liq(LiqRange(12, 13), UnsignedDecimal("7556478634723908752323756"))  # RRL
-        liq_tree.add_t_liq(LiqRange(12, 13), UnsignedDecimal("5556478634723908752323756"), UnsignedDecimal("28635482364798629384e18"), UnsignedDecimal("83764587364859348795634987e6"))
+        liq_tree.add_t_liq(LiqRange(12, 13), UnsignedDecimal("5556478634723908752323756"), UnsignedDecimal("28635482364798629384e18"),
+                           UnsignedDecimal("83764587364859348795634987e6"))
         liq_tree.add_m_liq(LiqRange(14, 15), UnsignedDecimal("54534789284573456239862722"))  # RRR
-        liq_tree.add_t_liq(LiqRange(14, 15), UnsignedDecimal("34534789284573456239862722"), UnsignedDecimal("27364527863428346239867e18"), UnsignedDecimal("9834657827356482367482369e6"))
+        liq_tree.add_t_liq(LiqRange(14, 15), UnsignedDecimal("34534789284573456239862722"), UnsignedDecimal("27364527863428346239867e18"),
+                           UnsignedDecimal("9834657827356482367482369e6"))
 
         liq_tree.add_m_liq(LiqRange(0, 0), UnsignedDecimal("92736478234923748923"))  # LLLL
         liq_tree.add_t_liq(LiqRange(0, 0), UnsignedDecimal("9736478234923748923"), UnsignedDecimal("5734523421634563e18"), UnsignedDecimal("72634678523487263e6"))
@@ -2096,7 +2127,8 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.add_m_liq(LiqRange(10, 10), UnsignedDecimal("34564375645457568568456"))  # RLRL
         liq_tree.add_t_liq(LiqRange(10, 10), UnsignedDecimal("3456437564545756856845"), UnsignedDecimal("1212312312423452454e18"), UnsignedDecimal("3423423648236487e6"))
         liq_tree.add_m_liq(LiqRange(11, 11), UnsignedDecimal("32546475786796896785674564"))  # RLRR
-        liq_tree.add_t_liq(LiqRange(11, 11), UnsignedDecimal("3254647578679689678567456"), UnsignedDecimal("287346234623487923642786e18"), UnsignedDecimal("827364826734823748963e6"))
+        liq_tree.add_t_liq(LiqRange(11, 11), UnsignedDecimal("3254647578679689678567456"), UnsignedDecimal("287346234623487923642786e18"),
+                           UnsignedDecimal("827364826734823748963e6"))
         liq_tree.add_m_liq(LiqRange(12, 12), UnsignedDecimal("5856745645634534563453"))  # RRLL
         liq_tree.add_t_liq(LiqRange(12, 12), UnsignedDecimal("585674564563453456345"), UnsignedDecimal("2837427354234786237896e18"), UnsignedDecimal("73649082374029384628376e6"))
         liq_tree.add_m_liq(LiqRange(13, 13), UnsignedDecimal("4574785673643563456"))  # RRLR
@@ -2121,7 +2153,7 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.add_t_liq(LiqRange(0, 0), UnsignedDecimal("3564575678567"), UnsignedDecimal("35664576857e18"), UnsignedDecimal("3565685685672375e6"))
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("34575687568567345")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("345654675678567345")
-        liq_tree.remove_t_liq(LiqRange(0, 0), UnsignedDecimal("3564575678567"),UnsignedDecimal("3564575678567e18"), UnsignedDecimal("3565467683463e6"))
+        liq_tree.remove_t_liq(LiqRange(0, 0), UnsignedDecimal("3564575678567"), UnsignedDecimal("3564575678567e18"), UnsignedDecimal("3565467683463e6"))
 
         # LiqRange(0, 1)
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("78567456345")
@@ -2362,7 +2394,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("97234")
         liq_tree.remove_t_liq(LiqRange(1, 2), UnsignedDecimal("34534"), UnsignedDecimal("234e18"), UnsignedDecimal("23e8"))
 
-
         # LiqRange(1, 3)
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("75345234")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("674563456")
@@ -2376,7 +2407,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9834")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("97234")
         liq_tree.remove_t_liq(LiqRange(1, 3), UnsignedDecimal("34534"), UnsignedDecimal("234e18"), UnsignedDecimal("23e8"))
-
 
         # LiqRange(1, 4)
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("75345234")
@@ -2392,7 +2422,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("97234")
         liq_tree.remove_t_liq(LiqRange(1, 4), UnsignedDecimal("34534"), UnsignedDecimal("234e18"), UnsignedDecimal("23e8"))
 
-
         # LiqRange(1, 5)
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("75345234")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("674563456")
@@ -2407,7 +2436,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("97234")
         liq_tree.remove_t_liq(LiqRange(1, 5), UnsignedDecimal("34534"), UnsignedDecimal("234e18"), UnsignedDecimal("23e8"))
 
-
         # LiqRange(1, 6)
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("75345234")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("674563456")
@@ -2421,7 +2449,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("9834")
         liq_tree.token_y_fee_rate_snapshot += UnsignedDecimal("97234")
         liq_tree.remove_t_liq(LiqRange(1, 6), UnsignedDecimal("34534"), UnsignedDecimal("234e18"), UnsignedDecimal("23e8"))
-
 
         # LiqRange(1, 7)
         liq_tree.token_x_fee_rate_snapshot += UnsignedDecimal("45745645")
@@ -2550,7 +2577,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         liq_tree.remove_t_liq(LiqRange(1, 15), UnsignedDecimal("2342352356"), UnsignedDecimal("3465343e18"), UnsignedDecimal("3562342346e6"))
 
         # endregion
-
 
         # m_liq
         self.assertEqual(root.m_liq, UnsignedDecimal("34693061576"))
@@ -2960,7 +2986,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         self.assertEqual(RRRR.token_y_cumulative_earned_per_m_subtree_liq, UnsignedDecimal("0"))
 
         return
-
 
         # # region Ranges that start with 2 -------------------------------------------------------------------------------------
         # # LiqRange(2, 2)
@@ -4473,7 +4498,6 @@ class TestDenseLiquidityTreeSolTruncation(TestCase):
         # liq_tree.remove_t_liq(UnsignedDecimal("0"), UnsignedDecimal("0"))
         #
         # #endregion
-
 
     # def test_left_and_right_leg_stopping_below_peak_BROKEN(self):
     #     liq_tree = self.liq_tree

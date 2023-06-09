@@ -1,9 +1,8 @@
 from collections import defaultdict
-from FloatingPoint.UnsignedDecimal import UnsignedDecimal
 
-from Tree.LiquidityKey import LiquidityKey
 from ILiquidity import *
 from LiquidityExceptions import *
+from Tree.LiquidityKey import LiquidityKey
 
 
 #  Liquidity Tree

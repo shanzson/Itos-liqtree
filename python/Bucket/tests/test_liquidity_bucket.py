@@ -1,9 +1,7 @@
-from unittest import TestCase
-
 from Bucket.LiquidityBucket import LiquidityBucket
-from ILiquidity import *
-from FloatingPoint.UnsignedDecimal import UnsignedDecimal
 from FloatingPoint.FloatingPointTestCase import FloatingPointTestCase
+from FloatingPoint.UnsignedDecimal import UnsignedDecimal
+from ILiquidity import *
 
 
 class TestLiquidityBucket(FloatingPointTestCase):
@@ -887,7 +885,7 @@ class TestLiquidityBucket(FloatingPointTestCase):
 
         # Querying the exact range
         (acc_rate_x, acc_rate_y) = self.liq_bucket.query_accumulated_fee_rates(LiqRange(0, 15))
-        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("7"))   # 1600 * 21 / (300*16)
+        self.assertFloatingPointEqual(acc_rate_x, UnsignedDecimal("7"))  # 1600 * 21 / (300*16)
         self.assertFloatingPointEqual(acc_rate_y, UnsignedDecimal("24"))  # 3200 * 36 / (300*16)
 
         # Querying a fully contained range
@@ -1185,8 +1183,6 @@ class TestLiquidityBucket(FloatingPointTestCase):
 
     # endregion
 
-
-
     #
     # # tLiq
     # def test_add_t_liq(self):
@@ -1289,6 +1285,7 @@ class TestLiquidityBucket(FloatingPointTestCase):
     #     # 1/4 of 8-11 = 8322750083.227500604480660158650166387347006561732528233292075
     #     (acc_x, acc_y) = self.liq_bucket.query_fees_in_range(LiqRange(8, 8))
     #     self.assertEqual(acc_x, UnsignedDecimal(8322750083))
+
 
 '''
 from unittest import TestCase

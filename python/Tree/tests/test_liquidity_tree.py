@@ -1,5 +1,7 @@
-from FloatingPoint.UnsignedDecimal import *
 from FloatingPoint.FloatingPointTestCase import FloatingPointTestCase
+from FloatingPoint.UnsignedDecimal import *
+from Tree.LiquidityTree import *
+
 
 # NOTE: all numbers must be given as UnsignedDecimal numbers to avoid precision errors.
 #       each UnsignedDecimal number must be created using a string! Otherwise precision is lost when the input variable is created
@@ -12,7 +14,6 @@ from FloatingPoint.FloatingPointTestCase import FloatingPointTestCase
 #
 #       If all goes perfectly, the final result in python would 100% match the final output in solidity
 
-from Tree.LiquidityTree import *
 
 #                                                               root(0-16)
 #                                                       ____----    ----____
@@ -40,9 +41,9 @@ class TestLiquidityTree(FloatingPointTestCase):
         liq_tree: LiquidityTree = self.liq_tree
 
         root: LiqNode = liq_tree.nodes[liq_tree.root_key]
-        L: LiqNode = liq_tree.nodes[(8 << 24) | 16]    # 0-7
-        LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]   # 0-3
-        LR: LiqNode = liq_tree.nodes[(4 << 24) | 20]   # 4-7
+        L: LiqNode = liq_tree.nodes[(8 << 24) | 16]  # 0-7
+        LL: LiqNode = liq_tree.nodes[(4 << 24) | 16]  # 0-3
+        LR: LiqNode = liq_tree.nodes[(4 << 24) | 20]  # 4-7
         LLL: LiqNode = liq_tree.nodes[(2 << 24) | 16]  # 0-1
         LLR: LiqNode = liq_tree.nodes[(2 << 24) | 18]  # 2-3
         LRL: LiqNode = liq_tree.nodes[(2 << 24) | 20]  # 4-5
@@ -909,7 +910,6 @@ class TestLiquidityTree(FloatingPointTestCase):
         LRLL: LiqNode = liq_tree.nodes[(1 << 24) | 20]
         LRLR: LiqNode = liq_tree.nodes[(1 << 24) | 21]
 
-
         self.liq_tree.add_m_liq(LiqRange(low=1, high=5), UnsignedDecimal("81"))  # LLLR, LLR, LRL
 
         # m_liq
@@ -1709,12 +1709,14 @@ class TestLiquidityTree(FloatingPointTestCase):
 
     def test_revert_adding_t_liq_on_range_with_negative_low_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative,
+                          lambda: self.liq_tree.add_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_range_with_negative_low_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
         self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("10"), UnsignedDecimal("2"), UnsignedDecimal("2"))
-        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.remove_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative,
+                          lambda: self.liq_tree.remove_t_liq(LiqRange(-3, 7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_adding_m_liq_on_range_with_negative_high_value(self):
         self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_m_liq(LiqRange(3, -7), UnsignedDecimal("2")))
@@ -1725,12 +1727,14 @@ class TestLiquidityTree(FloatingPointTestCase):
 
     def test_revert_adding_t_liq_on_range_with_negative_high_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
-        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.add_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative,
+                          lambda: self.liq_tree.add_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     def test_revert_removing_t_liq_on_range_with_negative_high_value(self):
         self.liq_tree.add_m_liq(LiqRange(3, 7), UnsignedDecimal("10"))
         self.liq_tree.add_t_liq(LiqRange(3, 7), UnsignedDecimal("10"), UnsignedDecimal("2"), UnsignedDecimal("2"))
-        self.assertRaises(LiquidityExceptionRangeContainsNegative, lambda: self.liq_tree.remove_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
+        self.assertRaises(LiquidityExceptionRangeContainsNegative,
+                          lambda: self.liq_tree.remove_t_liq(LiqRange(3, -7), UnsignedDecimal("2"), UnsignedDecimal("2"), UnsignedDecimal("2")))
 
     # endregion
 

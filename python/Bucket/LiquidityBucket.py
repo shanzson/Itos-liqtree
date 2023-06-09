@@ -1,9 +1,9 @@
 from dataclasses import field
 from typing import List
 
+from FloatingPoint.UnsignedDecimal import UnsignedDecimalIsSignedException
 from ILiquidity import *
 from LiquidityExceptions import *
-from FloatingPoint.UnsignedDecimal import UnsignedDecimal, UnsignedDecimalIsSignedException
 
 
 @dataclass
@@ -38,7 +38,7 @@ class Bucket:
 
 
 class LiquidityBucket(ILiquidity):
-    def __init__(self, size, sol_truncation = True):
+    def __init__(self, size, sol_truncation=True):
         self.sol_truncation = sol_truncation
 
         self._buckets = [Bucket() for n in range(0, size)]
