@@ -757,9 +757,16 @@ library LiqTreeImpl {
         uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - node.tokenY.feeRateSnapshot;
         node.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
+        console.log("hello");
+        console.log(rangeWidth);
+
         // TODO: determine if we need to check for overflow
         uint256 auxLevel = auxilliaryLevelMLiq(self, current);
         uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth;
+
+        console.log(auxLevel);
+        console.log(totalMLiq);
+        console.log(node.tokenX.borrow);
 
         if (totalMLiq > 0) {
             node.tokenX.cumulativeEarnedPerMLiq += node.tokenX.borrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;

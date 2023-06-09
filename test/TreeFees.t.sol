@@ -429,6 +429,14 @@ contract TreeFeeTest is Test {
     // subtreeMLiq
 
     // A[]
+    // NOTE: Below section of tests have the following in common
+    //  1. borrow and subtreeBorrow values will be the same
+    //  2. the equation to split the borrow across nodes
+    //      borrow / borrowRange * nodeRange
+    //     will have borrowRange and nodeRange as the same values. Meaning we borrow at a single node.
+    //  3. we assert against 3 only to show the result is not a multiple of 2.
+    //  4. borrow will equal the range tested. Anything lower will result in 0, as the equation to split with division first causes the first term to truncate to zero
+    //  5. r will be adjusted to counter the totalMLiq in the nodeEarn and nodeSubtreeEarn equations
 
     function _allocateAuxillaryArrays() internal {
         // Allocate mLiq to each node, such that any combination of sums can only be one distinct set of nodes.
@@ -452,7 +460,7 @@ contract TreeFeeTest is Test {
     function testAuxAllocation() public {
         _allocateAuxillaryArrays();
 
-        assertEq(liqTree.nodes[LKey.wrap(16 << 24 | 16)].mLiq, 16384);
+        assertEq(liqTree.nodes[LKey.wrap(16 << 24 | 16)].mLiq, 16384); 
 
         assertEq(liqTree.nodes[LKey.wrap(8 << 24 | 16)].mLiq, 8192);
         assertEq(liqTree.nodes[LKey.wrap(8 << 24 | 24)].mLiq, 8193);
@@ -492,46 +500,118 @@ contract TreeFeeTest is Test {
     function testAuxAtNodeOfRangeOne() public {
         _allocateAuxillaryArrays();
 
-        LiqNode storage rangeOne = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
+        LiqNode storage zeroZero = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
 
-        liqTree.feeRateSnapshotTokenX += 1;
-        liqTree.feeRateSnapshotTokenY += 1;
-
-        liqTree.addMLiq(LiqRange(0, 0), 100);
         liqTree.addTLiq(LiqRange(0, 0), 100, 1, 1);
 
-        assertEq(rangeOne.tokenX.cumulativeEarnedPerMLiq, 1);
-        assertEq(rangeOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1);
+        // A[] = 0-1.mliq + 0-3.mLiq + 0-7.mLiq + 0-15.mLiq
+        //     = 2048 + 4096 + 8192 + 16384 = 30720
+        // totalMLiq = 1024*1 + 30720*1 = 31744
+        liqTree.feeRateSnapshotTokenX += 1756720331627508019494912;
+        liqTree.feeRateSnapshotTokenY += 1756720331627508019494912;
+
+        liqTree.removeTLiq(LiqRange(0, 0), 100, 1, 1);
+
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testAuxAtNodeOfRangeTwo() public {
         _allocateAuxillaryArrays();
 
-        LiqNode storage rangeTwo = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
 
+        // using 2 so splitting the borrow results in 2 instead of 0 (x/2*2)
+        liqTree.addTLiq(LiqRange(0, 1), 100, 2, 2);
+
+        // A[] = 0-3.mLiq + 0-7.mLiq + 0-15.mLiq
+        //     = 4096 + 8192 + 16384 = 28672
+        // subtreeMLiq = 1024 + 1025 = 2049
+        // totalMLiq = 2049 + 2048*2 + 28672*2 = 63489
+        liqTree.feeRateSnapshotTokenX += 1756748001743618583822336; // 63489 * 2**64
+        liqTree.feeRateSnapshotTokenY += 1756748001743618583822336;
+
+        liqTree.removeTLiq(LiqRange(0, 1), 100, 1, 1);
+
+        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testAuxAtNodeOfRangeFour() public {
         _allocateAuxillaryArrays();
 
-        LiqNode storage rangeFour = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
 
+        // using 2 so splitting the borrow results in 2 instead of 0 (x/2*2)
+        liqTree.addTLiq(LiqRange(0, 3), 100, 4, 4);
+
+        // A[] = 0-7.mLiq + 0-15.mLiq
+        //     = 8192 + 16384 = 24576
+        // subtreeMLiq = 4096*4 + 2*2048 + 2*2049 + 1*1024 + 1*1025 + 1*1026 + 1*1027 = 28680
+        // totalMLiq = 28680 + 24576*4 = 126984
+        liqTree.feeRateSnapshotTokenX += 1756831012091950276804608; // 126984 * 2**64 / 4 * 3
+        liqTree.feeRateSnapshotTokenY += 1756831012091950276804608;
+
+        liqTree.removeTLiq(LiqRange(0, 3), 100, 1, 1);
+
+        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testAuxAtNodeOfRangeEight() public {
         _allocateAuxillaryArrays();
 
-        LiqNode storage rangeEight = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
 
+        liqTree.addTLiq(LiqRange(0, 7), 100, 8, 8);
+
+        // A[] = 0-15.mLiq
+        //     = 16384 = 16384
+        // subtreeMLiq = 8192*8 + 4096*4 + 4097*4 + 2048*2 + 2049*2 + 2050*2 + 2051*2 + 1024*1 + 1025*1 + 1026*1 + 1027*1 + 1028*1 + 1029*1 + 1030*1 + 1031*1 = 57388
+        // totalMLiq = 122924 + 16384*8 = 253996
+        liqTree.feeRateSnapshotTokenX += 1757024702904724227096576; // 253996 * 2**64 / 8 * 3
+        liqTree.feeRateSnapshotTokenY += 1757024702904724227096576;
+
+        liqTree.removeTLiq(LiqRange(0, 7), 100, 1, 1);
+
+        assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
+    // something strange about the console output in the fee handle method?
     function testAuxAtNodeOfRangeSixteen() public {
         _allocateAuxillaryArrays();
 
-        LiqNode storage rangeSixteen = liqTree.nodes[liqTree.root];
+        LiqNode storage zeroFifteen = liqTree.nodes[liqTree.root];
 
+        liqTree.addWideRangeTLiq(100, 16, 16);
+
+        // A[] = 0-15.mLiq = 0
+        // subtreeMLiq = 
+        //      16384*16 + 8192*8 + 8193*8 + 4096*4 + 4097*4 + 4098*4 + 4099*4 +
+        //      2048*2 + 2049*2 + 2050*2 + 2051*2 + 2052*2 + 2053*2 + 2054*2 + 2055*2 +
+        //      1024*1 + 1025*1 + 1026*1 + 1027*1 + 1028*1 + 1029*1 + 1030*1 + 1031*1 + 1032*1 +
+        //      1033*1 + 1034*1 + 1035*1 + 1036*1 + 1037*1 + 1038*1 + 1039*1 
+        //      = 458784 + 32824 + 9252 + 7252 = 508112
+        // totalMLiq = 508112 + 0*8 = 508112
+        liqTree.feeRateSnapshotTokenX += 1757439754646382692007936; // 508112 * 2**64 / 16 * 3
+        liqTree.feeRateSnapshotTokenY += 1757439754646382692007936;
+
+        liqTree.removeWideRangeTLiq(100, 16, 16);
+
+        assertEq(zeroFifteen.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroFifteen.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroFifteen.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroFifteen.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
-
 
     // N.range
 /*
