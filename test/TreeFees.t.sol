@@ -614,40 +614,98 @@ contract TreeFeeTest is Test {
     }
 
     // N.range
-/*
+
     function testNodeRangeOfOneInFeeCalculation() public {
-        LiqNode storage rangeOne = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
+        LiqNode storage zeroZero = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
 
-        liqTree.feeRateSnapshotTokenX += 1;
-        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.addWideRangeMLiq(1); // A[] = 1
+        liqTree.addMLiq(LiqRange(0, 0), 5);
+        liqTree.addTLiq(LiqRange(0, 0), 100, 18, 18);
 
-        liqTree.addMLiq(LiqRange(0, 0), 100);
-        liqTree.addTLiq(LiqRange(0, 0), 100, 1, 1);
+        liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
+        liqTree.feeRateSnapshotTokenY += 18446744073709551616;
+        liqTree.removeTLiq(LiqRange(0, 0), 100, 15, 15);
 
-        assertEq(rangeOne.tokenX.cumulativeEarnedPerMLiq, 1);
-        assertEq(rangeOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1);
+        // totalMLiq = 5 + 1*1 = 6
+        // borrows = 18
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 3);  // 15 * 1 / 5
+        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testNodeRangeOfTwoInFeeCalculation() public {
-        LiqNode storage rangeTwo = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
 
+        liqTree.addWideRangeMLiq(1); // A[] = 1
+        liqTree.addMLiq(LiqRange(0, 1), 4);
+        liqTree.addTLiq(LiqRange(0, 1), 100, 31, 31);
+
+        liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
+        liqTree.feeRateSnapshotTokenY += 18446744073709551616;
+        liqTree.removeTLiq(LiqRange(0, 1), 100, 21, 21);
+
+        // totalMLiq = 4*2 + 2*1 = 10
+        // borrow = 31/2*2 = 20 (decimal truncation)
+        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testNodeRangeOfFourInFeeCalculation() public {
-        LiqNode storage rangeFour = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
 
+        liqTree.addWideRangeMLiq(1); // A[] = 1
+        liqTree.addMLiq(LiqRange(0, 3), 24);
+        liqTree.addTLiq(LiqRange(0, 3), 100, 300, 300);
+
+        liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
+        liqTree.feeRateSnapshotTokenY += 18446744073709551616;
+        liqTree.removeTLiq(LiqRange(0, 3), 100, 300, 300);
+
+        // totalMLiq = 24*4 + 4*1 = 100
+        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testNodeRangeOfEightInFeeCalculation() public {
-        LiqNode storage rangeEight = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
 
+        liqTree.addWideRangeMLiq(1); // A[] = 1
+        liqTree.addMLiq(LiqRange(0, 7), 47);
+        liqTree.addTLiq(LiqRange(0, 7), 100, 1152, 1152);
+
+        liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
+        liqTree.feeRateSnapshotTokenY += 18446744073709551616;
+        liqTree.removeTLiq(LiqRange(0, 7), 100, 1, 1);
+
+        // totalMLiq = 47*8 + 8*1 = 384
+        assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
 
     function testNodeRangeOfSixteenInFeeCalculation() public {
-        LiqNode storage rangeSixteen = liqTree.nodes[liqTree.root];
+        LiqNode storage zeroSixteen = liqTree.nodes[liqTree.root];
 
+        liqTree.addWideRangeMLiq(3);
+        liqTree.addWideRangeTLiq(100, 144, 144);
+
+        liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
+        liqTree.feeRateSnapshotTokenY += 18446744073709551616;
+        liqTree.removeWideRangeTLiq(100, 1, 1);
+
+        // totalMLiq = 3*16 + 16*0 = 48
+        assertEq(zeroSixteen.tokenX.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSixteen.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSixteen.tokenY.cumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSixteen.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
     }
-*/
+
     // r
 
     function testTreeInitialRates() public {
