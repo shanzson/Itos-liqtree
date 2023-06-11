@@ -24,7 +24,25 @@ import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
  *        /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
  *     LLLL    LLLR    LLRL    LLRR   LRLL    LRLR   LRRL    LRRR      RLLL   RLLR   RLRL    RLRR   RRLL    RRLR   RRRL    RRRR
  *
- */
+ *
+ *
+ *
+ *                                                              0-15
+ *                                                      ____----    ----____
+ *                                  __________----------                    ----------__________
+ *                                0-7                                                          8-15
+ *                            __--  --__                                                    __--  --__
+ *                       __---          ---__                                          __---          ---__
+ *                     /                       \                                     /                       \
+ *                  0-3                          4-7                             8-11                         12-15
+ *                /   \                         /   \                           /   \                         /   \
+ *              /       \                     /       \                       /       \                     /       \
+ *            /           \                 /           \                   /           \                 /           \
+ *          0-1            2-3            4-5            6-7              8-9           10-11          12-13          14-15
+ *         /   \          /   \          /   \          /   \            /   \          /   \          /   \          /   \
+ *        /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
+ *       0       1      2       3      4       5      6       7        8       9      10      11    12      13      14     15
+ **/
 
 /// I would totally rewrite this differently.
 /// Querying is not just using the break down.
@@ -790,149 +808,7 @@ library LiqTreeImpl {
         mLiq += self.nodes[self.root].mLiq;
     }
 
-    // function queryAccumulatedFeeRates(LiqTree storage self, LiqRange memory range) public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
-
-    // }
-
-    // function queryAccumulatedFeeRates(LiqTree storage self, LiqRange memory range) public returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
-
-    // }
-
-    /***
-    
-    
-     *                                                              0-15
-    *                                                      ____----    ----____
-    *                                  __________----------                    ----------__________
-    *                                0-7                                                          8-15
-    *                            __--  --__                                                    __--  --__
-    *                       __---          ---__                                          __---          ---__
-    *                     /                       \                                     /                       \
-    *                  0-3                          4-7                             8-11                         12-15
-    *                /   \                         /   \                           /   \                         /   \
-    *              /       \                     /       \                       /       \                     /       \
-    *            /           \                 /           \                   /           \                 /           \
-    *          0-1            2-3            4-5            6-7              8-9           10-11          12-13          14-15
-    *         /   \          /   \          /   \          /   \            /   \          /   \          /   \          /   \
-    *        /     \        /     \        /     \        /     \          /     \        /     \        /     \        /     \
-    *       0       1      2       3      4       5      6       7        8       9      10      11    12      13      14     15
-    
-
-    1. Want to see how mLiq disproportionally effects fees
-
-    2. Borrow can only happen at nodes with a borrow, which means it has mLiq
-
-
-
-    Check very simple examples for correctness
-
-
-    function testFeesExampleOne() public {
-
-    }
-
-
-
-
-
-
-
-
-
-    Things to look at
-        - leaf
-        - root
-        - left subtree
-        - right subtree
-        - 4 traversal types
-
-
-    4-7 type 4th - at peak?
-
-
-
-
-    function testFeeRateAccumulationForBorrowSplitAcrossNodesAscendingToTheRight() public {
-
-    }
-
-    function testFeeRateAccumulationForBorrowSplitAcrossNodesAscendingToTheLeft() public {
-
-    }
-
-    function testFeeRateAccumulationForBorrowAtLeaf() public {
-
-    }
-
-    function testFeeRateAccumulationForBorrowA
-
-
-    
-    addMLiq(LiqRange(8, 11), 3);
-    addTLiq(LiqRange(8, 11), 1, 40, 0);
-
-    addMLiq(LiqRange(8, 8), 2);
-    addTLiq(LiqRange(8, 8), 1, 500, 0);
-
-    rateX = 4 
-
-    
-    Tree State
-
-    nodeFees = node.borrow * rate
-    totalMLiq = node.subtreeMLiq + A[level] * node.range
-
-    8-8
-
-        borrow = 500/1 = 500
-        A[level] = 3
-        totalMLiq = 2 + 3*1 = 5
-
-        accumulatedFeesX = 500 * 4 / 5 = 400
-
-
-    9-9
-
-        0
-
-
-    8-9
-
-        0
-
-    10-11
-
-        0
-
-    8-11
-
-        borrow = 40 / 4 * 4 = 40
-        A[level] = 0
-        totalMLiq = 3*4
-
-        accumulatedFeesX = 
-        accumu
-
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-     */
-
-    function queryAccumulatedFeeRates(LiqTree storage self, LiqRange memory range) public returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function queryAccumulatedFeeRates(LiqTree storage self, LiqRange memory range) public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;

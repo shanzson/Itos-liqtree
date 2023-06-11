@@ -36,6 +36,12 @@ class LiquidityKey:
     def left_sibling(key: int) -> int:
         return key & ~(key >> 24)
 
+    @staticmethod
+    def children(key: int) -> (int, int):
+        child_range = key >> 25
+        raw_left = key - (child_range << 24)
+        return raw_left, raw_left + child_range
+
     # input is raw low, high
     @staticmethod
     def keys(low: int, high: int, offset: int) -> Tuple[int, int, int, int]:  # low, high, peak, stop_range

@@ -481,7 +481,7 @@ contract TreeFeeTest is Test {
 
         assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 17)), 70); // 1-1
         assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 18)), 70); // 2-2
-        
+
         assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 16)), 70); // 0-1
         assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 18)), 70); // 2-3
         assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 16)), 140); // 0-3
@@ -516,6 +516,7 @@ contract TreeFeeTest is Test {
     }
 
     // A[]
+
     // NOTE: Below section of tests have the following in common
     //  1. borrow and subtreeBorrow values will be the same
     //  2. the equation to split the borrow across nodes
@@ -702,16 +703,16 @@ contract TreeFeeTest is Test {
 
     // N.range
 
-    function testNodeRangeOfOneInFeeCalculation() public {
+    function testNodeRangeOfOneInFeeCalculation() public { // TODO: revert on allocation of tLiq when there is not enough mLiq
         LiqNode storage zeroZero = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 0), 5);
-        liqTree.addTLiq(LiqRange(0, 0), 100, 18, 18);
+        liqTree.addTLiq(LiqRange(0, 0), 1, 18, 18);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
-        liqTree.removeTLiq(LiqRange(0, 0), 100, 15, 15);
+        liqTree.removeTLiq(LiqRange(0, 0), 1, 15, 15);
 
         // totalMLiq = 5 + 1*1 = 6
         // borrows = 18
@@ -726,11 +727,11 @@ contract TreeFeeTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 1), 4);
-        liqTree.addTLiq(LiqRange(0, 1), 100, 31, 31);
+        liqTree.addTLiq(LiqRange(0, 1), 1, 31, 31);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
-        liqTree.removeTLiq(LiqRange(0, 1), 100, 21, 21);
+        liqTree.removeTLiq(LiqRange(0, 1), 1, 21, 21);
 
         // totalMLiq = 4*2 + 2*1 = 10
         // borrow = 31/2*2 = 20 (decimal truncation)
@@ -745,11 +746,11 @@ contract TreeFeeTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 3), 24);
-        liqTree.addTLiq(LiqRange(0, 3), 100, 300, 300);
+        liqTree.addTLiq(LiqRange(0, 3), 1, 300, 300);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
-        liqTree.removeTLiq(LiqRange(0, 3), 100, 300, 300);
+        liqTree.removeTLiq(LiqRange(0, 3), 1, 300, 300);
 
         // totalMLiq = 24*4 + 4*1 = 100
         assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 3);
@@ -763,11 +764,11 @@ contract TreeFeeTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 7), 47);
-        liqTree.addTLiq(LiqRange(0, 7), 100, 1152, 1152);
+        liqTree.addTLiq(LiqRange(0, 7), 1, 1152, 1152);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
-        liqTree.removeTLiq(LiqRange(0, 7), 100, 1, 1);
+        liqTree.removeTLiq(LiqRange(0, 7), 1, 1, 1);
 
         // totalMLiq = 47*8 + 8*1 = 384
         assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq, 3);
@@ -780,11 +781,11 @@ contract TreeFeeTest is Test {
         LiqNode storage zeroSixteen = liqTree.nodes[liqTree.root];
 
         liqTree.addWideRangeMLiq(3);
-        liqTree.addWideRangeTLiq(100, 144, 144);
+        liqTree.addWideRangeTLiq(1, 144, 144);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
-        liqTree.removeWideRangeTLiq(100, 1, 1);
+        liqTree.removeWideRangeTLiq(1, 1, 1);
 
         // totalMLiq = 3*16 + 16*0 = 48
         assertEq(zeroSixteen.tokenX.cumulativeEarnedPerMLiq, 3);
@@ -861,6 +862,17 @@ contract TreeFeeTest is Test {
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
+
+    function testNodeRateDoesNotAccumulateWhenAddingWideMLiq() public {
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+
+        liqTree.addWideRangeMLiq(100);
+        
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
     
     function testNodeRateAccumulationRemovingMLiq() public {
         liqTree.addMLiq(LiqRange(15, 15), 100);
@@ -894,6 +906,17 @@ contract TreeFeeTest is Test {
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
         liqTree.removeMLiq(LiqRange(0, 0), 100);
+        
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+
+    function testNodeRateDoesNotAccuulateWhenRemovingWideMLiq() public {
+        liqTree.addWideRangeMLiq(100);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.removeWideRangeMLiq(100);
         
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
@@ -938,6 +961,17 @@ contract TreeFeeTest is Test {
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
 
+    function testNodeRateDoesNotAccumulateWhenAddingWideTLiq() public {
+        liqTree.addWideRangeMLiq(100);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.addWideRangeTLiq(10, 1, 1);
+
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+
     function testNodeRateAccumulationRemovingTLiq() public {
         liqTree.addMLiq(LiqRange(15, 15), 100);
         liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
@@ -973,6 +1007,18 @@ contract TreeFeeTest is Test {
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
         liqTree.removeTLiq(LiqRange(0, 0), 10, 1, 1);
+        
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
+        assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
+        assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
+    }
+
+    function testNodeRateDoesNotAccumulateWhenRemovingWideTLiq() public {
+        liqTree.addWideRangeMLiq(100);
+        liqTree.addWideRangeTLiq(10, 1, 1);
+        liqTree.feeRateSnapshotTokenX += 1;
+        liqTree.feeRateSnapshotTokenY += 1;
+        liqTree.removeWideRangeTLiq(10, 1, 1);
         
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
