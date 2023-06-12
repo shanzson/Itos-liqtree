@@ -49,9 +49,7 @@ import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
 /// Traversals are always done so I would have prioritize cheapening those.
 /// But the change should not be insanely difficult.
 
-
 import { console } from "forge-std/console.sol";
-
 
 type LKey is uint48;
 // Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks.
@@ -66,7 +64,6 @@ struct LiqRange {
     uint24 low;
     uint24 high;
 }
- 
 
 /*
  * @notice A struct for querying the liquidity available in a given range. It's similar to a combination of a
@@ -81,7 +78,6 @@ struct LiqTree {
     uint256 feeRateSnapshotTokenX;
     uint256 feeRateSnapshotTokenY;
 }
-
 
 library LiqTreeImpl {
     using LKeyImpl for LKey;
@@ -111,7 +107,12 @@ library LiqTreeImpl {
         console.log("\t", low, low + range - 1);
     }
 
-    function addMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+    function addMLiq(
+        LiqTree storage self,
+        LiqRange memory range,
+        uint128 liq
+    ) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+        // uint128 minMaker (need to add)
         {
             console.log("\n\nStarting of addMLiq");
             console.log(range.low, " - ", range.high);
@@ -131,7 +132,7 @@ library LiqTreeImpl {
                 _printKey(self, current);
             }
 
-            (rangeWidth,) = current.explode();
+            (rangeWidth, ) = current.explode();
 
             _handleFee(self, current, node);
 
@@ -139,6 +140,9 @@ library LiqTreeImpl {
 
             node.addMLiq(liq);
             node.subtreeMLiq += totalLiq;
+
+            accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
 
             // Right Propogate M
             (LKey up, LKey left) = current.rightUp();
@@ -150,6 +154,9 @@ library LiqTreeImpl {
             parent.subtreeMLiq += totalLiq;
             (current, node) = (up, parent);
 
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+
             {
                 console.log("low a.2)");
                 _printKey(self, current);
@@ -160,13 +167,16 @@ library LiqTreeImpl {
                     current = current.rightSib();
                     node = self.nodes[current];
 
-                    (rangeWidth,) = current.explode();
+                    (rangeWidth, ) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
 
                     _handleFee(self, current, node);
 
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
+
+                    accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+                    accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
 
                     {
                         console.log("low b)");
@@ -175,11 +185,11 @@ library LiqTreeImpl {
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
-                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated. 
+                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated.
 
                 // Right Propogate M
                 (up, left) = current.rightUp();
-                (rangeWidth,) = up.explode();
+                (rangeWidth, ) = up.explode();
                 parent = self.nodes[up];
 
                 _handleFee(self, up, parent);
@@ -187,6 +197,9 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
+
+                accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
 
                 {
                     console.log("low c)");
@@ -204,13 +217,16 @@ library LiqTreeImpl {
                 _printKey(self, current);
             }
 
-            (rangeWidth,) = current.explode();
+            (rangeWidth, ) = current.explode();
             uint128 totalLiq = rangeWidth * liq; // better name
 
             _handleFee(self, current, node);
 
             node.addMLiq(liq);
             node.subtreeMLiq += totalLiq;
+
+            accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
 
             // Left Propogate M
             (LKey up, LKey left) = current.leftUp();
@@ -221,24 +237,29 @@ library LiqTreeImpl {
             parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
             parent.subtreeMLiq += totalLiq;
             (current, node) = (up, parent);
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
 
             {
                 console.log("high a.2)");
                 _printKey(self, current);
             }
 
-            while(current.isLess(stopRange)) {
+            while (current.isLess(stopRange)) {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
 
-                    (rangeWidth,) = current.explode();
+                    (rangeWidth, ) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
 
                     _handleFee(self, current, node);
 
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
+
+                    accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                    accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
 
                     {
                         console.log("high b)");
@@ -247,11 +268,11 @@ library LiqTreeImpl {
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
-                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated. 
+                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated.
 
                 // Left Propogate M
                 (up, left) = current.leftUp();
-                (rangeWidth,) = up.explode();
+                (rangeWidth, ) = up.explode();
                 parent = self.nodes[up];
 
                 _handleFee(self, up, parent);
@@ -260,7 +281,10 @@ library LiqTreeImpl {
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
 
-                 {
+                accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+
+                {
                     console.log("high c)");
                     _printKey(self, current);
                 }
@@ -283,7 +307,7 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
             uint128 oldMin = parent.subtreeMinM;
 
-            (rangeWidth,) = up.explode();
+            (rangeWidth, ) = up.explode();
 
             _handleFee(self, up, parent);
 
@@ -293,10 +317,13 @@ library LiqTreeImpl {
 
             current = up;
             node = parent; // Store this to save one lookup..
+
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
         }
     }
 
-    function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external {
+    function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -307,7 +334,7 @@ library LiqTreeImpl {
             current = low;
             node = self.nodes[current];
 
-            (rangeWidth,) = current.explode();
+            (rangeWidth, ) = current.explode();
 
             _handleFee(self, current, node);
 
@@ -315,6 +342,9 @@ library LiqTreeImpl {
 
             node.removeMLiq(liq);
             node.subtreeMLiq -= totalLiq;
+
+            accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
 
             // Right Propogate M
             (LKey up, LKey left) = current.rightUp();
@@ -326,27 +356,32 @@ library LiqTreeImpl {
             parent.subtreeMLiq -= totalLiq;
             (current, node) = (up, parent);
 
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+
             while (current.isLess(stopRange)) {
                 if (current.isLeft()) {
                     current = current.rightSib();
                     node = self.nodes[current];
 
-                    (rangeWidth,) = current.explode();
+                    (rangeWidth, ) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
 
                     _handleFee(self, current, node);
 
-
                     node.removeMLiq(liq);
                     node.subtreeMLiq -= totalLiq;
+
+                    accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+                    accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
-                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated. 
+                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated.
 
                 // Right Propogate M
                 (up, left) = current.rightUp();
-                (rangeWidth,) = up.explode();
+                (rangeWidth, ) = up.explode();
                 parent = self.nodes[up];
 
                 _handleFee(self, up, parent);
@@ -354,6 +389,9 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
+
+                accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
             }
         }
 
@@ -361,13 +399,16 @@ library LiqTreeImpl {
             current = high;
             node = self.nodes[current];
 
-            (rangeWidth,) = current.explode();
+            (rangeWidth, ) = current.explode();
             uint128 totalLiq = rangeWidth * liq; // better name
 
             _handleFee(self, current, node);
 
             node.removeMLiq(liq);
             node.subtreeMLiq -= totalLiq;
+
+            accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
 
             // Left Propogate M
             (LKey up, LKey left) = current.leftUp();
@@ -379,26 +420,32 @@ library LiqTreeImpl {
             parent.subtreeMLiq -= totalLiq;
             (current, node) = (up, parent);
 
-            while(current.isLess(stopRange)) {
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+
+            while (current.isLess(stopRange)) {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
 
-                    (rangeWidth,) = current.explode();
+                    (rangeWidth, ) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
 
                     _handleFee(self, current, node);
 
                     node.removeMLiq(liq);
                     node.subtreeMLiq -= totalLiq;
+
+                    accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                    accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
-                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated. 
+                // Because if we flipped over to the adjacent node, the side we flipped from, was not propogated.
 
                 // Left Propogate M
                 (up, left) = current.leftUp();
-                (rangeWidth,) = up.explode();
+                (rangeWidth, ) = up.explode();
                 parent = self.nodes[up];
 
                 _handleFee(self, up, parent);
@@ -406,6 +453,9 @@ library LiqTreeImpl {
                 parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
                 parent.subtreeMLiq = self.nodes[left].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
                 (current, node) = (up, parent);
+
+                accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
             }
         }
 
@@ -425,7 +475,7 @@ library LiqTreeImpl {
             LiqNode storage parent = self.nodes[up];
             uint128 oldMin = parent.subtreeMinM;
 
-            (rangeWidth,) = up.explode();
+            (rangeWidth, ) = up.explode();
 
             _handleFee(self, up, parent);
 
@@ -435,10 +485,19 @@ library LiqTreeImpl {
 
             current = up;
             node = parent; // Store this to save one lookup..
+
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
         }
     }
 
-    function addTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) public {
+    function addTLiq(
+        LiqTree storage self,
+        LiqRange memory range,
+        uint128 liq,
+        uint256 amountX,
+        uint256 amountY
+    ) public {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -453,11 +512,11 @@ library LiqTreeImpl {
 
             node.addTLiq(liq);
 
-            (uint256 nodeRange,) = current.explode();
-            node.tokenX.borrow += amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.borrow += amountY / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1)* nodeRange;
+            (uint256 nodeRange, ) = current.explode();
+            node.tokenX.borrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
@@ -465,8 +524,8 @@ library LiqTreeImpl {
             _handleFee(self, up, parent);
 
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
-            parent.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1) * nodeRange;
+            parent.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+            parent.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
             (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
@@ -479,11 +538,11 @@ library LiqTreeImpl {
 
                     node.addTLiq(liq);
 
-                    (nodeRange,) = current.explode();
-                    node.tokenX.borrow += amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.borrow += amountY / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1)* nodeRange;
+                    (nodeRange, ) = current.explode();
+                    node.tokenX.borrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
                 }
 
                 // Right Propogate T
@@ -491,8 +550,14 @@ library LiqTreeImpl {
                 parent = self.nodes[up];
                 _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.tokenX.subtreeBorrow = self.nodes[left].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
-                parent.tokenY.subtreeBorrow = self.nodes[left].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
+                parent.tokenX.subtreeBorrow =
+                    self.nodes[left].tokenX.subtreeBorrow +
+                    node.tokenX.subtreeBorrow +
+                    parent.tokenX.borrow;
+                parent.tokenY.subtreeBorrow =
+                    self.nodes[left].tokenY.subtreeBorrow +
+                    node.tokenY.subtreeBorrow +
+                    parent.tokenY.borrow;
                 (current, node) = (up, parent);
             }
         }
@@ -505,11 +570,11 @@ library LiqTreeImpl {
 
             node.addTLiq(liq);
 
-            (uint256 nodeRange,) = current.explode();
-            node.tokenX.borrow += amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.borrow += amountY / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1)* nodeRange;
+            (uint256 nodeRange, ) = current.explode();
+            node.tokenX.borrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
@@ -517,11 +582,11 @@ library LiqTreeImpl {
 
             _handleFee(self, up, parent);
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
-            parent.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1) * nodeRange;
+            parent.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+            parent.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
             (current, node) = (up, parent);
 
-            while(current.isLess(stopRange)) {
+            while (current.isLess(stopRange)) {
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
                 if (current.isRight()) {
                     current = current.leftSib();
@@ -531,20 +596,26 @@ library LiqTreeImpl {
 
                     node.addTLiq(liq);
 
-                    (nodeRange,) = current.explode();
-                    node.tokenX.borrow += amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenX.subtreeBorrow += amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.borrow += amountY / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.subtreeBorrow += amountY / (range.high - range.low + 1)* nodeRange;
+                    (nodeRange, ) = current.explode();
+                    node.tokenX.borrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
                 }
-  
+
                 // Left Propogate T
                 (up, left) = current.leftUp();
                 parent = self.nodes[up];
                 _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.tokenX.subtreeBorrow = self.nodes[left].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
-                parent.tokenY.subtreeBorrow = self.nodes[left].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
+                parent.tokenX.subtreeBorrow =
+                    self.nodes[left].tokenX.subtreeBorrow +
+                    node.tokenX.subtreeBorrow +
+                    parent.tokenX.borrow;
+                parent.tokenY.subtreeBorrow =
+                    self.nodes[left].tokenY.subtreeBorrow +
+                    node.tokenY.subtreeBorrow +
+                    parent.tokenY.borrow;
                 (current, node) = (up, parent);
             }
         }
@@ -562,19 +633,31 @@ library LiqTreeImpl {
             _handleFee(self, up, parent);
             uint128 oldMax = parent.subtreeMaxT;
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow = self.nodes[other].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
-            parent.tokenY.subtreeBorrow = self.nodes[other].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
+            parent.tokenX.subtreeBorrow =
+                self.nodes[other].tokenX.subtreeBorrow +
+                node.tokenX.subtreeBorrow +
+                parent.tokenX.borrow;
+            parent.tokenY.subtreeBorrow =
+                self.nodes[other].tokenY.subtreeBorrow +
+                node.tokenY.subtreeBorrow +
+                parent.tokenY.borrow;
 
             if (node.subtreeMaxT == oldMax) {
-            // Don't think we can early return anymore
-            //    return;
+                // Don't think we can early return anymore
+                //    return;
             }
             current = up;
             node = parent;
         }
     }
 
-    function removeTLiq(LiqTree storage self, LiqRange memory range, uint128 liq, uint256 amountX, uint256 amountY) external {
+    function removeTLiq(
+        LiqTree storage self,
+        LiqRange memory range,
+        uint128 liq,
+        uint256 amountX,
+        uint256 amountY
+    ) external {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -589,11 +672,11 @@ library LiqTreeImpl {
 
             node.removeTLiq(liq);
 
-            (uint256 nodeRange,) = current.explode();
-            node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
+            (uint256 nodeRange, ) = current.explode();
+            node.tokenX.borrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenX.subtreeBorrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.borrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.subtreeBorrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
@@ -601,8 +684,8 @@ library LiqTreeImpl {
             _handleFee(self, up, parent);
 
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
-            parent.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
+            parent.tokenX.subtreeBorrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+            parent.tokenY.subtreeBorrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
             (current, node) = (up, parent);
 
             while (current.isLess(stopRange)) {
@@ -615,11 +698,11 @@ library LiqTreeImpl {
 
                     node.removeTLiq(liq);
 
-                    (nodeRange,) = current.explode();
-                    node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
+                    (nodeRange, ) = current.explode();
+                    node.tokenX.borrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenX.subtreeBorrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.borrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.subtreeBorrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
                 }
 
                 // neeed to calculate because blah blah blah
@@ -629,8 +712,14 @@ library LiqTreeImpl {
                 parent = self.nodes[up];
                 _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.tokenX.subtreeBorrow = self.nodes[left].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
-                parent.tokenY.subtreeBorrow = self.nodes[left].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
+                parent.tokenX.subtreeBorrow =
+                    self.nodes[left].tokenX.subtreeBorrow +
+                    node.tokenX.subtreeBorrow +
+                    parent.tokenX.borrow;
+                parent.tokenY.subtreeBorrow =
+                    self.nodes[left].tokenY.subtreeBorrow +
+                    node.tokenY.subtreeBorrow +
+                    parent.tokenY.borrow;
                 (current, node) = (up, parent);
             }
         }
@@ -643,22 +732,22 @@ library LiqTreeImpl {
 
             node.removeTLiq(liq);
 
-            (uint256 nodeRange,) = current.explode();
-            node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
-            node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
+            (uint256 nodeRange, ) = current.explode();
+            node.tokenX.borrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenX.subtreeBorrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.borrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
+            node.tokenY.subtreeBorrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
 
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
             _handleFee(self, up, parent);
             parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
-            parent.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
+            parent.tokenX.subtreeBorrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+            parent.tokenY.subtreeBorrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
             (current, node) = (up, parent);
 
-            while(current.isLess(stopRange)) {
+            while (current.isLess(stopRange)) {
                 // TODO: This can be gas optimized by sharing the right key and node with leftPropogate
                 if (current.isRight()) {
                     current = current.leftSib();
@@ -668,11 +757,11 @@ library LiqTreeImpl {
 
                     node.removeTLiq(liq);
 
-                    (nodeRange,) = current.explode();
-                    node.tokenX.borrow -= amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenX.subtreeBorrow -= amountX / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.borrow -= amountY / (range.high - range.low + 1) * nodeRange;
-                    node.tokenY.subtreeBorrow -= amountY / (range.high - range.low + 1) * nodeRange;
+                    (nodeRange, ) = current.explode();
+                    node.tokenX.borrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenX.subtreeBorrow -= (amountX / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.borrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
+                    node.tokenY.subtreeBorrow -= (amountY / (range.high - range.low + 1)) * nodeRange;
                 }
 
                 // neeed to calculate because blah blah blah
@@ -682,8 +771,14 @@ library LiqTreeImpl {
                 parent = self.nodes[up];
                 _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.tokenX.subtreeBorrow = self.nodes[left].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
-                parent.tokenY.subtreeBorrow = self.nodes[left].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
+                parent.tokenX.subtreeBorrow =
+                    self.nodes[left].tokenX.subtreeBorrow +
+                    node.tokenX.subtreeBorrow +
+                    parent.tokenX.borrow;
+                parent.tokenY.subtreeBorrow =
+                    self.nodes[left].tokenY.subtreeBorrow +
+                    node.tokenY.subtreeBorrow +
+                    parent.tokenY.borrow;
                 (current, node) = (up, parent);
             }
         }
@@ -701,19 +796,25 @@ library LiqTreeImpl {
             _handleFee(self, up, parent);
             uint128 oldMax = parent.subtreeMaxT;
             parent.subtreeMaxT = max(self.nodes[other].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-            parent.tokenX.subtreeBorrow = self.nodes[other].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
-            parent.tokenY.subtreeBorrow = self.nodes[other].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
+            parent.tokenX.subtreeBorrow =
+                self.nodes[other].tokenX.subtreeBorrow +
+                node.tokenX.subtreeBorrow +
+                parent.tokenX.borrow;
+            parent.tokenY.subtreeBorrow =
+                self.nodes[other].tokenY.subtreeBorrow +
+                node.tokenY.subtreeBorrow +
+                parent.tokenY.borrow;
 
             if (node.subtreeMaxT == oldMax) {
-            // Don't think we can early return anymore
-            //    return;
+                // Don't think we can early return anymore
+                //    return;
             }
             current = up;
             node = parent;
         }
     }
 
-    function addWideRangeMLiq(LiqTree storage self, uint128 liq) external {
+    function addWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
@@ -725,19 +826,34 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.borrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
 
-            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.borrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
         }
 
         rootNode.mLiq += liq;
         rootNode.subtreeMinM += liq;
         rootNode.subtreeMLiq += self.offset * liq;
+
+        accumulatedFeeRateX = rootNode.tokenX.cumulativeEarnedPerMLiq;
+        accumulatedFeeRateY = rootNode.tokenY.cumulativeEarnedPerMLiq;
     }
 
-    function removeWideRangeMLiq(LiqTree storage self, uint128 liq) external {
+    function removeWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
@@ -749,16 +865,31 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.borrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
 
-            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.borrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
         }
 
         rootNode.mLiq -= liq;
         rootNode.subtreeMinM -= liq;
         rootNode.subtreeMLiq -= self.offset * liq;
+
+        accumulatedFeeRateX = rootNode.tokenX.cumulativeEarnedPerMLiq;
+        accumulatedFeeRateY = rootNode.tokenY.cumulativeEarnedPerMLiq;
     }
 
     function addWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
@@ -775,11 +906,23 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.borrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
 
-            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.borrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
         }
 
         rootNode.tLiq += liq;
@@ -802,11 +945,23 @@ library LiqTreeImpl {
         // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += rootNode.tokenX.borrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenX.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.borrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
 
-            rootNode.tokenY.cumulativeEarnedPerMLiq += rootNode.tokenY.borrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            rootNode.tokenY.cumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.borrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
+            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq +=
+                (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
         }
 
         rootNode.tLiq -= liq;
@@ -818,7 +973,7 @@ library LiqTreeImpl {
     }
 
     function _handleFee(LiqTree storage self, LKey current, LiqNode storage node) internal {
-        (uint24 rangeWidth,) = current.explode();
+        (uint24 rangeWidth, ) = current.explode();
 
         uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - node.tokenX.feeRateSnapshot;
         node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
@@ -837,11 +992,17 @@ library LiqTreeImpl {
         // console.log(node.tokenX.borrow);
 
         if (totalMLiq > 0) {
-            node.tokenX.cumulativeEarnedPerMLiq += node.tokenX.borrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
-            node.tokenX.subtreeCumulativeEarnedPerMLiq += node.tokenX.subtreeBorrow * tokenXRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenX.cumulativeEarnedPerMLiq += (node.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
+            node.tokenX.subtreeCumulativeEarnedPerMLiq +=
+                (node.tokenX.subtreeBorrow * tokenXRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
 
-            node.tokenY.cumulativeEarnedPerMLiq += node.tokenY.borrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
-            node.tokenY.subtreeCumulativeEarnedPerMLiq += node.tokenY.subtreeBorrow * tokenYRateDiffX64 / totalMLiq / TWO_POW_64;
+            node.tokenY.cumulativeEarnedPerMLiq += (node.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
+            node.tokenY.subtreeCumulativeEarnedPerMLiq +=
+                (node.tokenY.subtreeBorrow * tokenYRateDiffX64) /
+                totalMLiq /
+                TWO_POW_64;
         }
     }
 
@@ -858,7 +1019,10 @@ library LiqTreeImpl {
         mLiq += self.nodes[self.root].mLiq;
     }
 
-    function queryAccumulatedFeeRates(LiqTree storage self, LiqRange memory range) public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function queryAccumulatedFeeRates(
+        LiqTree storage self,
+        LiqRange memory range
+    ) public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -901,7 +1065,7 @@ library LiqTreeImpl {
             accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
             accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
 
-            while(current.isLess(stopRange)) {
+            while (current.isLess(stopRange)) {
                 if (current.isRight()) {
                     current = current.leftSib();
                     node = self.nodes[current];
@@ -931,7 +1095,9 @@ library LiqTreeImpl {
     /// A thin wrapper around LiqTreeIntLib that handles base value offsets.
     // Determine way to support testing + make private
     function getKeys(
-        LiqTree storage self, uint24 rangeLow, uint24 rangeHigh
+        LiqTree storage self,
+        uint24 rangeLow,
+        uint24 rangeHigh
     ) public view returns (LKey low, LKey high, LKey peak, LKey stopRange) {
         require(rangeLow <= rangeHigh, "RLH");
         require(rangeHigh < self.offset, "RHO");
@@ -978,10 +1144,10 @@ library LiqTreeImpl {
             node = self.nodes[current];
             minMaker = min(node.subtreeMinM, minMaker);
             maxTaker = max(node.subtreeMaxT, maxTaker);
-            (current,) = current.rightUp();
+            (current, ) = current.rightUp();
 
             LKey right;
-            while(current.isLess(stopRange)) {
+            while (current.isLess(stopRange)) {
                 node = self.nodes[current];
                 minMaker += node.mLiq;
                 maxTaker += node.tLiq;
@@ -991,7 +1157,7 @@ library LiqTreeImpl {
                     minMaker = min(minMaker, self.nodes[right].subtreeMinM);
                     maxTaker = max(maxTaker, self.nodes[right].subtreeMaxT);
                 } else {
-                    (current,) = current.rightUp();
+                    (current, ) = current.rightUp();
                 }
             }
             // We the node at the stop range, so we don't have to specially handle
@@ -1010,10 +1176,10 @@ library LiqTreeImpl {
             node = self.nodes[current];
             rightMaker = min(node.subtreeMinM, rightMaker);
             rightTaker = max(node.subtreeMaxT, rightTaker);
-            (current,) = current.leftUp();
+            (current, ) = current.leftUp();
 
             LKey left;
-            while(current.isLess(stopRange)) {
+            while (current.isLess(stopRange)) {
                 node = self.nodes[current];
                 rightMaker += node.mLiq;
                 rightTaker += node.tLiq;
@@ -1023,7 +1189,7 @@ library LiqTreeImpl {
                     rightMaker = min(rightMaker, self.nodes[left].subtreeMinM);
                     rightTaker = max(rightTaker, self.nodes[left].subtreeMaxT);
                 } else {
-                    (current,) = current.leftUp();
+                    (current, ) = current.leftUp();
                 }
             }
             // We add the node at the stop range, so we don't have to specially handle
@@ -1043,7 +1209,7 @@ library LiqTreeImpl {
         // Thus we just need to start adding.
         // NOTE: it's possible we've already added root in the single node case.
         while (current.isLess(self.root)) {
-            (current,) = current.genericUp();
+            (current, ) = current.genericUp();
             node = self.nodes[current];
             minMaker += node.mLiq;
             maxTaker += node.tLiq;
@@ -1302,5 +1468,4 @@ library LKeyImpl {
             return x & (~x + 1);
         }
     }
-
 }
