@@ -105,7 +105,7 @@ library LiqTreeImpl {
         LiqTree storage self,
         LiqRange memory range,
         uint128 liq
-    ) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) { // uint128 minMaker (need to add)
+    ) external returns (uint128 minMaker, uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -272,7 +272,7 @@ library LiqTreeImpl {
         }
     }
 
-    function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function removeMLiq(LiqTree storage self, LiqRange memory range, uint128 liq) external returns (uint128 minMaker, uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -446,7 +446,18 @@ library LiqTreeImpl {
         uint128 liq,
         uint256 amountX,
         uint256 amountY
-    ) public {
+    ) public returns (uint128 maxTaker) {
+        return addTLiq(self, range, liq, amountX, amountY, 34028236692093846346337460743176821145600); // 100*2**128
+    }
+
+    function addTLiq(
+        LiqTree storage self,
+        LiqRange memory range,
+        uint128 liq,
+        uint256 amountX,
+        uint256 amountY,
+        uint256 utilizationThresholdX128
+    ) public returns (uint128 maxTaker) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -584,7 +595,7 @@ library LiqTreeImpl {
         uint128 liq,
         uint256 amountX,
         uint256 amountY
-    ) external {
+    ) external returns (uint128 maxTaker) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -718,7 +729,7 @@ library LiqTreeImpl {
         }
     }
 
-    function addWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function addWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint128 minMaker, uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleRootFee(self, rootNode);
@@ -731,7 +742,7 @@ library LiqTreeImpl {
         accumulatedFeeRateY = rootNode.tokenY.cumulativeEarnedPerMLiq;
     }
 
-    function removeWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function removeWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint128 minMaker, uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleRootFee(self, rootNode);
@@ -744,7 +755,7 @@ library LiqTreeImpl {
         accumulatedFeeRateY = rootNode.tokenY.cumulativeEarnedPerMLiq;
     }
 
-    function addWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
+    function addWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external returns (uint128 maxTaker) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleRootFee(self, rootNode);
@@ -757,7 +768,7 @@ library LiqTreeImpl {
         rootNode.tokenY.subtreeBorrow += amountY;
     }
 
-    function removeWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
+    function removeWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external returns (uint128 maxTaker) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleRootFee(self, rootNode);
@@ -892,6 +903,83 @@ library LiqTreeImpl {
         while (current.isLess(self.root)) {
             (current, ) = current.genericUp();
             node = self.nodes[current];
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+        }
+    }
+
+    function queryAccumulatedFeeRatesWhileUpdatingFees(
+        LiqTree storage self,
+        LiqRange memory range
+    ) public returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+        (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
+
+        LKey current;
+        LiqNode storage node;
+
+        if (low.isLess(stopRange)) {
+            current = low;
+            node = self.nodes[current];
+            _handleFee(self, current, node);
+            accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
+
+            (current, ) = current.rightUp();
+            node = self.nodes[current];
+             _handleFee(self, current, node);
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+
+            while (current.isLess(stopRange)) {
+                if (current.isLeft()) {
+                    current = current.rightSib();
+                    node = self.nodes[current];
+                    _handleFee(self, current, node);
+                    accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+                    accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
+                }
+
+                (current, ) = current.rightUp();
+                node = self.nodes[current];
+                _handleFee(self, current, node);
+                accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+            }
+        }
+
+        if (high.isLess(stopRange)) {
+            current = high;
+            node = self.nodes[current];
+            accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
+
+            (current, ) = current.leftUp();
+            node = self.nodes[current];
+            _handleFee(self, current, node);
+            accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+            accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+
+            while (current.isLess(stopRange)) {
+                if (current.isRight()) {
+                    current = current.leftSib();
+                    node = self.nodes[current];
+                    _handleFee(self, current, node);
+                    accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                    accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+                }
+
+                (current, ) = current.leftUp();
+                node = self.nodes[current];
+                _handleFee(self, current, node);
+                accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
+                accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
+            }
+        }
+
+        while (current.isLess(self.root)) {
+            (current, ) = current.genericUp();
+            node = self.nodes[current];
+            _handleFee(self, current, node);
             accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
             accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
         }

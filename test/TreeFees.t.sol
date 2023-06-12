@@ -36,18 +36,18 @@ contract TreeFeesTest is Test {
     function testNodeEarnAndSubtreeEarnAtLeafNodeAreEqual() public {
         LiqNode storage threeThree = liqTree.nodes[LKey.wrap(1 << 24 | 19)];
 
-        (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) = liqTree.addWideRangeMLiq(400);
+        (,uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) = liqTree.addWideRangeMLiq(400);
         assertEq(accumulatedFeeRateX, 0);
         assertEq(accumulatedFeeRateY, 0);
 
-        (accumulatedFeeRateX, accumulatedFeeRateY) = liqTree.addMLiq(LiqRange(3, 3), 130);
+        (,accumulatedFeeRateX, accumulatedFeeRateY) = liqTree.addMLiq(LiqRange(3, 3), 130);
         assertEq(accumulatedFeeRateX, 0);
         assertEq(accumulatedFeeRateY, 0);
 
         liqTree.addTLiq(LiqRange(3, 3), 30, 44e18, 101e18);
         liqTree.feeRateSnapshotTokenX += 23947923;
         liqTree.feeRateSnapshotTokenY += 13542645834;
-        (accumulatedFeeRateX, accumulatedFeeRateY) = liqTree.removeMLiq(LiqRange(3, 3), 20);
+        (,accumulatedFeeRateX, accumulatedFeeRateY) = liqTree.removeMLiq(LiqRange(3, 3), 20);
 
         // totalMLiq = 130*1 + 400*1 = 530
         // x:  44e18 * 23947923 / (130*1 + 400*1) / 2**64 = 107776.713
