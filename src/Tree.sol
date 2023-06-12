@@ -727,21 +727,7 @@ library LiqTreeImpl {
     function addWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
-        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
-        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
-
-        // TODO: determine if we need to check for overflow
-        // TODO: round earned fees up
-        uint256 totalMLiq = rootNode.subtreeMLiq;
-        if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += (rootNode.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-
-            rootNode.tokenY.cumulativeEarnedPerMLiq += (rootNode.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-        }
+        _handleRootFee(self, rootNode);
 
         rootNode.mLiq += liq;
         rootNode.subtreeMinM += liq;
@@ -754,21 +740,7 @@ library LiqTreeImpl {
     function removeWideRangeMLiq(LiqTree storage self, uint128 liq) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
-        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
-        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
-
-        // TODO: determine if we need to check for overflow
-        // TODO: round earned fees up
-        uint256 totalMLiq = rootNode.subtreeMLiq;
-        if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += (rootNode.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-
-            rootNode.tokenY.cumulativeEarnedPerMLiq += (rootNode.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-        }
+        _handleRootFee(self, rootNode);
 
         rootNode.mLiq -= liq;
         rootNode.subtreeMinM -= liq;
@@ -781,23 +753,7 @@ library LiqTreeImpl {
     function addWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
-        // TODO (urlaubaitos) adjust for fee accounting
-
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
-        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
-        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
-
-        // TODO: determine if we need to check for overflow
-        // TODO: round earned fees up
-        uint256 totalMLiq = rootNode.subtreeMLiq;
-        if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += (rootNode.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-
-            rootNode.tokenY.cumulativeEarnedPerMLiq += (rootNode.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-        }
+        _handleRootFee(self, rootNode);
 
         rootNode.tLiq += liq;
         rootNode.subtreeMaxT += liq;
@@ -810,13 +766,23 @@ library LiqTreeImpl {
     function removeWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external {
         LiqNode storage rootNode = self.nodes[self.root];
 
+        _handleRootFee(self, rootNode);
+
+        rootNode.tLiq -= liq;
+        rootNode.subtreeMaxT -= liq;
+        rootNode.tokenX.borrow -= amountX;
+        rootNode.tokenX.subtreeBorrow -= amountX;
+        rootNode.tokenY.borrow -= amountY;
+        rootNode.tokenY.subtreeBorrow -= amountY;
+    }
+
+    function _handleRootFee(LiqTree storage self, LiqNode storage rootNode) internal {
         uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
         rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
         uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
         rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
 
         // TODO: determine if we need to check for overflow
-        // TODO: round earned fees up
         uint256 totalMLiq = rootNode.subtreeMLiq;
         if (totalMLiq > 0) {
             rootNode.tokenX.cumulativeEarnedPerMLiq += (rootNode.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
@@ -825,13 +791,6 @@ library LiqTreeImpl {
             rootNode.tokenY.cumulativeEarnedPerMLiq += (rootNode.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
             rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
         }
-
-        rootNode.tLiq -= liq;
-        rootNode.subtreeMaxT -= liq;
-        rootNode.tokenX.borrow -= amountX;
-        rootNode.tokenX.subtreeBorrow -= amountX;
-        rootNode.tokenY.borrow -= amountY;
-        rootNode.tokenY.subtreeBorrow -= amountY;
     }
 
     function _handleFee(LiqTree storage self, LKey current, LiqNode storage node) internal {
