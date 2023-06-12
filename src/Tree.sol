@@ -100,23 +100,12 @@ library LiqTreeImpl {
     /***********************************
      * Updated Interface Methods (comment to be deleted after refactor)  *
      ***********************************/
-
-    function _printKey(LiqTree storage self, LKey k) public view {
-        (uint24 range, uint24 base) = k.explode();
-        uint24 low = base - self.offset;
-        console.log("\t", low, low + range - 1);
-    }
-
+     
     function addMLiq(
         LiqTree storage self,
         LiqRange memory range,
         uint128 liq
-    ) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
-        // uint128 minMaker (need to add)
-        {
-            console.log("\n\nStarting of addMLiq");
-            console.log(range.low, " - ", range.high);
-        }
+    ) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) { // uint128 minMaker (need to add)
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -126,11 +115,6 @@ library LiqTreeImpl {
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
-
-            {
-                console.log("low a.1)");
-                _printKey(self, current);
-            }
 
             (rangeWidth, ) = current.explode();
 
@@ -157,11 +141,6 @@ library LiqTreeImpl {
             accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
             accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
 
-            {
-                console.log("low a.2)");
-                _printKey(self, current);
-            }
-
             while (current.isLess(stopRange)) {
                 if (current.isLeft()) {
                     current = current.rightSib();
@@ -177,11 +156,6 @@ library LiqTreeImpl {
 
                     accumulatedFeeRateX += node.tokenX.subtreeCumulativeEarnedPerMLiq;
                     accumulatedFeeRateY += node.tokenY.subtreeCumulativeEarnedPerMLiq;
-
-                    {
-                        console.log("low b)");
-                        _printKey(self, current);
-                    }
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
@@ -200,22 +174,12 @@ library LiqTreeImpl {
 
                 accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
                 accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
-
-                {
-                    console.log("low c)");
-                    _printKey(self, current);
-                }
             }
         }
 
         if (high.isLess(stopRange)) {
             current = high;
             node = self.nodes[current];
-
-            {
-                console.log("high a.1)");
-                _printKey(self, current);
-            }
 
             (rangeWidth, ) = current.explode();
             uint128 totalLiq = rangeWidth * liq; // better name
@@ -240,11 +204,6 @@ library LiqTreeImpl {
             accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
             accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
 
-            {
-                console.log("high a.2)");
-                _printKey(self, current);
-            }
-
             while (current.isLess(stopRange)) {
                 if (current.isRight()) {
                     current = current.leftSib();
@@ -260,11 +219,6 @@ library LiqTreeImpl {
 
                     accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
                     accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
-
-                    {
-                        console.log("high b)");
-                        _printKey(self, current);
-                    }
                 }
 
                 // In the next section, we need to calculate the subtreeMLiq
@@ -283,11 +237,6 @@ library LiqTreeImpl {
 
                 accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
                 accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
-
-                {
-                    console.log("high c)");
-                    _printKey(self, current);
-                }
             }
         }
 
@@ -1257,25 +1206,21 @@ library LiqTreeIntLib {
             // The simple case where we can just walk up both legs.
             // Each individual leg will stop at the children of the peak,
             // so our limit range is one below peak range.
-            console.log("bounds - 1st");
             limitRange = LKey.wrap(LKey.unwrap(peakRange) >> 1);
         } else if (lowBelow && !highBelow) {
             // We only have the left leg to worry about.
             // So our limit range will be at the peak, because we want to include
             // the right child of the peak.
-            console.log("bounds - 2nd");
             limitRange = peakRange;
         } else if (!lowBelow && highBelow) {
             // Just the right leg. So include the left child of peak.
             limitRange = peakRange;
-            console.log("bounds - 3rd");
         } else {
             // Both are at or higher than the peak! So our range breakdown is just
             // the peak.
             // You can prove that one of the keys must be the peak itself trivially.
             // Thus we don't modify our keys and just stop at one above the peak.
             limitRange = LKey.wrap(LKey.unwrap(peakRange) << 1);
-            console.log("bounds - 4th");
         }
     }
 
