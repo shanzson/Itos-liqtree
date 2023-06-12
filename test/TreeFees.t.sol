@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
-import { console } from "forge-std/console.sol";
 import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
