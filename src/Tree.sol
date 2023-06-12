@@ -499,14 +499,8 @@ library LiqTreeImpl {
                 parent = self.nodes[up];
                 _handleFee(self, up, parent);
                 parent.subtreeMaxT = max(self.nodes[left].subtreeMaxT, node.subtreeMaxT) + parent.tLiq;
-                parent.tokenX.subtreeBorrow =
-                    self.nodes[left].tokenX.subtreeBorrow +
-                    node.tokenX.subtreeBorrow +
-                    parent.tokenX.borrow;
-                parent.tokenY.subtreeBorrow =
-                    self.nodes[left].tokenY.subtreeBorrow +
-                    node.tokenY.subtreeBorrow +
-                    parent.tokenY.borrow;
+                parent.tokenX.subtreeBorrow = self.nodes[left].tokenX.subtreeBorrow + node.tokenX.subtreeBorrow + parent.tokenX.borrow;
+                parent.tokenY.subtreeBorrow = self.nodes[left].tokenY.subtreeBorrow + node.tokenY.subtreeBorrow + parent.tokenY.borrow;
                 (current, node) = (up, parent);
             }
         }
