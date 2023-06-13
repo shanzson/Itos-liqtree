@@ -4,6 +4,7 @@ pragma solidity ^0.8.18;
 import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
+import { ONE_HUNDRED_PERCENT_UTILIZATION } from "./UtilizationConstants.sol";
 
 
 /**
@@ -44,7 +45,7 @@ contract TreeFeesTest is Test {
         assertEq(accumulatedFeeRateX, 0);
         assertEq(accumulatedFeeRateY, 0);
 
-        liqTree.addTLiq(LiqRange(3, 3), 30, 44e18, 101e18);
+        liqTree.addTLiq(LiqRange(3, 3), 30, 44e18, 101e18, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.feeRateSnapshotTokenX += 23947923;
         liqTree.feeRateSnapshotTokenY += 13542645834;
         (,accumulatedFeeRateX, accumulatedFeeRateY) = liqTree.removeMLiq(LiqRange(3, 3), 20);
@@ -86,15 +87,15 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(3, 3), 20);
 
         // borrows
-        liqTree.addTLiq(LiqRange(0, 3), 1, 700e18, 2400e6);
+        liqTree.addTLiq(LiqRange(0, 3), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
-        liqTree.addTLiq(LiqRange(0, 1), 1, 700e18, 2400e6);
-        liqTree.addTLiq(LiqRange(2, 3), 1, 700e18, 2400e6);
+        liqTree.addTLiq(LiqRange(0, 1), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(2, 3), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
-        liqTree.addTLiq(LiqRange(0, 0), 1, 700e18, 2400e6);
-        liqTree.addTLiq(LiqRange(1, 1), 1, 700e18, 2400e6);
-        liqTree.addTLiq(LiqRange(2, 2), 1, 700e18, 2400e6);
-        liqTree.addTLiq(LiqRange(3, 3), 1, 700e18, 2400e6);
+        liqTree.addTLiq(LiqRange(0, 0), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(1, 1), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(2, 2), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(3, 3), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -188,10 +189,10 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(1, 1), 20);
 
         // borrows
-        liqTree.addTLiq(LiqRange(0, 1), 1, 700e18, 2400e6);
+        liqTree.addTLiq(LiqRange(0, 1), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
-        liqTree.addTLiq(LiqRange(0, 0), 1, 700e18, 2400e6);
-        liqTree.addTLiq(LiqRange(1, 1), 1, 700e18, 2400e6);
+        liqTree.addTLiq(LiqRange(0, 0), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(1, 1), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -259,8 +260,8 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(3, 3), 4000000000);
 
         // borrows
-        liqTree.addTLiq(LiqRange(0, 3), 1, 700e18, 2400e6);
-        liqTree.addTLiq(LiqRange(3, 3), 1, 700e18, 2400e6);
+        liqTree.addTLiq(LiqRange(0, 3), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(3, 3), 1, 700e18, 2400e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -339,7 +340,7 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(4, 5), 1);
 
         // borrows
-        liqTree.addTLiq(LiqRange(4, 5), 1, 9241e18, 16732e6);
+        liqTree.addTLiq(LiqRange(4, 5), 1, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -387,7 +388,7 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(4, 7), 7000000000);
 
         // borrows
-        liqTree.addTLiq(LiqRange(4, 7), 100, 9241e18, 16732e6);
+        liqTree.addTLiq(LiqRange(4, 7), 100, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -418,8 +419,8 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(4, 5), 1);
 
         // borrows
-        liqTree.addTLiq(LiqRange(5, 5), 1, 9241e18, 16732e6);
-        liqTree.addTLiq(LiqRange(4, 5), 1, 1241e18, 26732e6);
+        liqTree.addTLiq(LiqRange(5, 5), 1, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(4, 5), 1, 1241e18, 26732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -469,7 +470,7 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(5, 5), 7000000000);
 
         // borrows
-        liqTree.addTLiq(LiqRange(5, 5), 1, 9241e18, 16732e6);
+        liqTree.addTLiq(LiqRange(5, 5), 1, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;
@@ -518,9 +519,9 @@ contract TreeFeesTest is Test {
         liqTree.addMLiq(LiqRange(5, 5), 7000000000);
 
         // borrows
-        liqTree.addTLiq(LiqRange(4, 7), 1, 9241e18, 16732e6);
-        liqTree.addTLiq(LiqRange(4, 5), 1, 9241e18, 16732e6);
-        liqTree.addTLiq(LiqRange(5, 5), 1, 9241e18, 16732e6);
+        liqTree.addTLiq(LiqRange(4, 7), 1, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(4, 5), 1, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addTLiq(LiqRange(5, 5), 1, 9241e18, 16732e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // trigger fees
         liqTree.feeRateSnapshotTokenX += 55769907879546549697897755;

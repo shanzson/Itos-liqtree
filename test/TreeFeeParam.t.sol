@@ -6,6 +6,8 @@ import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
 
+import { ONE_HUNDRED_PERCENT_UTILIZATION } from "./UtilizationConstants.sol";
+
 /** 
  * Fees are calculated in the liquidity tree using the following formulas:
  *
@@ -32,7 +34,7 @@ contract TreeFeeParamTest is Test {
 
     function testBorrowAtRootNode() public {
         liqTree.addWideRangeMLiq(900);
-        liqTree.addWideRangeTLiq(200, 57e18, 290e6);
+        liqTree.addWideRangeTLiq(200, 57e18, 290e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeWideRangeTLiq(50, 10e18, 1e6);
 
         LiqNode storage root = liqTree.nodes[liqTree.root];
@@ -44,7 +46,7 @@ contract TreeFeeParamTest is Test {
 
     function testBorrowAtSingleNode() public {
         liqTree.addMLiq(LiqRange(0, 3), 500);
-        liqTree.addTLiq(LiqRange(0, 3), 400, 43e18, 12e6);
+        liqTree.addTLiq(LiqRange(0, 3), 400, 43e18, 12e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(0, 3), 20, 20e18, 10e6);
 
         LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
@@ -56,7 +58,7 @@ contract TreeFeeParamTest is Test {
 
     function testBorrowAtLeafNode() public {
         liqTree.addMLiq(LiqRange(3, 3), 100);
-        liqTree.addTLiq(LiqRange(3, 3), 20, 22e18, 29e6);
+        liqTree.addTLiq(LiqRange(3, 3), 20, 22e18, 29e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(3, 3), 20, 20e18, 20e6);
 
         LiqNode storage threeThree = liqTree.nodes[LKey.wrap(1 << 24 | 19)];
@@ -71,7 +73,7 @@ contract TreeFeeParamTest is Test {
         // 2nd traversal type, only left leg
 
         liqTree.addMLiq(LiqRange(1, 7), 100);
-        liqTree.addTLiq(LiqRange(1, 7), 20, 12e18, 19e6);
+        liqTree.addTLiq(LiqRange(1, 7), 20, 12e18, 19e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(1, 7), 20, 10e18, 10e6);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
@@ -102,7 +104,7 @@ contract TreeFeeParamTest is Test {
         // 1st traversal type, both legs below peak
 
         liqTree.addMLiq(LiqRange(1, 2), 100);
-        liqTree.addTLiq(LiqRange(1, 2), 20, 74e18, 21e6);
+        liqTree.addTLiq(LiqRange(1, 2), 20, 74e18, 21e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(1, 2), 20, 2e18, 2e6);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
@@ -123,7 +125,7 @@ contract TreeFeeParamTest is Test {
         // 3rd traversal type, only right leg
 
         liqTree.addMLiq(LiqRange(8, 14), 100);
-        liqTree.addTLiq(LiqRange(8, 14), 20, 474e18, 220e6);
+        liqTree.addTLiq(LiqRange(8, 14), 20, 474e18, 220e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(8, 14), 20, 2e18, 1e6);
 
         LiqNode storage eightEleven = liqTree.nodes[LKey.wrap(4 << 24 | 24)];
@@ -154,7 +156,7 @@ contract TreeFeeParamTest is Test {
         // 4th traversal type, both legs at or above peak
 
         liqTree.addMLiq(LiqRange(8, 15), 100);
-        liqTree.addTLiq(LiqRange(8, 15), 20, 1473e18, 5220e6);
+        liqTree.addTLiq(LiqRange(8, 15), 20, 1473e18, 5220e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(8, 15), 20, 1e18, 1e6);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
@@ -170,11 +172,11 @@ contract TreeFeeParamTest is Test {
 
     function testSubtreeBorrowAtRootNode() public {
         liqTree.addWideRangeMLiq(900);
-        liqTree.addWideRangeTLiq(200, 57e18, 290e6);
+        liqTree.addWideRangeTLiq(200, 57e18, 290e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeWideRangeTLiq(50, 10e18, 1e6);
 
         liqTree.addMLiq(LiqRange(4, 7), 100);
-        liqTree.addTLiq(LiqRange(4, 7), 10, 200e18, 200e6);
+        liqTree.addTLiq(LiqRange(4, 7), 10, 200e18, 200e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(4, 7), 10, 100e18, 100e6);
 
         LiqNode storage root = liqTree.nodes[liqTree.root];
@@ -186,7 +188,7 @@ contract TreeFeeParamTest is Test {
 
     function testSubtreeBorrowAtSingleNode() public {
         liqTree.addMLiq(LiqRange(0, 3), 500);
-        liqTree.addTLiq(LiqRange(0, 3), 400, 43e18, 12e6);
+        liqTree.addTLiq(LiqRange(0, 3), 400, 43e18, 12e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(0, 3), 20, 20e18, 10e6);
 
         LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
@@ -210,7 +212,7 @@ contract TreeFeeParamTest is Test {
 
     function testSubtreeBorrowAtLeafNode() public {
         liqTree.addMLiq(LiqRange(3, 3), 100);
-        liqTree.addTLiq(LiqRange(3, 3), 20, 22e18, 29e6);
+        liqTree.addTLiq(LiqRange(3, 3), 20, 22e18, 29e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(3, 3), 20, 20e18, 20e6);
 
         LiqNode storage threeThree = liqTree.nodes[LKey.wrap(1 << 24 | 19)];
@@ -247,7 +249,7 @@ contract TreeFeeParamTest is Test {
         // 2nd traversal type, only left leg
 
         liqTree.addMLiq(LiqRange(1, 7), 100);
-        liqTree.addTLiq(LiqRange(1, 7), 20, 12e18, 19e6);
+        liqTree.addTLiq(LiqRange(1, 7), 20, 12e18, 19e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(1, 7), 20, 10e18, 10e6);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
@@ -300,7 +302,7 @@ contract TreeFeeParamTest is Test {
         // 1st traversal type, both legs below peak
 
         liqTree.addMLiq(LiqRange(1, 2), 100);
-        liqTree.addTLiq(LiqRange(1, 2), 20, 74e18, 21e6);
+        liqTree.addTLiq(LiqRange(1, 2), 20, 74e18, 21e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(1, 2), 20, 2e18, 2e6);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
@@ -350,7 +352,7 @@ contract TreeFeeParamTest is Test {
         // 3rd traversal type, only right leg
 
         liqTree.addMLiq(LiqRange(8, 14), 100);
-        liqTree.addTLiq(LiqRange(8, 14), 20, 474e18, 220e6);
+        liqTree.addTLiq(LiqRange(8, 14), 20, 474e18, 220e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(8, 14), 20, 2e18, 1e6);
 
         LiqNode storage eightEleven = liqTree.nodes[LKey.wrap(4 << 24 | 24)];
@@ -405,7 +407,7 @@ contract TreeFeeParamTest is Test {
         // 4th traversal type, both legs at or above peak
 
         liqTree.addMLiq(LiqRange(8, 15), 100);
-        liqTree.addTLiq(LiqRange(8, 15), 20, 1473e18, 5220e6);
+        liqTree.addTLiq(LiqRange(8, 15), 20, 1473e18, 5220e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(8, 15), 20, 1e18, 1e6);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
@@ -534,7 +536,6 @@ contract TreeFeeParamTest is Test {
         uint128 mLiq = 16384;
         liqTree.addWideRangeMLiq(mLiq);
         
-        uint24 range = 0;
         for (uint24 j = 1; j < 16; j *= 2) {
             mLiq = 1024 * j;
             for (uint24 i = 0; i < 16;) {
@@ -590,7 +591,7 @@ contract TreeFeeParamTest is Test {
 
         LiqNode storage zeroZero = liqTree.nodes[LKey.wrap(1 << 24 | 16)];
 
-        liqTree.addTLiq(LiqRange(0, 0), 100, 1, 1);
+        liqTree.addTLiq(LiqRange(0, 0), 100, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // A[] = 0-1.mliq + 0-3.mLiq + 0-7.mLiq + 0-15.mLiq
         //     = 2048 + 4096 + 8192 + 16384 = 30720
@@ -612,7 +613,7 @@ contract TreeFeeParamTest is Test {
         LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 16)];
 
         // using 2 so splitting the borrow results in 2 instead of 0 (x/2*2)
-        liqTree.addTLiq(LiqRange(0, 1), 100, 2, 2);
+        liqTree.addTLiq(LiqRange(0, 1), 100, 2, 2, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // A[] = 0-3.mLiq + 0-7.mLiq + 0-15.mLiq
         //     = 4096 + 8192 + 16384 = 28672
@@ -635,7 +636,7 @@ contract TreeFeeParamTest is Test {
         LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 16)];
 
         // using 2 so splitting the borrow results in 2 instead of 0 (x/2*2)
-        liqTree.addTLiq(LiqRange(0, 3), 100, 4, 4);
+        liqTree.addTLiq(LiqRange(0, 3), 100, 4, 4, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // A[] = 0-7.mLiq + 0-15.mLiq
         //     = 8192 + 16384 = 24576
@@ -657,7 +658,7 @@ contract TreeFeeParamTest is Test {
 
         LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 16)];
 
-        liqTree.addTLiq(LiqRange(0, 7), 100, 8, 8);
+        liqTree.addTLiq(LiqRange(0, 7), 100, 8, 8, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // A[] = 0-15.mLiq
         //     = 16384 = 16384
@@ -680,7 +681,7 @@ contract TreeFeeParamTest is Test {
 
         LiqNode storage zeroFifteen = liqTree.nodes[liqTree.root];
 
-        liqTree.addWideRangeTLiq(100, 16, 16);
+        liqTree.addWideRangeTLiq(100, 16, 16, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // A[] = 0-15.mLiq = 0
         // subtreeMLiq = 
@@ -708,7 +709,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 0), 5);
-        liqTree.addTLiq(LiqRange(0, 0), 1, 18, 18);
+        liqTree.addTLiq(LiqRange(0, 0), 1, 18, 18, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
@@ -727,7 +728,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 1), 4);
-        liqTree.addTLiq(LiqRange(0, 1), 1, 31, 31);
+        liqTree.addTLiq(LiqRange(0, 1), 1, 31, 31, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
@@ -746,7 +747,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 3), 24);
-        liqTree.addTLiq(LiqRange(0, 3), 1, 300, 300);
+        liqTree.addTLiq(LiqRange(0, 3), 1, 300, 300, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
@@ -764,7 +765,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addWideRangeMLiq(1); // A[] = 1
         liqTree.addMLiq(LiqRange(0, 7), 47);
-        liqTree.addTLiq(LiqRange(0, 7), 1, 1152, 1152);
+        liqTree.addTLiq(LiqRange(0, 7), 1, 1152, 1152, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
@@ -781,7 +782,7 @@ contract TreeFeeParamTest is Test {
         LiqNode storage zeroSixteen = liqTree.nodes[liqTree.root];
 
         liqTree.addWideRangeMLiq(3);
-        liqTree.addWideRangeTLiq(1, 144, 144);
+        liqTree.addWideRangeTLiq(1, 144, 144, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 18446744073709551616; // 2**64
         liqTree.feeRateSnapshotTokenY += 18446744073709551616;
@@ -927,7 +928,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addMLiq(LiqRange(15, 15), 100);
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
-        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
@@ -943,7 +944,7 @@ contract TreeFeeParamTest is Test {
         liqTree.feeRateSnapshotTokenX += 8726349723049235689236;
         liqTree.feeRateSnapshotTokenY += 827369027349823649072634587236582365;
 
-        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
@@ -954,7 +955,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addMLiq(LiqRange(0, 0), 100);
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
-        liqTree.addTLiq(LiqRange(0, 0), 10, 1, 1);
+        liqTree.addTLiq(LiqRange(0, 0), 10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
@@ -965,7 +966,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addWideRangeMLiq(100);
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
-        liqTree.addWideRangeTLiq(10, 1, 1);
+        liqTree.addWideRangeTLiq(10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 24)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
@@ -974,7 +975,7 @@ contract TreeFeeParamTest is Test {
 
     function testNodeRateAccumulationRemovingTLiq() public {
         liqTree.addMLiq(LiqRange(15, 15), 100);
-        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
         liqTree.removeTLiq(LiqRange(15, 15), 10, 1, 1);
@@ -989,7 +990,7 @@ contract TreeFeeParamTest is Test {
         liqTree.feeRateSnapshotTokenY += 1;
 
         liqTree.addMLiq(LiqRange(15, 15), 100);
-        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1);
+        liqTree.addTLiq(LiqRange(15, 15), 10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 8726349723049235689236;
         liqTree.feeRateSnapshotTokenY += 827369027349823649072634587236582365;
@@ -1003,7 +1004,7 @@ contract TreeFeeParamTest is Test {
 
     function testNodeRateDoesNotAccumulateWhenRemovingTLiqFromOtherNodes() public {
         liqTree.addMLiq(LiqRange(0, 0), 100);
-        liqTree.addTLiq(LiqRange(0, 0), 10, 1, 1);
+        liqTree.addTLiq(LiqRange(0, 0), 10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
         liqTree.removeTLiq(LiqRange(0, 0), 10, 1, 1);
@@ -1015,7 +1016,7 @@ contract TreeFeeParamTest is Test {
 
     function testNodeRateDoesNotAccumulateWhenRemovingWideTLiq() public {
         liqTree.addWideRangeMLiq(100);
-        liqTree.addWideRangeTLiq(10, 1, 1);
+        liqTree.addWideRangeTLiq(10, 1, 1, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.feeRateSnapshotTokenX += 1;
         liqTree.feeRateSnapshotTokenY += 1;
         liqTree.removeWideRangeTLiq(10, 1, 1);

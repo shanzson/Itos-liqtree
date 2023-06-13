@@ -6,6 +6,9 @@ import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
 
+
+import { ONE_HUNDRED_PERCENT_UTILIZATION } from "./UtilizationConstants.sol";
+
 /**
  * In practice, the LiqTree will have many nodes. So many, that testing at that scale is intractable.
  * Thus the reason for this file. A smaller scale LiqTree, where we can more easily populate the values densely.
@@ -23,7 +26,7 @@ contract SmallTreeTest is Test {
 
     function testSimpleFee() public {
         liqTree.addMLiq(LiqRange(8, 11), 1111);
-        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
+        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenX += 113712805933826;
 
@@ -32,7 +35,7 @@ contract SmallTreeTest is Test {
         LiqNode storage RLLL = liqTree.nodes[LKey.wrap((1 << 24) | 24)];
 
         // trigger fees + undo
-        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
+        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6, ONE_HUNDRED_PERCENT_UTILIZATION);
         liqTree.removeTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
 
         // 113712805933826 * 24e18 / 4444 / 2**64 = 33291000332.9100024179226406346006655493880262469301129331683
@@ -47,7 +50,7 @@ contract SmallTreeTest is Test {
         LiqNode storage root = liqTree.nodes[liqTree.root];
 
         liqTree.addWideRangeMLiq(8430);
-        liqTree.addWideRangeTLiq(4381, 832e18, 928e6);
+        liqTree.addWideRangeTLiq(4381, 832e18, 928e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         liqTree.feeRateSnapshotTokenY += 113712805933826;  // 5.4% APR as Q192.64 = 0.054 * 3600 / (365 * 24 * 60 * 60) * 2^64 = 113712805933826
         liqTree.feeRateSnapshotTokenX += 113712805933826;
@@ -104,7 +107,7 @@ contract SmallTreeTest is Test {
         liqTree.feeRateSnapshotTokenY += 6932491854677024;
         liqTree.feeRateSnapshotTokenX += 6932491854677024;
 
-        liqTree.addWideRangeTLiq(7287, 9184e18, 7926920e6);
+        liqTree.addWideRangeTLiq(7287, 9184e18, 7926920e6, ONE_HUNDRED_PERCENT_UTILIZATION);
 
         // earn_x      = 6932491854677024 * 832e18 / 224560 / 2**64 = 1392388963085.50927075184684754182568989829487082029858389739
         // earn_y      = 6932491854677024 * 928e6 / 224560 / 2**64  = 1.5530492280569141866078291761043440387327135097611022666547915924
@@ -163,12 +166,12 @@ contract SmallTreeTest is Test {
         liqTree.addMLiq(LiqRange(2, 3), 45346);  // LLR
         liqTree.addMLiq(LiqRange(3, 3), 287634865);  // LLRR
 
-        liqTree.addWideRangeTLiq(4430, 492e18, 254858e6);  // root
-        liqTree.addTLiq(LiqRange(0, 7), 77, 998e18, 353e6);  // L
-        liqTree.addTLiq(LiqRange(0, 3), 82734, 765e18, 99763e6);  // LL
-        liqTree.addTLiq(LiqRange(4, 7), 111, 24e18, 552e6);  // LR
-        liqTree.addTLiq(LiqRange(2, 3), 5346, 53e18, 8765e6);  // LLR
-        liqTree.addTLiq(LiqRange(3, 3), 7634865, 701e18, 779531e6);  // LLRR
+        liqTree.addWideRangeTLiq(4430, 492e18, 254858e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // root
+        liqTree.addTLiq(LiqRange(0, 7), 77, 998e18, 353e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // L
+        liqTree.addTLiq(LiqRange(0, 3), 82734, 765e18, 99763e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LL
+        liqTree.addTLiq(LiqRange(4, 7), 111, 24e18, 552e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LR
+        liqTree.addTLiq(LiqRange(2, 3), 5346, 53e18, 8765e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLR
+        liqTree.addTLiq(LiqRange(3, 3), 7634865, 701e18, 779531e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLRR
 
         // mLiq
         assertEq(root.mLiq, 8430);
@@ -352,7 +355,7 @@ contract SmallTreeTest is Test {
 
         // Apply change that requires fee calculation
         // addTLiq
-        liqTree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6);  // LLRR, LR
+        liqTree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLRR, LR
 
         // root
         assertEq(root.tokenX.cumulativeEarnedPerMLiq, 1355310898622008714);
@@ -541,12 +544,12 @@ contract SmallTreeTest is Test {
         liqTree.addMLiq(LiqRange(12, 13), 45346);      // RRL
         liqTree.addMLiq(LiqRange(12, 12), 287634865);  // RRLL
 
-        liqTree.addWideRangeTLiq(4430, 492e18, 254858e6);              // root
-        liqTree.addTLiq(LiqRange(8, 15), 77, 998e18, 353e6);           // R
-        liqTree.addTLiq(LiqRange(12, 15), 82734, 765e18, 99763e6);     // RR
-        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 552e6);           // RL
-        liqTree.addTLiq(LiqRange(12, 13), 5346, 53e18, 8765e6);        // RRL
-        liqTree.addTLiq(LiqRange(12, 12), 7634865, 701e18, 779531e6);  // RRLL
+        liqTree.addWideRangeTLiq(4430, 492e18, 254858e6, ONE_HUNDRED_PERCENT_UTILIZATION);              // root
+        liqTree.addTLiq(LiqRange(8, 15), 77, 998e18, 353e6, ONE_HUNDRED_PERCENT_UTILIZATION);           // R
+        liqTree.addTLiq(LiqRange(12, 15), 82734, 765e18, 99763e6, ONE_HUNDRED_PERCENT_UTILIZATION);     // RR
+        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 552e6, ONE_HUNDRED_PERCENT_UTILIZATION);           // RL
+        liqTree.addTLiq(LiqRange(12, 13), 5346, 53e18, 8765e6, ONE_HUNDRED_PERCENT_UTILIZATION);        // RRL
+        liqTree.addTLiq(LiqRange(12, 12), 7634865, 701e18, 779531e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // RRLL
 
         // mLiq
         assertEq(root.mLiq, 8430);
@@ -815,7 +818,7 @@ contract SmallTreeTest is Test {
 
         // Apply change that requires fee calculation
         // addTLiq
-        liqTree.addTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6);  // RRLL, RL
+        liqTree.addTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // RRLL, RL
 
         // root
         //           total_mLiq = 324198833
@@ -1110,14 +1113,14 @@ contract SmallTreeTest is Test {
         liqTree.addMLiq(LiqRange(1, 1), 2462);             // LLLR
         liqTree.addMLiq(LiqRange(4, 4), 45656756785);      // LRLL
 
-        liqTree.addTLiq(LiqRange(0, 7), 5645645, 4357e18, 345345345e6);        // L
-        liqTree.addTLiq(LiqRange(0, 3), 3456835, 293874927834e18, 2345346e6);  // LL
-        liqTree.addTLiq(LiqRange(4, 7), 51463465, 23452e18, 12341235e6);       // LR
-        liqTree.addTLiq(LiqRange(0, 1), 23453467234, 134235e18, 34534634e6);   // LLL
-        liqTree.addTLiq(LiqRange(2, 3), 456756745, 1233463e18, 2341356e6);     // LLR
-        liqTree.addTLiq(LiqRange(4, 5), 3457472, 45e18, 1324213563456457e6);   // LRL
-        liqTree.addTLiq(LiqRange(1, 1), 262, 4567e18, 1235146e6);              // LLLR
-        liqTree.addTLiq(LiqRange(4, 4), 4564573, 4564564e18, 6345135e6);       // LRLL
+        liqTree.addTLiq(LiqRange(0, 7), 5645645, 4357e18, 345345345e6, ONE_HUNDRED_PERCENT_UTILIZATION);        // L
+        liqTree.addTLiq(LiqRange(0, 3), 3456835, 293874927834e18, 2345346e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LL
+        liqTree.addTLiq(LiqRange(4, 7), 51463465, 23452e18, 12341235e6, ONE_HUNDRED_PERCENT_UTILIZATION);       // LR
+        liqTree.addTLiq(LiqRange(0, 1), 23453467234, 134235e18, 34534634e6, ONE_HUNDRED_PERCENT_UTILIZATION);   // LLL
+        liqTree.addTLiq(LiqRange(2, 3), 456756745, 1233463e18, 2341356e6, ONE_HUNDRED_PERCENT_UTILIZATION);     // LLR
+        liqTree.addTLiq(LiqRange(4, 5), 3457472, 45e18, 1324213563456457e6, ONE_HUNDRED_PERCENT_UTILIZATION);   // LRL
+        liqTree.addTLiq(LiqRange(1, 1), 262, 4567e18, 1235146e6, ONE_HUNDRED_PERCENT_UTILIZATION);              // LLLR
+        liqTree.addTLiq(LiqRange(4, 4), 4564573, 4564564e18, 6345135e6, ONE_HUNDRED_PERCENT_UTILIZATION);       // LRLL
 
         // Verify initial state
         // mLiq
@@ -1307,7 +1310,7 @@ contract SmallTreeTest is Test {
         liqTree.feeRateSnapshotTokenX += 129987217567345826;
         liqTree.feeRateSnapshotTokenY += 234346579834678237846892;
 
-        liqTree.addTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);     // LLLR, LLL
+        liqTree.addTLiq(LiqRange(1, 3), 32, 8687384723, 56758698, ONE_HUNDRED_PERCENT_UTILIZATION);     // LLLR, LLL
         liqTree.removeTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);  // LLLR, LLL
 
         // LLLR
@@ -1421,9 +1424,9 @@ contract SmallTreeTest is Test {
         liqTree.addMLiq(LiqRange(0, 0), 2582);  // LLLL
         liqTree.addMLiq(LiqRange(1, 1), 1111);  // LLLR
 
-        liqTree.addTLiq(LiqRange(0, 1), 726, 346e18, 132e6);  // LLL
-        liqTree.addTLiq(LiqRange(0, 0), 245, 100e18, 222e6);  // LLLL
-        liqTree.addTLiq(LiqRange(1, 1), 342, 234e18, 313e6);  // LLLR
+        liqTree.addTLiq(LiqRange(0, 1), 726, 346e18, 132e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLL
+        liqTree.addTLiq(LiqRange(0, 0), 245, 100e18, 222e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLLL
+        liqTree.addTLiq(LiqRange(1, 1), 342, 234e18, 313e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLLR
 
         // Verify initial tree state
         // mLiq
@@ -2995,92 +2998,4 @@ contract SmallTreeTest is Test {
 
     }
     */
-
-    function _nodeKey(uint24 depth, uint24 index, uint24 offset) public returns (LKey) {
-        uint24 baseStep = uint24(offset / 2 ** depth);
-
-        uint24 range = offset >> depth;
-        uint24 base = offset + baseStep * index;
-        return LKeyImpl.makeKey(range, base);
-    }
 }
-
-/*
-contract DenseTreeCodeStructureTest is Test {
-    LiqTree public liqTree;
-    using LiqTreeImpl for LiqTree;
-    using LKeyImpl for LKey;
-    using FeeRateSnapshotImpl for FeeRateSnapshot;
-    
-    function setUp(); public {
-        // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15];);. 
-        // ie. A complete tree matching the ascii documentation. 
-        liqTree.init(4);
-    }
-
-    // NOTE: Technically all these cases are already covered by leftLegOnly + rightLegOnly
-    //       I'm not yet sure if this is necessary or not.
-    //       Leaning toward no.
-
-
-    function testLowOutterIfStatementOnly(); public {
-
-    }
-
-    function testLowInnerWhileWithoutInnerIf(); public {
-
-    }
-
-    function testLowInnerWhileWithInnerIf(); public {
-
-    }
-
-    function testHighOutterIfStatementOnly(); public {
-
-    }
-
-    function testHighInnerWhileWithoutInnerIf(); public {
-
-    }
-
-    function testHighInnerWhileWithInnerIf(); public {
-
-    }
-
-}
-
-
-contract DenseTreeMathmaticalLimitationsTest is Test {
-    LiqTree public liqTree;
-    using LiqTreeImpl for LiqTree;
-    using LKeyImpl for LKey;
-    using FeeRateSnapshotImpl for FeeRateSnapshot;
-    
-    function setUp(); public {
-        // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15];);. 
-        // ie. A complete tree matching the ascii documentation. 
-        liqTree.init(4);
-    }
-
-    function testNoFeeAccumulationWithoutRate(); public {
-
-    }
-
-    function testFeeAccumulationDoesNotRoundUp(); public {
-
-    }
-
-    function testNodeTraversedTwiceWithoutRateUpdateDoesNotAccumulateAdditionalFees(); public {
-
-    }
-
-    function testFeeAccumulationDoesNotOverflowUint256(); public {
-
-    }
-
-    function testFeeAccumulationAccuracyWithRidiculousRates(); public {
-
-    }
-    
-}
-*/

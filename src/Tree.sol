@@ -445,16 +445,6 @@ library LiqTreeImpl {
         LiqRange memory range,
         uint128 liq,
         uint256 amountX,
-        uint256 amountY
-    ) public returns (uint128 maxTaker) {
-        return addTLiq(self, range, liq, amountX, amountY, 34028236692093846346337460743176821145600); // 100*2**128
-    }
-
-    function addTLiq(
-        LiqTree storage self,
-        LiqRange memory range,
-        uint128 liq,
-        uint256 amountX,
         uint256 amountY,
         uint256 utilizationThresholdX128
     ) public returns (uint128 maxTaker) {
@@ -477,6 +467,9 @@ library LiqTreeImpl {
             node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
             node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
             node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+
+            require(node.subtreeMinM * utilizationThresholdX128 >> 128 >= node.subtreeMaxT, "violates utilization threshold");
+            require(node.subtreeMinM >= node.subtreeMaxT, "tLiq should never exceed mLiq");
 
             // Right Propogate T
             (LKey up, LKey left) = current.rightUp();
@@ -503,6 +496,9 @@ library LiqTreeImpl {
                     node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
                     node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
                     node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+
+                    require(node.subtreeMinM * utilizationThresholdX128 >> 128 >= node.subtreeMaxT, "violates utilization threshold");
+                    require(node.subtreeMinM >= node.subtreeMaxT, "tLiq should never exceed mLiq");
                 }
 
                 // Right Propogate T
@@ -530,6 +526,9 @@ library LiqTreeImpl {
             node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
             node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
 
+            require(node.subtreeMinM * utilizationThresholdX128 >> 128 >= node.subtreeMaxT, "violates utilization threshold");
+            require(node.subtreeMinM >= node.subtreeMaxT, "tLiq should never exceed mLiq");
+
             // Left Propogate T
             (LKey up, LKey left) = current.leftUp();
             LiqNode storage parent = self.nodes[up];
@@ -555,6 +554,9 @@ library LiqTreeImpl {
                     node.tokenX.subtreeBorrow += (amountX / (range.high - range.low + 1)) * nodeRange;
                     node.tokenY.borrow += (amountY / (range.high - range.low + 1)) * nodeRange;
                     node.tokenY.subtreeBorrow += (amountY / (range.high - range.low + 1)) * nodeRange;
+
+                    require(node.subtreeMinM * utilizationThresholdX128 >> 128 >= node.subtreeMaxT, "violates utilization threshold");
+                    require(node.subtreeMinM >= node.subtreeMaxT, "tLiq should never exceed mLiq");
                 }
 
                 // Left Propogate T
@@ -755,7 +757,7 @@ library LiqTreeImpl {
         accumulatedFeeRateY = rootNode.tokenY.cumulativeEarnedPerMLiq;
     }
 
-    function addWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external returns (uint128 maxTaker) {
+    function addWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY, uint256 utilizationThresholdX128) external returns (uint128 maxTaker) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleRootFee(self, rootNode);
@@ -766,6 +768,9 @@ library LiqTreeImpl {
         rootNode.tokenX.subtreeBorrow += amountX;
         rootNode.tokenY.borrow += amountY;
         rootNode.tokenY.subtreeBorrow += amountY;
+
+        require(rootNode.mLiq * utilizationThresholdX128 >> 128 >= rootNode.tLiq, "violates utilization threshold");
+        require(rootNode.mLiq >= rootNode.tLiq, "tLiq should never exceed mLiq");
     }
 
     function removeWideRangeTLiq(LiqTree storage self, uint128 liq, uint256 amountX, uint256 amountY) external returns (uint128 maxTaker) {
@@ -1139,7 +1144,7 @@ library LiqTreeIntLib {
     function getRangeBounds(
         uint24 rangeLow,
         uint24 rangeHigh
-    ) public view returns (LKey low, LKey high, LKey peak, LKey limitRange) {
+    ) public pure returns (LKey low, LKey high, LKey peak, LKey limitRange) {
         LKey peakRange;
         (peak, peakRange) = lowestCommonAncestor(rangeLow, rangeHigh);
 
