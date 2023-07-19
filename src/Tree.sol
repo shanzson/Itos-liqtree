@@ -54,29 +54,36 @@ import { console } from "forge-std/console.sol";
 type LKey is uint48;
 // Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks.
 uint8 constant MAX_TREE_DEPTH = 21; // We zero index depth, so this is 22 levels.
-uint256 constant TWO_POW_64 = 18446744073709551616;
+uint256 constant TWO_POW_64 = 1 << 64;
 
 // This is okay as the NIL key because it can't possibly be used in any breakdowns since the depth portion of
 // the lkey is one-hot.
 LKey constant LKeyNIL = LKey.wrap(0xFFFFFFFFFFFF);
 
+// This stay in memory so each have their own slots.
 struct LiqRange {
     uint24 low;
     uint24 high;
 }
 
+// Struct Fee
+
 /*
  * @notice A struct for querying the liquidity available in a given range. It's similar to a combination of a
  * segment tree and an augmented tree.
- * TODO: We can test a LGroupKey idea where we batch node storage to reduce lookups like a BTree
- * @author Terence An
+ * @author Terence An and Austin Urlaub
  */
 struct LiqTree {
     mapping(LKey => LiqNode) nodes;
     LKey root; // maxRange << 24 + maxRange;
     uint24 offset; // This is also the maximum range allowed in this tree.
-    uint256 feeRateSnapshotTokenX;
-    uint256 feeRateSnapshotTokenY;
+}
+
+// Single stack pointer for the fees from a user.
+// The precision is left up to the user.
+struct FeeSnap {
+    uint256 X;
+    uint256 Y;
 }
 
 library LiqTreeImpl {
@@ -104,7 +111,8 @@ library LiqTreeImpl {
     function addMLiq(
         LiqTree storage self,
         LiqRange memory range,
-        uint128 liq
+        uint128 liq,
+        FeeSnap memory rates,
     ) external returns (uint128 minMaker, uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
@@ -118,7 +126,7 @@ library LiqTreeImpl {
 
             (rangeWidth, ) = current.explode();
 
-            _handleFee(self, current, node);
+            _handleFee(self, current, node, rates);
 
             uint128 totalLiq = rangeWidth * liq; // better name
 
@@ -786,48 +794,36 @@ library LiqTreeImpl {
         rootNode.tokenY.subtreeBorrow -= amountY;
     }
 
-    function _handleRootFee(LiqTree storage self, LiqNode storage rootNode) internal {
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - rootNode.tokenX.feeRateSnapshot;
-        rootNode.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - rootNode.tokenY.feeRateSnapshot;
-        rootNode.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
-
-        // TODO: determine if we need to check for overflow
-        uint256 totalMLiq = rootNode.subtreeMLiq;
-        if (totalMLiq > 0) {
-            rootNode.tokenX.cumulativeEarnedPerMLiq += (rootNode.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenX.subtreeCumulativeEarnedPerMLiq +=(rootNode.tokenX.subtreeBorrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-
-            rootNode.tokenY.cumulativeEarnedPerMLiq += (rootNode.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-            rootNode.tokenY.subtreeCumulativeEarnedPerMLiq += (rootNode.tokenY.subtreeBorrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-        }
+    function _handleRootFee(LiqTree storage self, LiqNode storage rootNode, FeeSnap memory fees) private {
+        _handleFeeHelper(self, rootNode, fees, 0, 0);
     }
 
-    function _handleFee(LiqTree storage self, LKey current, LiqNode storage node) internal {
+    function _handleFee(LiqTree storage self, LKey current, LiqNode storage node, FeeSnap memory fees) private {
         (uint24 rangeWidth, ) = current.explode();
+        uint256 auxMLiq = auxilliaryLevelMLiq(self, current); // At most log2(24) + 128 = 132 bits
+        _handleFeeHelper(self, node, fees, rangeWidth, auxMLiq);
+    }
 
-        uint256 tokenXRateDiffX64 = self.feeRateSnapshotTokenX - node.tokenX.feeRateSnapshot;
-        node.tokenX.feeRateSnapshot = self.feeRateSnapshotTokenX;
-        uint256 tokenYRateDiffX64 = self.feeRateSnapshotTokenY - node.tokenY.feeRateSnapshot;
-        node.tokenY.feeRateSnapshot = self.feeRateSnapshotTokenY;
+    function _handleFeeHelper(
+        LiqTree storage self,
+        LiqNode storage node,
+        FeeSnap memory fees,
+        uint24 rangeWidth,
+        uint256 auxMLiq
+    ) private {
+        uint256 rateDiffX = fees.X - node.tokenX.feeRateSnapshot;
+        node.tokenX.feeRateSnapshot = fees.X;
+        uint256 rateDiffY = fees.Y - node.tokenY.feeRateSnapshot;
+        node.tokenY.feeRateSnapshot = fees.Y;
 
-        // console.log("hello");
-        // console.log(rangeWidth);
-
-        // TODO: determine if we need to check for overflow
-        uint256 auxLevel = auxilliaryLevelMLiq(self, current);
-        uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth;
-
-        // console.log(auxLevel);
-        // console.log(totalMLiq);
-        // console.log(node.tokenX.borrow);
+        uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth; // At most 24 + 132 = 156 bits
 
         if (totalMLiq > 0) {
-            node.tokenX.cumulativeEarnedPerMLiq += (node.tokenX.borrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
-            node.tokenX.subtreeCumulativeEarnedPerMLiq += (node.tokenX.subtreeBorrow * tokenXRateDiffX64) / totalMLiq / TWO_POW_64;
+            node.tokenX.cumulativeEarnedPerMLiq += (node.tokenX.borrow * rateDiffX) / totalMLiq;
+            node.tokenX.subtreeCumulativeEarnedPerMLiq += (node.tokenX.subtreeBorrow * rateDiffX) / totalMLiq;
 
-            node.tokenY.cumulativeEarnedPerMLiq += (node.tokenY.borrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
-            node.tokenY.subtreeCumulativeEarnedPerMLiq += (node.tokenY.subtreeBorrow * tokenYRateDiffX64) / totalMLiq / TWO_POW_64;
+            node.tokenY.cumulativeEarnedPerMLiq += (node.tokenY.borrow * rateDiffY) / totalMLiq;
+            node.tokenY.subtreeCumulativeEarnedPerMLiq += (node.tokenY.subtreeBorrow * rateDiffY) / totalMLiq;
         }
     }
 
