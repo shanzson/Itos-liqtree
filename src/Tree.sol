@@ -262,7 +262,6 @@ library LiqTreeImpl {
         while (current.isLess(self.root)) {
             (LKey up, LKey other) = current.genericUp();
             LiqNode storage parent = self.nodes[up];
-            uint128 oldMin = parent.subtreeMinM;
 
             (rangeWidth, ) = up.explode();
 
@@ -273,7 +272,7 @@ library LiqTreeImpl {
             parent.subtreeMLiq = self.nodes[other].subtreeMLiq + node.subtreeMLiq + parent.mLiq * rangeWidth;
 
             current = up;
-            node = parent; // Store this to save one lookup..
+            node = parent;
 
             accumulatedFeeRateX += node.tokenX.cumulativeEarnedPerMLiq;
             accumulatedFeeRateY += node.tokenY.cumulativeEarnedPerMLiq;
@@ -798,20 +797,86 @@ library LiqTreeImpl {
     /* Helpers */
     /***********/
 
-    function _traverse(LiqTree storage self, LiqRange memory range, function () private op, function() private merge) private {
+    function _traverse(
+        LiqTree storage self,
+        LiqRange memory range,
+        function (LKey, LiqNode storage, State memory) private visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) private propogate
+    ) private returns (State memory state) {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
         LiqNode storage node;
-        uint24 rangeWidth;
 
         if (low.isLess(stopRange)) {
             current = low;
             node = self.nodes[current];
-            (rangeWidth, ) = current.explode();
 
+            visit(current, node, state);
+            // A propogate always follows a visit.
+            (LKey up, LKey left) = current.rightUp();
+            LiqNode storage parent = self.nodes[up];
+            LiqNode storage sib = self.nodes[left];
+            propogate(sib, node, up, parent, state);
 
+            (current, node) = (up, parent);
 
+            while (current.isLess(stopRange)) {
+                if (current.isLeft()) {
+                    current = current.rightSib();
+                    node = self.nodes[current];
+
+                    visit(current, node, state);
+                }
+                (up, left) = current.rightUp();
+                parent = self.nodes[up];
+                sib = self.nodes[left];
+                propogate(sib, node, up, parent, state);
+
+                (current, node) = (up, parent);
+            }
+        }
+
+        if (high.isLess(stopRange)) {
+            current = high;
+            node = self.nodes[current];
+
+            visit(current, node, state);
+            // A propogate always follows
+            (LKey up, LKey right) = current.leftUp();
+            LiqNode storage parent = self.nodes[up];
+            LiqNode storage sib = self.nodes[right];
+            propogate(node, sib, up, parent, state);
+
+            (current, node) = (up, parent);
+
+            while (current.isLess(stopRange)) {
+                if (current.isRight()) {
+                    current = current.leftSib();
+                    node = self.nodes[current];
+
+                    visit(current, node, state);
+                }
+                (up, right) = current.leftUp();
+                parent = self.nodes[up];
+                sib = self.nodes[right];
+                propogate(node, sib, up, parent, state);
+
+                (current, node) = (up, parent);
+            }
+        }
+        // Both legs are handled. Touch up everything above where we left off.
+        // We are guaranteed to have visited the left or the right side, so our node and
+        // current are already prefilled and current has already been propogated to.
+
+        // Peak propogate.
+        while (current.isLess(self.root)) {
+            (LKey up, LKey other) = current.genericUp();
+            LiqNode storage parent = self.nodes[up];
+            LiqNode storage sib = self.nodes[other];
+            propogate(sib, node, up, parent);
+
+            (current, node) = (up, parent);
         }
     }
 
@@ -1208,8 +1273,8 @@ library LiqTreeIntLib {
         } else {
             // Both are at or higher than the peak! So our range breakdown is just
             // the peak.
-            // You can prove that one of the keys must be the peak itself trivially.
-            // Thus we don't modify our keys and just stop at one above the peak.
+            // You can prove that one of the keys must be the peak and the other must be above.
+            // Thus we don't modify our keys and limit at one above the peak.
             limitRange = LKey.wrap(LKey.unwrap(peakRange) << 1);
         }
     }
