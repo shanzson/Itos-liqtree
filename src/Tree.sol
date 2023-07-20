@@ -140,7 +140,7 @@ library LiqTreeImpl {
             (LKey up, LKey left) = current.rightUp();
             LiqNode storage parent = self.nodes[up];
 
-            _handleFee(self, up, parent);
+            _handleFee(self, up, parent, rates);
 
             parent.subtreeMinM = min(self.nodes[left].subtreeMinM, node.subtreeMinM) + parent.mLiq;
             parent.subtreeMLiq += totalLiq;
@@ -157,7 +157,7 @@ library LiqTreeImpl {
                     (rangeWidth, ) = current.explode();
                     totalLiq = rangeWidth * liq; // better name
 
-                    _handleFee(self, current, node);
+                    _handleFee(self, current, node, rates);
 
                     node.addMLiq(liq);
                     node.subtreeMLiq += totalLiq;
@@ -794,6 +794,27 @@ library LiqTreeImpl {
         rootNode.tokenY.subtreeBorrow -= amountY;
     }
 
+    /***********/
+    /* Helpers */
+    /***********/
+
+    function _traverse(LiqTree storage self, LiqRange memory range, function () private op, function() private merge) private {
+        (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
+
+        LKey current;
+        LiqNode storage node;
+        uint24 rangeWidth;
+
+        if (low.isLess(stopRange)) {
+            current = low;
+            node = self.nodes[current];
+            (rangeWidth, ) = current.explode();
+
+
+
+        }
+    }
+
     function _handleRootFee(LiqTree storage self, LiqNode storage rootNode, FeeSnap memory fees) private {
         _handleFeeHelper(self, rootNode, fees, 0, 0);
     }
@@ -819,13 +840,33 @@ library LiqTreeImpl {
         uint256 totalMLiq = node.subtreeMLiq + auxLevel * rangeWidth; // At most 24 + 132 = 156 bits
 
         if (totalMLiq > 0) {
-            node.tokenX.cumulativeEarnedPerMLiq += (node.tokenX.borrow * rateDiffX) / totalMLiq;
-            node.tokenX.subtreeCumulativeEarnedPerMLiq += (node.tokenX.subtreeBorrow * rateDiffX) / totalMLiq;
+            node.tokenX.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq);
+            node.tokenX.subtreeCumulativeEarnedPerMLiq += Math.shortMulDiv(
+                node.tokenX.subtreeBorrow, rateDiffX, totalMLiq);
 
-            node.tokenY.cumulativeEarnedPerMLiq += (node.tokenY.borrow * rateDiffY) / totalMLiq;
-            node.tokenY.subtreeCumulativeEarnedPerMLiq += (node.tokenY.subtreeBorrow * rateDiffY) / totalMLiq;
+            node.tokenY.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenY.borrow, rateDiffY, totalMLiq);
+            node.tokenY.subtreeCumulativeEarnedPerMLiq += Math.shortMulDiv(
+                node.tokenY.subtreeBorrow, rateDiffY, totalMLiq);
         }
     }
+
+    /// Precompute the auxilliary liquidities for a starting LKey (low or high leg).
+    function computeAuxArray(LiqTree storage self, LKey start)
+    internal view returns (uint256[MAX_TREE_DEPTH] auxMLiqs)
+    {
+        uint8 idx = 0;
+        while (!start.isEq(self.root)) {
+            (start, ) = start.genericUp();
+            auxMLiqs[idx++] = self.nodes[start].mLiq;
+        }
+
+        uint256 suffixSum = self.nodes[idx];
+        while (idx > 0) {
+            suffixSum += auxMLiq[--idx];
+            auxMLiqs[idx] = suffixSum;
+        }
+    }
+
 
     function auxilliaryLevelMLiq(LiqTree storage self, LKey nodeKey) internal view returns (uint256 mLiq) {
         if (nodeKey.isEq(self.root)) {
