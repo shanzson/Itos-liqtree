@@ -12,9 +12,10 @@ struct LiqNodeTokenData {
 struct LiqNode {
     uint128 mLiq;
     uint128 tLiq;
-    uint128 subtreeMLiq;
     uint128 subtreeMinM;
     uint128 subtreeMaxT;
+    // Note! Not updated by the liq functions below.
+    uint128 subtreeMLiq;
 
     LiqNodeTokenData tokenX;
     LiqNodeTokenData tokenY;
