@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
-import { LiqNode, LiqNodeImpl } from "src/LiqNode.sol";
+import { LiqNode, LiqNodeImpl } from "./LiqNode.sol";
+import { Math } from "./Math.sol";
 
 /**
  *  Liquidity Tree
@@ -88,11 +89,11 @@ struct State {
     FeeSnap rateSnap;
     FeeSnap accumulatedFees;
 
-    uint256[24] auxMLiqs;
+    uint256[MAX_TREE_DEPTH] auxMLiqs;
     uint8 auxIdx;
 
     // The liquidity change our operation is introducting.
-    uint256 liqDiff;
+    uint128 liqDiff;
 
     // The borrow changes.
     uint256 xDiff;
@@ -132,7 +133,7 @@ library LiqTreeImpl {
         LiqTree storage self,
         LiqRange memory range,
         uint128 liq,
-        FeeSnap memory rates,
+        FeeSnap memory rates
     ) public returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         State memory state;
         state.liqDiff = liq;
@@ -148,7 +149,7 @@ library LiqTreeImpl {
         LiqTree storage self,
         LiqRange memory range,
         uint128 liq,
-        FeeSnap memory rates,
+        FeeSnap memory rates
     ) public returns (
         uint256 accumulatedFeeRateX,
         uint256 accumulatedFeeRateY,
@@ -184,7 +185,7 @@ library LiqTreeImpl {
         state.liqDiff = liq;
         state.rateSnap = rates;
         state.mLiqTracker = type(uint128).max;
-        state.tLiqTracker = 0
+        state.tLiqTracker = 0;
         // TODO: Test replacing this with the actual per node borrow calculation.
         uint256 width = range.high - range.low + 1;
         state.xDiff = borrowedX / width;
@@ -193,7 +194,7 @@ library LiqTreeImpl {
         _traverse(self, range, addTLiqVisit, addTLiqPropogate, state);
         minMaker = state.mLiqTracker;
         maxTaker = state.tLiqTracker;
-    )
+    }
 
     function removeTLiq(
         LiqTree storage self,
@@ -201,7 +202,7 @@ library LiqTreeImpl {
         uint128 liq,
         FeeSnap memory rates,
         uint256 borrowedX,
-        uint256 borrowedY,
+        uint256 borrowedY
     ) public {
         State memory state;
         state.liqDiff = liq;
@@ -314,7 +315,7 @@ library LiqTreeImpl {
         LKey key,
         LiqNode storage node,
         State memory state
-    ) private {
+    ) internal {
         (uint24 rangeWidth, ) = key.explode();
         // Need to update the subtreeMLiq first
         node.addMLiq(state.liqDiff);
@@ -331,26 +332,26 @@ library LiqTreeImpl {
         LiqNode storage a,
         LiqNode storage b,
         LKey up,
-        LiqNode parent,
+        LiqNode storage parent,
         State memory state
-    ) private {
+    ) internal {
         (uint24 rangeWidth, ) = up.explode();
         parent.subtreeMinM = min(a.subtreeMinM, b.subtreeMinM) + parent.mLiq;
         parent.subtreeMLiq = a.subtreeMLiq + b.subtreeMLiq + parent.mLiq * rangeWidth;
 
         // Move up in the aux array since we're moving up a level.
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
-        _handleFee(node, state.rateSnap, aboveMLiq);
+        _handleFee(parent, state.rateSnap, aboveMLiq);
 
-        state.accumulatedFees.X += node.tokenX.cumulativeEarnedPerMLiq;
-        state.accumulatedFees.Y += node.tokenY.cumulativeEarnedPerMLiq;
+        state.accumulatedFees.X += parent.tokenX.cumulativeEarnedPerMLiq;
+        state.accumulatedFees.Y += parent.tokenY.cumulativeEarnedPerMLiq;
     }
 
     function removeMLiqVisit(
         LKey key,
         LiqNode storage node,
         State memory state
-    ) private {
+    ) internal {
         (uint24 rangeWidth, ) = key.explode();
         // Need to update the subtreeMLiq first
         node.removeMLiq(state.liqDiff);
@@ -372,9 +373,9 @@ library LiqTreeImpl {
         LiqNode storage a,
         LiqNode storage b,
         LKey up,
-        LiqNode parent,
+        LiqNode storage parent,
         State memory state
-    ) private {
+    ) internal {
         (uint24 rangeWidth, ) = up.explode();
         parent.subtreeMinM = min(a.subtreeMinM, b.subtreeMinM) + parent.mLiq;
         parent.subtreeMLiq = a.subtreeMLiq + b.subtreeMLiq + parent.mLiq * rangeWidth;
@@ -384,28 +385,28 @@ library LiqTreeImpl {
 
         // Move up in the aux array since we're moving up a level.
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
-        _handleFee(node, state.rateSnap, aboveMLiq);
+        _handleFee(parent, state.rateSnap, aboveMLiq);
 
-        state.accumulatedFees.X += node.tokenX.cumulativeEarnedPerMLiq;
-        state.accumulatedFees.Y += node.tokenY.cumulativeEarnedPerMLiq;
+        state.accumulatedFees.X += parent.tokenX.cumulativeEarnedPerMLiq;
+        state.accumulatedFees.Y += parent.tokenY.cumulativeEarnedPerMLiq;
     }
 
     function addTLiqVisit(
         LKey key,
         LiqNode storage node,
         State memory state
-    ) private {
+    ) internal {
         node.addTLiq(state.liqDiff);
+        (uint24 rangeWidth, ) = key.explode();
 
         // Handle fees first
         uint256 aboveMLiq = state.auxMLiqs[state.auxIdx] * rangeWidth;
         _handleFee(node, state.rateSnap, aboveMLiq);
 
-        (uint24 rangeWidth, ) = key.explode();
         node.tokenX.borrow += state.xDiff * rangeWidth;
         node.tokenX.subtreeBorrow += state.xDiff * rangeWidth;
         node.tokenY.borrow += state.yDiff * rangeWidth;
-        node.tokenY.subtrreeBorrow += state.yDiff * rangeWidth;
+        node.tokenY.subtreeBorrow += state.yDiff * rangeWidth;
 
         state.mLiqTracker = min(state.mLiqTracker, node.subtreeMinM);
         state.tLiqTracker = max(state.tLiqTracker, node.subtreeMaxT);
@@ -415,12 +416,14 @@ library LiqTreeImpl {
         LiqNode storage a,
         LiqNode storage b,
         LKey up,
-        LiqNode parent,
+        LiqNode storage parent,
         State memory state
-    ) private {
+    ) internal {
+        (uint24 rangeWidth, ) = up.explode();
+
         // Move up in the aux array since we're moving up a level.
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
-        _handleFee(node, state.rateSnap, aboveMLiq);
+        _handleFee(parent, state.rateSnap, aboveMLiq);
 
         state.mLiqTracker += parent.mLiq;
         state.tLiqTracker += parent.tLiq;
@@ -434,30 +437,32 @@ library LiqTreeImpl {
         LKey key,
         LiqNode storage node,
         State memory state
-    ) private {
+    ) internal {
         node.removeTLiq(state.liqDiff);
+        (uint24 rangeWidth, ) = key.explode();
 
         // Handle fees first
         uint256 aboveMLiq = state.auxMLiqs[state.auxIdx] * rangeWidth;
         _handleFee(node, state.rateSnap, aboveMLiq);
 
-        (uint24 rangeWidth, ) = key.explode();
         node.tokenX.borrow -= state.xDiff * rangeWidth;
         node.tokenX.subtreeBorrow -= state.xDiff * rangeWidth;
         node.tokenY.borrow -= state.yDiff * rangeWidth;
-        node.tokenY.subtrreeBorrow -= state.yDiff * rangeWidth;
+        node.tokenY.subtreeBorrow -= state.yDiff * rangeWidth;
     }
 
     function removeTLiqPropogate(
         LiqNode storage a,
         LiqNode storage b,
         LKey up,
-        LiqNode parent,
+        LiqNode storage parent,
         State memory state
-    ) private {
+    ) internal {
+        (uint24 rangeWidth, ) = up.explode();
+
         // Move up in the aux array since we're moving up a level.
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
-        _handleFee(node, state.rateSnap, aboveMLiq);
+        _handleFee(parent, state.rateSnap, aboveMLiq);
 
         parent.subtreeMaxT = max(a.subtreeMaxT, b.subtreeMaxT) + parent.tLiq;
         parent.tokenX.subtreeBorrow = a.tokenX.subtreeBorrow + b.tokenX.subtreeBorrow + parent.tokenX.borrow;
@@ -468,7 +473,7 @@ library LiqTreeImpl {
         LKey key,
         LiqNode storage node,
         State memory state
-    ) private {
+    ) internal view {
         (uint24 rangeWidth, ) = key.explode();
         uint256 aboveMLiq = state.auxMLiqs[state.auxIdx] * rangeWidth;
         (uint256 subtreeX, uint256 subtreeY) = _viewSubtreeFee(node, state.rateSnap, aboveMLiq);
@@ -478,15 +483,15 @@ library LiqTreeImpl {
     }
 
     function queryEarnPropogate(
-        LiqNode storage a,
-        LiqNode storage b,
+        LiqNode storage,
+        LiqNode storage,
         LKey up,
-        LiqNode parent,
+        LiqNode storage parent,
         State memory state
-    ) private {
+    ) internal view {
         (uint24 rangeWidth, ) = up.explode();
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
-        (uint256 x, uint256 y) = _viewFee(node, state.rateSnap, aboveMLiq);
+        (uint256 x, uint256 y) = _viewFee(parent, state.rateSnap, aboveMLiq);
 
         state.accumulatedFees.X += x;
         state.accumulatedFees.Y += y;
@@ -499,10 +504,10 @@ library LiqTreeImpl {
     function _traverse(
         LiqTree storage self,
         LiqRange memory range,
-        function (LKey, LiqNode storage, State memory) private visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) private propogate,
+        function (LKey, LiqNode storage, State memory) internal visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
         State memory state
-    ) private {
+    ) internal {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -510,85 +515,121 @@ library LiqTreeImpl {
 
         if (low.isLess(stopRange)) {
             computeAuxArray(self, low, state.auxMLiqs);
-            current = low;
-            node = self.nodes[current];
-
-            visit(current, node, state);
-            // A propogate always follows a visit.
-            (LKey up, LKey left) = current.rightUp();
-            LiqNode storage parent = self.nodes[up];
-            LiqNode storage sib = self.nodes[left];
-            propogate(sib, node, up, parent, state);
-
-            (current, node) = (up, parent);
-
-            while (current.isLess(stopRange)) {
-                if (current.isLeft()) {
-                    current = current.rightSib();
-                    node = self.nodes[current];
-
-                    visit(current, node, state);
-                }
-                (up, left) = current.rightUp();
-                parent = self.nodes[up];
-                sib = self.nodes[left];
-                propogate(sib, node, up, parent, state);
-
-                (current, node) = (up, parent);
-            }
+            current = _traverseLeft(self, low, stopRange, visit, propogate, state);
         }
-
         if (high.isLess(stopRange)) {
-            computeAuxArray(self, high, state.auxMLiqs);
-            current = high;
-            node = self.nodes[current];
-
-            visit(current, node, state);
-            // A propogate always follows
-            (LKey up, LKey right) = current.leftUp();
-            LiqNode storage parent = self.nodes[up];
-            LiqNode storage sib = self.nodes[right];
-            propogate(node, sib, up, parent, state);
-
-            (current, node) = (up, parent);
-
-            while (current.isLess(stopRange)) {
-                if (current.isRight()) {
-                    current = current.leftSib();
-                    node = self.nodes[current];
-
-                    visit(current, node, state);
-                }
-                (up, right) = current.leftUp();
-                parent = self.nodes[up];
-                sib = self.nodes[right];
-                propogate(node, sib, up, parent, state);
-
-                (current, node) = (up, parent);
-            }
+            computeAuxArray(self, low, state.auxMLiqs);
+            current = _traverseRight(self, high, stopRange, visit, propogate, state);
         }
+        // We could return the node to save this lookup hash, but the compiler doesn't know
+        // we are guaranteed to go through one of the above two branches, so it'll complain
+        // node is unassigned before use.
+        node = self.nodes[current];
+
         // Both legs are handled. Touch up everything above where we left off.
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
 
         // Peak propogate.
+        LKey up;
+        LiqNode storage sib;
         while (current.isLess(self.root)) {
-            (LKey up, LKey other) = current.genericUp();
+            {
+                LKey other;
+                (up, other) = current.genericUp();
+                sib = self.nodes[other];
+            }
             LiqNode storage parent = self.nodes[up];
-            LiqNode storage sib = self.nodes[other];
-            propogate(sib, node, up, parent);
+            propogate(sib, node, up, parent, state);
+            (current, node) = (up, parent);
+        }
+    }
+
+    function _traverseLeft(
+        LiqTree storage self,
+        LKey current,
+        LKey stopRange,
+        function (LKey, LiqNode storage, State memory) internal visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
+        State memory state
+    ) internal returns (LKey last) {
+        LiqNode storage node = self.nodes[current];
+
+        visit(current, node, state);
+        // A propogate always follows a visit.
+        LKey up;
+        LiqNode storage sib;
+        {
+            LKey left;
+            (up, left) = current.rightUp();
+            sib = self.nodes[left];
+        }
+        LiqNode storage parent = self.nodes[up];
+        propogate(sib, node, up, parent, state);
+        (current, node) = (up, parent);
+
+        while (current.isLess(stopRange)) {
+            if (current.isLeft()) {
+                current = current.rightSib();
+                node = self.nodes[current];
+
+                visit(current, node, state);
+            }
+            {
+                LKey left;
+                (up, left) = current.rightUp();
+                sib = self.nodes[left];
+            }
+            parent = self.nodes[up];
+            propogate(sib, node, up, parent, state);
+            (current, node) = (up, parent);
+        }
+        last = current;
+    }
+
+    function _traverseRight(
+        LiqTree storage self,
+        LKey current,
+        LKey stopRange,
+        function (LKey, LiqNode storage, State memory) internal visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
+        State memory state
+    ) internal returns (LKey last) {
+        LiqNode storage node = self.nodes[current];
+
+        visit(current, node, state);
+        // A propogate always follows
+        (LKey up, LKey right) = current.leftUp();
+        LiqNode storage parent = self.nodes[up];
+        LiqNode storage sib = self.nodes[right];
+        propogate(node, sib, up, parent, state);
+
+        (current, node) = (up, parent);
+
+        while (current.isLess(stopRange)) {
+            if (current.isRight()) {
+                current = current.leftSib();
+                node = self.nodes[current];
+
+                visit(current, node, state);
+            }
+            (up, right) = current.leftUp();
+            parent = self.nodes[up];
+            sib = self.nodes[right];
+            propogate(node, sib, up, parent, state);
 
             (current, node) = (up, parent);
         }
+        last = current;
     }
 
     function _traverseView(
         LiqTree storage self,
         LiqRange memory range,
-        function (LKey, LiqNode storage, State memory) private view visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) private view propogate,
+        function (LKey, LiqNode storage, State memory) internal view visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
         State memory state
-    ) private view {
+    ) internal view {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
 
         LKey current;
@@ -596,83 +637,119 @@ library LiqTreeImpl {
 
         if (low.isLess(stopRange)) {
             computeAuxArray(self, low, state.auxMLiqs);
-            current = low;
-            node = self.nodes[current];
-
-            visit(current, node, state);
-            // A propogate always follows a visit.
-            (LKey up, LKey left) = current.rightUp();
-            LiqNode storage parent = self.nodes[up];
-            LiqNode storage sib = self.nodes[left];
-            propogate(sib, node, up, parent, state);
-
-            (current, node) = (up, parent);
-
-            while (current.isLess(stopRange)) {
-                if (current.isLeft()) {
-                    current = current.rightSib();
-                    node = self.nodes[current];
-
-                    visit(current, node, state);
-                }
-                (up, left) = current.rightUp();
-                parent = self.nodes[up];
-                sib = self.nodes[left];
-                propogate(sib, node, up, parent, state);
-
-                (current, node) = (up, parent);
-            }
+            current = _traverseLeftView(self, low, stopRange, visit, propogate, state);
         }
-
         if (high.isLess(stopRange)) {
-            computeAuxArray(self, high, state.auxMLiqs);
-            current = high;
-            node = self.nodes[current];
-
-            visit(current, node, state);
-            // A propogate always follows
-            (LKey up, LKey right) = current.leftUp();
-            LiqNode storage parent = self.nodes[up];
-            LiqNode storage sib = self.nodes[right];
-            propogate(node, sib, up, parent, state);
-
-            (current, node) = (up, parent);
-
-            while (current.isLess(stopRange)) {
-                if (current.isRight()) {
-                    current = current.leftSib();
-                    node = self.nodes[current];
-
-                    visit(current, node, state);
-                }
-                (up, right) = current.leftUp();
-                parent = self.nodes[up];
-                sib = self.nodes[right];
-                propogate(node, sib, up, parent, state);
-
-                (current, node) = (up, parent);
-            }
+            computeAuxArray(self, low, state.auxMLiqs);
+            current = _traverseRightView(self, high, stopRange, visit, propogate, state);
         }
+        // We could return the node to save this lookup hash, but the compiler doesn't know
+        // we are guaranteed to go through one of the above two branches, so it'll complain
+        // node is unassigned before use.
+        node = self.nodes[current];
+
         // Both legs are handled. Touch up everything above where we left off.
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
 
         // Peak propogate.
+        LKey up;
+        LiqNode storage sib;
         while (current.isLess(self.root)) {
-            (LKey up, LKey other) = current.genericUp();
+            {
+                LKey other;
+                (up, other) = current.genericUp();
+                sib = self.nodes[other];
+            }
             LiqNode storage parent = self.nodes[up];
-            LiqNode storage sib = self.nodes[other];
-            propogate(sib, node, up, parent);
+            propogate(sib, node, up, parent, state);
+            (current, node) = (up, parent);
+        }
+    }
+
+    function _traverseLeftView(
+        LiqTree storage self,
+        LKey current,
+        LKey stopRange,
+        function (LKey, LiqNode storage, State memory) internal view visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
+        State memory state
+    ) internal view returns (LKey last) {
+        LiqNode storage node = self.nodes[current];
+
+        visit(current, node, state);
+        // A propogate always follows a visit.
+        LKey up;
+        LiqNode storage sib;
+        {
+            LKey left;
+            (up, left) = current.rightUp();
+            sib = self.nodes[left];
+        }
+        LiqNode storage parent = self.nodes[up];
+        propogate(sib, node, up, parent, state);
+        (current, node) = (up, parent);
+
+        while (current.isLess(stopRange)) {
+            if (current.isLeft()) {
+                current = current.rightSib();
+                node = self.nodes[current];
+
+                visit(current, node, state);
+            }
+            {
+                LKey left;
+                (up, left) = current.rightUp();
+                sib = self.nodes[left];
+            }
+            parent = self.nodes[up];
+            propogate(sib, node, up, parent, state);
+            (current, node) = (up, parent);
+        }
+        last = current;
+    }
+
+    function _traverseRightView(
+        LiqTree storage self,
+        LKey current,
+        LKey stopRange,
+        function (LKey, LiqNode storage, State memory) internal view visit,
+        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
+        State memory state
+    ) internal view returns (LKey last) {
+        LiqNode storage node = self.nodes[current];
+
+        visit(current, node, state);
+        // A propogate always follows
+        (LKey up, LKey right) = current.leftUp();
+        LiqNode storage parent = self.nodes[up];
+        LiqNode storage sib = self.nodes[right];
+        propogate(node, sib, up, parent, state);
+
+        (current, node) = (up, parent);
+
+        while (current.isLess(stopRange)) {
+            if (current.isRight()) {
+                current = current.leftSib();
+                node = self.nodes[current];
+
+                visit(current, node, state);
+            }
+            (up, right) = current.leftUp();
+            parent = self.nodes[up];
+            sib = self.nodes[right];
+            propogate(node, sib, up, parent, state);
 
             (current, node) = (up, parent);
         }
+        last = current;
     }
 
     function _handleFee(
         LiqNode storage node,
         FeeSnap memory fees,
         uint256 aboveMLiq
-    ) private {
+    ) internal {
         uint256 rateDiffX = fees.X - node.tokenX.feeRateSnapshot;
         node.tokenX.feeRateSnapshot = fees.X;
         uint256 rateDiffY = fees.Y - node.tokenY.feeRateSnapshot;
@@ -695,9 +772,9 @@ library LiqTreeImpl {
         LiqNode storage node,
         FeeSnap memory snap,
         uint256 aboveMLiq
-    ) private view returns (uint256 earnedX, uint256 earnedY) {
-        uint256 rateDiffX = fees.X - node.tokenX.feeRateSnapshot;
-        uint256 rateDiffY = fees.Y - node.tokenY.feeRateSnapshot;
+    ) internal view returns (uint256 earnedX, uint256 earnedY) {
+        uint256 rateDiffX = snap.X - node.tokenX.feeRateSnapshot;
+        uint256 rateDiffY = snap.Y - node.tokenY.feeRateSnapshot;
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
         if (totalMLiq > 0) {
             earnedX = Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq);
@@ -709,9 +786,9 @@ library LiqTreeImpl {
         LiqNode storage node,
         FeeSnap memory snap,
         uint256 aboveMLiq
-    ) private view returns (uint256 subtreeEarnedX, uint256 subtreeEarnedY) {
-        uint256 rateDiffX = fees.X - node.tokenX.feeRateSnapshot;
-        uint256 rateDiffY = fees.Y - node.tokenY.feeRateSnapshot;
+    ) internal view returns (uint256 subtreeEarnedX, uint256 subtreeEarnedY) {
+        uint256 rateDiffX = snap.X - node.tokenX.feeRateSnapshot;
+        uint256 rateDiffY = snap.Y - node.tokenY.feeRateSnapshot;
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
         if (totalMLiq > 0) {
             subtreeEarnedX = Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq);
@@ -723,15 +800,19 @@ library LiqTreeImpl {
     function computeAuxArray(LiqTree storage self, LKey start, uint256[MAX_TREE_DEPTH] memory auxMLiqs)
     internal view
     {
+        // Fill the array with the mLiq from its parent.
         uint8 idx = 0;
         while (!start.isEq(self.root)) {
             (start, ) = start.genericUp();
             auxMLiqs[idx++] = self.nodes[start].mLiq;
         }
+        // We reuse this array between the two legs so ensure the root has an aux MLiq of 0.
+        auxMLiqs[idx] = 0;
 
-        uint256 suffixSum = self.nodes[idx];
+        // Iterate backwards collecting the previous MLiq into the partial suffix sums.
+        uint256 suffixSum = 0;
         while (idx > 0) {
-            suffixSum += auxMLiq[--idx];
+            suffixSum += auxMLiqs[--idx];
             auxMLiqs[idx] = suffixSum;
         }
     }
