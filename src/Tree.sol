@@ -56,8 +56,8 @@ import { Math } from "./Math.sol";
 import { console } from "forge-std/console.sol";
 
 type LKey is uint48;
-// Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks.
-uint8 constant MAX_TREE_DEPTH = 21; // We zero index depth, so this is 22 levels.
+// Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks, so 22 bits.
+uint8 constant MAX_TREE_DEPTH = 22;
 
 // This is okay as the NIL key because it can't possibly be used in any breakdowns since the depth portion of
 // the lkey is one-hot.
