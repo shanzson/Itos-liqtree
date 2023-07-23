@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.17;
 
+// solhint-disable
+
 struct LiqNodeTokenData {
     uint256 borrow;
     uint256 subtreeBorrow;
@@ -22,15 +24,14 @@ struct LiqNode {
 }
 
 library LiqNodeImpl {
-
     function addMLiq(LiqNode storage self, uint128 liq) external {
-         self.mLiq += liq;
-         self.subtreeMinM += liq;
+        self.mLiq += liq;
+        self.subtreeMinM += liq;
     }
 
     function removeMLiq(LiqNode storage self, uint128 liq) external {
-         self.mLiq -= liq;
-         self.subtreeMinM -= liq;
+        self.mLiq -= liq;
+        self.subtreeMinM -= liq;
     }
 
     function addTLiq(LiqNode storage self, uint128 liq) external {

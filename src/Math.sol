@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.4.0;
+pragma solidity ^0.8.17;
+// solhint-disable
 
 library Math {
-    /// @notice Calculates floor(a×b÷denominator) with full precision. Throws if result overflows a uint256 or denominator == 0
+    /// @notice Calculates floor(a×b÷denominator) with full precision.
+    /// Throws if result overflows a uint256 or denominator == 0
     /// @param a The multiplicand
     /// @param b The multiplier
     /// @param denominator The divisor
@@ -118,6 +120,7 @@ library Math {
         unchecked {
             num = m0 * m1;
         }
+
         if (num == 0)
             return 0;
 

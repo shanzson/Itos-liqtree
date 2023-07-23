@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.17;
+// solhint-disable
 
 import { console2 } from "forge-std/console2.sol";
 
@@ -814,8 +815,7 @@ library LiqTreeImpl {
 
     /// Precompute the auxilliary liquidities for a starting LKey (low or high leg).
     function computeAuxArray(LiqTree storage self, LKey start, uint256[MAX_TREE_DEPTH] memory auxMLiqs)
-    internal view
-    {
+    internal view {
         // Fill the array with the mLiq from its parent.
         uint8 idx = 0;
         logKey(self.root);
@@ -1110,8 +1110,8 @@ library LKeyImpl {
     /// @dev We use the raw int values to save gas. TODO we don't really need range here.
     function getNextRightAdjacent(LKey key) internal pure returns (LKey) {
         uint48 raw = LKey.unwrap(key);
-        uint48 lsb_bit = lsb(raw);
-        return LKey.wrap(((raw ^ lsb_bit) & 0x000000FFFFFF) ^ (lsb_bit << 24));
+        uint48 lsbBit = lsb(raw);
+        return LKey.wrap(((raw ^ lsbBit) & 0x000000FFFFFF) ^ (lsbBit << 24));
     }
 
     /********
