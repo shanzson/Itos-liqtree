@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSL-1.1
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.17;
+
+import { console2 } from "forge-std/console2.sol";
 
 import { LiqNode, LiqNodeImpl } from "./LiqNode.sol";
 import { Math } from "./Math.sol";
@@ -62,8 +64,8 @@ LKey constant LKeyNIL = LKey.wrap(0xFFFFFFFFFFFF);
 
 // This stay in memory so each have their own slots.
 struct LiqRange {
-    uint24 low;
-    uint24 high;
+    int24 low;
+    int24 high;
 }
 
 /*
@@ -73,7 +75,7 @@ struct LiqRange {
  */
 struct LiqTree {
     mapping(LKey => LiqNode) nodes;
-    LKey root; // maxRange << 24 + maxRange;
+    LKey root; // maxRange << 24;
     uint24 offset; // This is also the maximum range allowed in this tree.
 }
 
@@ -112,6 +114,10 @@ library LiqTreeImpl {
     using LiqNodeImpl for LiqNode;
     using LiqTreeIntLib for uint24;
 
+    error RangeBoundsInverted(int24 rangeLow, int24 rangeHigh);
+    error RangeHighOutOfBounds(int24 rangeHigh, uint24 maxRange);
+    error ConcentratedWideRangeUsed(int24 rangeLow, int24 rangeHigh);
+
     /****************************
      * Initialization Functions *
      ****************************/
@@ -121,7 +127,7 @@ library LiqTreeImpl {
         // Note, NOT maxDepth - 1. The indexing from 0 or 1 is arbitrary so we go with the cheaper gas.
         uint24 maxRange = uint24(1 << maxDepth);
 
-        self.root = LKeyImpl.makeKey(maxRange, maxRange);
+        self.root = LKeyImpl.makeKey(maxRange, 0);
         self.offset = maxRange;
     }
 
@@ -187,7 +193,7 @@ library LiqTreeImpl {
         state.mLiqTracker = type(uint128).max;
         state.tLiqTracker = 0;
         // TODO: Test replacing this with the actual per node borrow calculation.
-        uint256 width = range.high - range.low + 1;
+        uint256 width = uint24(range.high - range.low + 1);
         state.xDiff = borrowedX / width;
         state.yDiff = borrowedY / width;
 
@@ -208,7 +214,7 @@ library LiqTreeImpl {
         state.liqDiff = liq;
         state.rateSnap = rates;
         // TODO: Test replacing this with the actual per node borrow calculation.
-        uint256 width = range.high - range.low + 1;
+        uint256 width = uint24(range.high - range.low + 1);
         state.xDiff = borrowedX / width;
         state.yDiff = borrowedY / width;
 
@@ -354,6 +360,7 @@ library LiqTreeImpl {
     ) internal {
         (uint24 rangeWidth, ) = key.explode();
         // Need to update the subtreeMLiq first
+        // logKey(key);
         node.removeMLiq(state.liqDiff);
         node.subtreeMLiq -= state.liqDiff * rangeWidth;
 
@@ -377,6 +384,7 @@ library LiqTreeImpl {
         State memory state
     ) internal {
         (uint24 rangeWidth, ) = up.explode();
+        // logKey(up);
         parent.subtreeMinM = min(a.subtreeMinM, b.subtreeMinM) + parent.mLiq;
         parent.subtreeMLiq = a.subtreeMLiq + b.subtreeMLiq + parent.mLiq * rangeWidth;
 
@@ -515,10 +523,14 @@ library LiqTreeImpl {
 
         if (low.isLess(stopRange)) {
             computeAuxArray(self, low, state.auxMLiqs);
+            // Reset height index.
+            state.auxIdx = 0;
             current = _traverseLeft(self, low, stopRange, visit, propogate, state);
         }
         if (high.isLess(stopRange)) {
-            computeAuxArray(self, low, state.auxMLiqs);
+            computeAuxArray(self, high, state.auxMLiqs);
+            // Reset height index.
+            state.auxIdx = 0;
             current = _traverseRight(self, high, stopRange, visit, propogate, state);
         }
         // We could return the node to save this lookup hash, but the compiler doesn't know
@@ -637,10 +649,14 @@ library LiqTreeImpl {
 
         if (low.isLess(stopRange)) {
             computeAuxArray(self, low, state.auxMLiqs);
+            // Reset height index.
+            state.auxIdx = 0;
             current = _traverseLeftView(self, low, stopRange, visit, propogate, state);
         }
         if (high.isLess(stopRange)) {
             computeAuxArray(self, low, state.auxMLiqs);
+            // Reset height index.
+            state.auxIdx = 0;
             current = _traverseRightView(self, high, stopRange, visit, propogate, state);
         }
         // We could return the node to save this lookup hash, but the compiler doesn't know
@@ -802,12 +818,18 @@ library LiqTreeImpl {
     {
         // Fill the array with the mLiq from its parent.
         uint8 idx = 0;
+        logKey(self.root);
+        logKey(start);
+        (uint24 range, uint24 base) = start.explode();
         while (!start.isEq(self.root)) {
             (start, ) = start.genericUp();
+            logKey(start);
+            (range, base) = start.explode();
             auxMLiqs[idx++] = self.nodes[start].mLiq;
         }
         // We reuse this array between the two legs so ensure the root has an aux MLiq of 0.
         auxMLiqs[idx] = 0;
+
 
         // Iterate backwards collecting the previous MLiq into the partial suffix sums.
         uint256 suffixSum = 0;
@@ -825,17 +847,27 @@ library LiqTreeImpl {
     // Determine way to support testing + make private
     function getKeys(
         LiqTree storage self,
-        uint24 rangeLow,
-        uint24 rangeHigh
+        int24 rangeLow,
+        int24 rangeHigh
     ) public view returns (LKey low, LKey high, LKey peak, LKey stopRange) {
-        require(rangeLow <= rangeHigh, "RLH");
-        require(rangeHigh < self.offset, "RHO");
+        // The offset specifies the whole range the indices can span centered around 0.
+        // We can make everything positive by shifting half the range.
+        rangeLow += int24(self.offset / 2);
+        rangeHigh += int24(self.offset / 2);
+
+        require(rangeLow >= 0, "NL");
+        require(rangeHigh > 0, "NH");
+
+        if (rangeLow > rangeHigh)
+            revert RangeBoundsInverted(rangeLow, rangeHigh);
+        if (rangeHigh >= int24(self.offset))
+            revert RangeHighOutOfBounds(rangeHigh, self.offset);
         // No one should be able to specifc the whole range. We rely on not having peak be equal to root
         // when we traverse the tree because stoprange can sometimes be one above the peak.
-        require((rangeLow != 0) || (rangeHigh != (self.offset - 1)), "WR");
-        rangeLow += self.offset;
-        rangeHigh += self.offset;
-        return LiqTreeIntLib.getRangeBounds(rangeLow, rangeHigh);
+        if (rangeLow == 0 && (rangeHigh == int24(self.offset - 1)))
+            revert ConcentratedWideRangeUsed(rangeLow, rangeHigh);
+
+        return LiqTreeIntLib.getRangeBounds(uint24(rangeLow), uint24(rangeHigh));
     }
 
     /**********
@@ -850,6 +882,11 @@ library LiqTreeImpl {
     /// Convenience function for maximum of uint128s
     function max(uint128 a, uint128 b) private pure returns (uint128) {
         return (a >= b) ? a : b;
+    }
+
+    function logKey(LKey key) private view {
+        (uint24 range, uint24 base) = key.explode();
+        console2.log("key", range, base);
     }
 }
 
