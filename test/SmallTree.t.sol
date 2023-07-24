@@ -1634,7 +1634,6 @@ contract SmallTreeTest is Test {
         // 100 / 16 = 6.25
         liqTree.addWideRangeMLiq(100e18, fees);
         liqTree.addWideRangeTLiq(10e18, fees, 100, 100);
-
         LiqNode storage root = liqTree.nodes[liqTree.root];
         assertEq(root.tokenX.borrow, 100);
         assertEq(root.tokenX.subtreeBorrow, 100);
@@ -1788,8 +1787,19 @@ contract SmallTreeTest is Test {
         assertEq(multTwo.tokenY.subtreeBorrow, 2);
     }
 
-    function testBorrowSplitDividedBySevenAndMultipliedByTwo() public {
 
+     // x8 (8, 9, 10, 11, 12, 13, 14, 15, 16)
+
+    function testBorrowSplitDividedByEightAndMultipliedByEight() public {
+        
+    }
+
+    function testBorrowSplitDividedByNineAndMultipliedByEight() public {
+        
+    }
+
+    function testBorrowSplitDividedByTenAndMultipliedByEight() public {
+        
     }
 
     function testBorrowSplitDividedByEightAndMultipliedByTwo() public {
