@@ -14,7 +14,6 @@ contract LiqNodeTest is Test {
         node.addMLiq(483);
         assertEq(node.mLiq, 483);
         assertEq(node.subtreeMinM, 483);
-        assertEq(node.subtreeMaxM, 483);
     }
 
     function testRemoveMLiq() public {
@@ -22,7 +21,6 @@ contract LiqNodeTest is Test {
         node.removeMLiq(480);
         assertEq(node.mLiq, 3);
         assertEq(node.subtreeMinM, 3);
-        assertEq(node.subtreeMaxM, 3);
     }
 
     function testRevertRemoveMLiqExceedingMLiqAdded() public {

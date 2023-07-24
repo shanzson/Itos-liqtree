@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: BSL-1.1
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.17;
+
+// solhint-disable
 
 struct LiqNodeTokenData {
     uint256 borrow;
@@ -12,29 +14,24 @@ struct LiqNodeTokenData {
 struct LiqNode {
     uint128 mLiq;
     uint128 tLiq;
-    uint128 subtreeMLiq;
     uint128 subtreeMinM;
     uint128 subtreeMaxT;
-    
+    // Note! Not updated by the liq functions below.
+    uint128 subtreeMLiq;
+
     LiqNodeTokenData tokenX;
     LiqNodeTokenData tokenY;
-
-    // DEPRECATED
-    uint128 subtreeMaxM;
 }
 
 library LiqNodeImpl {
-
     function addMLiq(LiqNode storage self, uint128 liq) external {
-         self.mLiq += liq;
-         self.subtreeMinM += liq;
-         self.subtreeMaxM += liq;
+        self.mLiq += liq;
+        self.subtreeMinM += liq;
     }
 
     function removeMLiq(LiqNode storage self, uint128 liq) external {
-         self.mLiq -= liq;
-         self.subtreeMinM -= liq;
-         self.subtreeMaxM -= liq;
+        self.mLiq -= liq;
+        self.subtreeMinM -= liq;
     }
 
     function addTLiq(LiqNode storage self, uint128 liq) external {
