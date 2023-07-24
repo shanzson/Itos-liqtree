@@ -1,42 +1,48 @@
 // SPDX-License-Identifier: BSL-1.1
 pragma solidity ^0.8.18;
 
-import { console } from "forge-std/console.sol";
+import { console2 } from "forge-std/console2.sol";
 import { Test } from "forge-std/Test.sol";
 
-import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode } from "src/Tree.sol";
-
-
-import { ONE_HUNDRED_PERCENT_UTILIZATION } from "./UtilizationConstants.sol";
+import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode, FeeSnap } from "src/Tree.sol";
 
 /**
  * In practice, the LiqTree will have many nodes. So many, that testing at that scale is intractable.
  * Thus the reason for this file. A smaller scale LiqTree, where we can more easily populate the values densely.
- */ 
+ */
 contract SmallTreeTest is Test {
     LiqTree public liqTree;
     using LiqTreeImpl for LiqTree;
     using LKeyImpl for LKey;
-    
+
     function setUp() public {
-        // A depth of 4 creates a tree that covers an absolute range of 16 ([0, 15];);. 
-        // ie. A complete tree matching the ascii documentation. 
-        liqTree.init(4);
+        // A depth of 5 creates a tree that covers an absolute range of 16 ([0, 15];);.
+        // ie. A complete tree matching the ascii documentation.
+        liqTree.init(5);
+    }
+
+    // Helper for creating a LiqRange from the given indices. The tree offsets the input values
+    // because it expects them to be zero centered. For testing, it is more convenient to interpret
+    // the indices from 0 to the max range. This we undo the offset here.
+    function range(int24 low, int24 high) public view returns (LiqRange memory lr) {
+        lr.low = low - int24(liqTree.width / 2);
+        lr.high = high - int24(liqTree.width / 2);
     }
 
     function testSimpleFee() public {
-        liqTree.addMLiq(LiqRange(8, 11), 1111);
-        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        FeeSnap memory fees;
+        liqTree.addMLiq(range(8, 11), 1111, fees);
+        liqTree.addTLiq(range(8, 11), 111, fees, 24e18, 7e6);
 
-        liqTree.feeRateSnapshotTokenX += 113712805933826;
+        fees.X += 113712805933826;
 
-        LiqNode storage RL = liqTree.nodes[LKey.wrap((4 << 24) | 24)];
-        LiqNode storage RLL = liqTree.nodes[LKey.wrap((2 << 24) | 24)];
-        LiqNode storage RLLL = liqTree.nodes[LKey.wrap((1 << 24) | 24)];
+        LiqNode storage RL = liqTree.nodes[LKey.wrap((4 << 24) | 8)];
+        // LiqNode storage RLL = liqTree.nodes[LKey.wrap((2 << 24) | 8)];
+        LiqNode storage RLLL = liqTree.nodes[LKey.wrap((1 << 24) | 8)];
 
         // trigger fees + undo
-        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 7e6, ONE_HUNDRED_PERCENT_UTILIZATION);
-        liqTree.removeTLiq(LiqRange(8, 11), 111, 24e18, 7e6);
+        liqTree.addTLiq(range(8, 11), 111, fees, 24e18, 7e6);
+        liqTree.removeTLiq(range(8, 11), 111, fees, 24e18, 7e6);
 
         // 113712805933826 * 24e18 / 4444 / 2**64 = 33291000332.9100024179226406346006655493880262469301129331683
         assertEq(RL.tokenX.cumulativeEarnedPerMLiq, 33291000332);
@@ -50,12 +56,13 @@ contract SmallTreeTest is Test {
 
     function testRootNodeOnly() public {
         LiqNode storage root = liqTree.nodes[liqTree.root];
+        FeeSnap memory fees;
 
-        liqTree.addWideRangeMLiq(8430);
-        liqTree.addWideRangeTLiq(4381, 832e18, 928e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addWideRangeMLiq(8430, fees);
+        liqTree.addWideRangeTLiq(4381, fees, 832e18, 928e6);
 
-        liqTree.feeRateSnapshotTokenY += 113712805933826;  // 5.4% APR as Q192.64 = 0.054 * 3600 / (365 * 24 * 60 * 60) * 2^64 = 113712805933826
-        liqTree.feeRateSnapshotTokenX += 113712805933826;
+        fees.Y += 113712805933826;  // 5.4% APR as Q192.64 = 0.054 * 3600 / (365 * 24 * 60 * 60) * 2^64 = 113712805933826
+        fees.X += 113712805933826;
 
         // Verify root state is as expected
         assertEq(root.mLiq, 8430);
@@ -67,7 +74,7 @@ contract SmallTreeTest is Test {
         assertEq(root.tokenY.subtreeBorrow, 928e6);
 
         // Testing add_Wide_range_mLiq
-        liqTree.addWideRangeMLiq(9287);
+        liqTree.addWideRangeMLiq(9287, fees);
 
         // earn_x      = 113712805933826 * 832e18 / 134880 / 2**64 = 38024667284.1612625482053537908689136045718673850859328662514
         // earn_y      = 113712805933826 * 928e6 / 134880 / 2**64  = 0.0424121288938721774576136638436614805589455443910573866585112692
@@ -85,10 +92,10 @@ contract SmallTreeTest is Test {
         assertEq(root.tokenY.subtreeBorrow, 928e6);
 
         // Testing remove_Wide_range_mLiq
-        liqTree.feeRateSnapshotTokenY += 74672420010376264941568;
-        liqTree.feeRateSnapshotTokenX += 74672420010376264941568;
+        fees.Y += 74672420010376264941568;
+        fees.X += 74672420010376264941568;
 
-        liqTree.removeWideRangeMLiq(3682);
+        liqTree.removeWideRangeMLiq(3682, fees);
 
         // earn_x      = 74672420010376264941568 * 832e18 / 283472 / 2**64 = 11881018231077496190.0999040469605463678952418581023875373934
         // earn_y      = 74672420010376264941568 * 928e6 / 283472 / 2**64  = 13251904.9500479765197268160523790709488062313032680476378619
@@ -106,10 +113,10 @@ contract SmallTreeTest is Test {
         assertEq(root.tokenY.subtreeBorrow, 928e6);
 
         // Testing add_Wide_range_tLiq
-        liqTree.feeRateSnapshotTokenY += 6932491854677024;
-        liqTree.feeRateSnapshotTokenX += 6932491854677024;
+        fees.Y += 6932491854677024;
+        fees.X += 6932491854677024;
 
-        liqTree.addWideRangeTLiq(7287, 9184e18, 7926920e6, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addWideRangeTLiq(7287, fees, 9184e18, 7926920e6);
 
         // earn_x      = 6932491854677024 * 832e18 / 224560 / 2**64 = 1392388963085.50927075184684754182568989829487082029858389739
         // earn_y      = 6932491854677024 * 928e6 / 224560 / 2**64  = 1.5530492280569141866078291761043440387327135097611022666547915924
@@ -127,10 +134,10 @@ contract SmallTreeTest is Test {
         assertEq(root.tokenY.subtreeBorrow, 7927848e6);
 
         // Testing remove_Wide_range_tLiq
-        liqTree.feeRateSnapshotTokenY += 1055375100301031600000000;
-        liqTree.feeRateSnapshotTokenX += 1055375100301031600000000;
+        fees.Y += 1055375100301031600000000;
+        fees.X += 1055375100301031600000000;
 
-        liqTree.removeWideRangeTLiq(4923, 222e18, 786e6);
+        liqTree.removeWideRangeTLiq(4923, fees, 222e18, 786e6);
 
         // earn_x      = 1055375100301031600000000 * 10016e18 / 224560 / 2**64  = 2551814126505030241953.87164028103035638433335980020216618053
         // earn_y      = 1055375100301031600000000 * 7927848e6 / 224560 / 2**64 = 2019807759503.25988354767545683493270255599285721099372431609
@@ -151,29 +158,29 @@ contract SmallTreeTest is Test {
     function testLeftLegOnly() public {
         // Mirrors test_right_leg_only
         // Manual calculations are shown there.
-
+        FeeSnap memory fees;
         LiqNode storage root = liqTree.nodes[liqTree.root];
 
-        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 16)];
-        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 16)];
-        LiqNode storage LR = liqTree.nodes[LKey.wrap((4 << 24) | 20)];
-        LiqNode storage LLR = liqTree.nodes[LKey.wrap((2 << 24) | 18)];
-        LiqNode storage LLRR = liqTree.nodes[LKey.wrap((1 << 24) | 19)];
+        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
+        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
+        LiqNode storage LR = liqTree.nodes[LKey.wrap((4 << 24) | 4)];
+        LiqNode storage LLR = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
+        LiqNode storage LLRR = liqTree.nodes[LKey.wrap((1 << 24) | 3)];
 
         // T0 - populate tree with data excluding fee calculations
-        liqTree.addWideRangeMLiq(8430);  // root
-        liqTree.addMLiq(LiqRange(0, 7), 377);  // L
-        liqTree.addMLiq(LiqRange(0, 3), 9082734);  // LL
-        liqTree.addMLiq(LiqRange(4, 7), 1111);  // LR
-        liqTree.addMLiq(LiqRange(2, 3), 45346);  // LLR
-        liqTree.addMLiq(LiqRange(3, 3), 287634865);  // LLRR
+        liqTree.addWideRangeMLiq(8430, fees);  // root
+        liqTree.addMLiq(range(0, 7), 377, fees);  // L
+        liqTree.addMLiq(range(0, 3), 9082734, fees);  // LL
+        liqTree.addMLiq(range(4, 7), 1111, fees);  // LR
+        liqTree.addMLiq(range(2, 3), 45346, fees);  // LLR
+        liqTree.addMLiq(range(3, 3), 287634865, fees);  // LLRR
 
-        liqTree.addWideRangeTLiq(4430, 492e18, 254858e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // root
-        liqTree.addTLiq(LiqRange(0, 7), 77, 998e18, 353e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // L
-        liqTree.addTLiq(LiqRange(0, 3), 82734, 765e18, 99763e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LL
-        liqTree.addTLiq(LiqRange(4, 7), 111, 24e18, 552e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LR
-        liqTree.addTLiq(LiqRange(2, 3), 5346, 53e18, 8765e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLR
-        liqTree.addTLiq(LiqRange(3, 3), 7634865, 701e18, 779531e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLRR
+        liqTree.addWideRangeTLiq(4430, fees, 492e18, 254858e6);  // root
+        liqTree.addTLiq(range(0, 7), 77, fees, 998e18, 353e6);  // L
+        liqTree.addTLiq(range(0, 3), 82734, fees, 765e18, 99763e6);  // LL
+        liqTree.addTLiq(range(4, 7), 111, fees, 24e18, 552e6);  // LR
+        liqTree.addTLiq(range(2, 3), 5346, fees, 53e18, 8765e6);  // LLR
+        liqTree.addTLiq(range(3, 3), 7634865, fees, 701e18, 779531e6);  // LLRR
 
         // mLiq
         assertEq(root.mLiq, 8430);
@@ -232,12 +239,12 @@ contract SmallTreeTest is Test {
         assertEq(LLRR.tokenY.subtreeBorrow, 779531e6);
 
         // T98273
-        liqTree.feeRateSnapshotTokenX += 4541239648278065;
-        liqTree.feeRateSnapshotTokenY += 13278814667749784;
+        fees.X += 4541239648278065;
+        fees.Y += 13278814667749784;
 
         // Apply change that requires fee calculation
         // addMLiq
-        liqTree.addMLiq(LiqRange(3, 7), 2734);  // LLRR, LR
+        liqTree.addMLiq(range(3, 7), 2734, fees);  // LLRR, LR
 
         // root
         assertEq(root.tokenX.cumulativeEarnedPerMLiq, 373601278);
@@ -292,12 +299,12 @@ contract SmallTreeTest is Test {
         assertEq(LLRR.subtreeMLiq, 287637599);
 
         // T2876298273
-        liqTree.feeRateSnapshotTokenX += 16463537718422861220174597;
-        liqTree.feeRateSnapshotTokenY += 3715979586694123491881712207;
+        fees.X += 16463537718422861220174597;
+        fees.Y += 3715979586694123491881712207;
 
         // Apply change that requires fee calculation
         // remove_mLiq
-        liqTree.removeMLiq(LiqRange(3, 7), 2734);  // LLRR, LR
+        liqTree.removeMLiq(range(3, 7), 2734, fees);  // LLRR, LR
 
         // root
         assertEq(root.tokenX.cumulativeEarnedPerMLiq, 1354374549844117328);
@@ -352,12 +359,12 @@ contract SmallTreeTest is Test {
         assertEq(LLRR.subtreeMLiq, 287634865);
 
         // T9214298113
-        liqTree.feeRateSnapshotTokenX += 11381610389149375791104;
-        liqTree.feeRateSnapshotTokenY += 185394198934916215865344;
+        fees.X += 11381610389149375791104;
+        fees.Y += 185394198934916215865344;
 
         // Apply change that requires fee calculation
         // addTLiq
-        liqTree.addTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLRR, LR
+        liqTree.addTLiq(range(3, 7), 1000, fees, 1000e18, 1000e6);  // LLRR, LR
 
         // root
         assertEq(root.tokenX.cumulativeEarnedPerMLiq, 1355310898622008714);
@@ -407,7 +414,7 @@ contract SmallTreeTest is Test {
         assertEq(root.tokenX.borrow, 492e18);
         assertEq(L.tokenX.borrow, 998e18);
         assertEq(LL.tokenX.borrow, 765e18);
-        assertEq(LR.tokenX.borrow, 824e18);
+        assertEq(LR.tokenX.borrow, 824e18, "LR x borrow");
         assertEq(LLR.tokenX.borrow, 53e18);
         assertEq(LLRR.tokenX.borrow, 901e18);
 
@@ -437,12 +444,12 @@ contract SmallTreeTest is Test {
 
         // T32876298273
         // 3.3) addTLiq
-        liqTree.feeRateSnapshotTokenX += 2352954287417905205553;
-        liqTree.feeRateSnapshotTokenY += 6117681147286553534438;
+        fees.X += 2352954287417905205553;
+        fees.Y += 6117681147286553534438;
 
         // Apply change that requires fee calculation
         // addTLiq
-        liqTree.removeTLiq(LiqRange(3, 7), 1000, 1000e18, 1000e6);  // LLRR, LR
+        liqTree.removeTLiq(range(3, 7), 1000, fees, 1000e18, 1000e6);  // LLRR, LR
 
         // root
         assertEq(root.tokenX.cumulativeEarnedPerMLiq, 1355504472799662735);
@@ -530,28 +537,29 @@ contract SmallTreeTest is Test {
     }
 
     function testRightLegOnly() public {
+        FeeSnap memory fees;
         LiqNode storage root = liqTree.nodes[liqTree.root];
 
-        LiqNode storage R = liqTree.nodes[LKey.wrap((8 << 24) | 24)];
-        LiqNode storage RR = liqTree.nodes[LKey.wrap((4 << 24) | 28)];
-        LiqNode storage RL = liqTree.nodes[LKey.wrap((4 << 24) | 24)];
-        LiqNode storage RRL = liqTree.nodes[LKey.wrap((2 << 24) | 28)];
-        LiqNode storage RRLL = liqTree.nodes[LKey.wrap((1 << 24) | 28)];
+        LiqNode storage R = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
+        LiqNode storage RR = liqTree.nodes[LKey.wrap((4 << 24) | 12)];
+        LiqNode storage RL = liqTree.nodes[LKey.wrap((4 << 24) | 8)];
+        LiqNode storage RRL = liqTree.nodes[LKey.wrap((2 << 24) | 12)];
+        LiqNode storage RRLL = liqTree.nodes[LKey.wrap((1 << 24) | 12)];
 
         // T0 - populate tree with data excluding fee calculations
-        liqTree.addWideRangeMLiq(8430);                // root
-        liqTree.addMLiq(LiqRange(8, 15), 377);         // R
-        liqTree.addMLiq(LiqRange(12, 15), 9082734);    // RR
-        liqTree.addMLiq(LiqRange(8, 11), 1111);        // RL
-        liqTree.addMLiq(LiqRange(12, 13), 45346);      // RRL
-        liqTree.addMLiq(LiqRange(12, 12), 287634865);  // RRLL
+        liqTree.addWideRangeMLiq(8430, fees);                // root
+        liqTree.addMLiq(range(8, 15), 377, fees);         // R
+        liqTree.addMLiq(range(12, 15), 9082734, fees);    // RR
+        liqTree.addMLiq(range(8, 11), 1111, fees);        // RL
+        liqTree.addMLiq(range(12, 13), 45346, fees);      // RRL
+        liqTree.addMLiq(range(12, 12), 287634865, fees);  // RRLL
 
-        liqTree.addWideRangeTLiq(4430, 492e18, 254858e6, ONE_HUNDRED_PERCENT_UTILIZATION);              // root
-        liqTree.addTLiq(LiqRange(8, 15), 77, 998e18, 353e6, ONE_HUNDRED_PERCENT_UTILIZATION);           // R
-        liqTree.addTLiq(LiqRange(12, 15), 82734, 765e18, 99763e6, ONE_HUNDRED_PERCENT_UTILIZATION);     // RR
-        liqTree.addTLiq(LiqRange(8, 11), 111, 24e18, 552e6, ONE_HUNDRED_PERCENT_UTILIZATION);           // RL
-        liqTree.addTLiq(LiqRange(12, 13), 5346, 53e18, 8765e6, ONE_HUNDRED_PERCENT_UTILIZATION);        // RRL
-        liqTree.addTLiq(LiqRange(12, 12), 7634865, 701e18, 779531e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // RRLL
+        liqTree.addWideRangeTLiq(4430, fees, 492e18, 254858e6);              // root
+        liqTree.addTLiq(range(8, 15), 77, fees, 998e18, 353e6);           // R
+        liqTree.addTLiq(range(12, 15), 82734, fees, 765e18, 99763e6);     // RR
+        liqTree.addTLiq(range(8, 11), 111, fees, 24e18, 552e6);           // RL
+        liqTree.addTLiq(range(12, 13), 5346, fees, 53e18, 8765e6);        // RRL
+        liqTree.addTLiq(range(12, 12), 7634865, fees, 701e18, 779531e6);  // RRLL
 
         // mLiq
         assertEq(root.mLiq, 8430);
@@ -610,12 +618,12 @@ contract SmallTreeTest is Test {
         assertEq(RRLL.tokenY.subtreeBorrow, 779531e6);   // 779531e6
 
         // T98273
-        liqTree.feeRateSnapshotTokenX += 4541239648278065;   // 7.9% APR as Q192.64 T98273 - T0
-        liqTree.feeRateSnapshotTokenY += 13278814667749784;  // 23.1% APR as Q192.64 T98273 - T0
+        fees.X += 4541239648278065;   // 7.9% APR as Q192.64 T98273 - T0
+        fees.Y += 13278814667749784;  // 23.1% APR as Q192.64 T98273 - T0
 
         // Apply change that requires fee calculation
         // addMLiq
-        liqTree.addMLiq(LiqRange(8, 12), 2734);  // RRLL, RL
+        liqTree.addMLiq(range(8, 12), 2734, fees);  // RRLL, RL
 
         // root
         //           total_mLiq = subtreeMLiq + aux_level * range
@@ -713,12 +721,12 @@ contract SmallTreeTest is Test {
         assertEq(RRLL.subtreeMLiq, 287637599);  // 287637599*1
 
         // T2876298273
-        liqTree.feeRateSnapshotTokenX += 16463537718422861220174597;    // 978567.9% APR as Q192.64 T2876298273 - T98273
-        liqTree.feeRateSnapshotTokenY += 3715979586694123491881712207;  // 220872233.1% APR as Q192.64 T2876298273 - T98273
+        fees.X += 16463537718422861220174597;    // 978567.9% APR as Q192.64 T2876298273 - T98273
+        fees.Y += 3715979586694123491881712207;  // 220872233.1% APR as Q192.64 T2876298273 - T98273
 
         // Apply change that requires fee calculation
         // remove_mLiq
-        liqTree.removeMLiq(LiqRange(8, 12), 2734);  // RRLL, RL
+        liqTree.removeMLiq(range(8, 12), 2734, fees);  // RRLL, RL
 
         // root
         //           total_mLiq = 324212503
@@ -815,12 +823,12 @@ contract SmallTreeTest is Test {
         assertEq(RRLL.subtreeMLiq, 287634865);
 
         // T9214298113
-        liqTree.feeRateSnapshotTokenX += 11381610389149375791104;   // 307% APR as Q192.64 T9214298113 - T2876298273
-        liqTree.feeRateSnapshotTokenY += 185394198934916215865344;  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
+        fees.X += 11381610389149375791104;   // 307% APR as Q192.64 T9214298113 - T2876298273
+        fees.Y += 185394198934916215865344;  // 5000.7% APR as Q192.64 T9214298113 - T2876298273
 
         // Apply change that requires fee calculation
         // addTLiq
-        liqTree.addTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // RRLL, RL
+        liqTree.addTLiq(range(8, 12), 1000, fees, 1000e18, 1000e6);  // RRLL, RL
 
         // root
         //           total_mLiq = 324198833
@@ -942,12 +950,12 @@ contract SmallTreeTest is Test {
 
         // T32876298273
         // 3.3) addTLiq
-        liqTree.feeRateSnapshotTokenX += 2352954287417905205553;  // 17% APR as Q192.64 T32876298273 - T9214298113
-        liqTree.feeRateSnapshotTokenY += 6117681147286553534438;  // 44.2% APR as Q192.64 T32876298273 - T9214298113
+        fees.X += 2352954287417905205553;  // 17% APR as Q192.64 T32876298273 - T9214298113
+        fees.Y += 6117681147286553534438;  // 44.2% APR as Q192.64 T32876298273 - T9214298113
 
         // Apply change that requires fee calculation
         // removeTLiq
-        liqTree.removeTLiq(LiqRange(8, 12), 1000, 1000e18, 1000e6);  // RRLL, RL
+        liqTree.removeTLiq(range(8, 12), 1000, fees, 1000e18, 1000e6);  // RRLL, RL
 
         // root
         //           total_mLiq = 324198833
@@ -1077,6 +1085,8 @@ contract SmallTreeTest is Test {
     }
 
     function testLeftAndRightLegStoppingBelowPeak() public {
+        FeeSnap memory fees;
+
         //   Range: (1, 4)
         //
         //                                  L(0-7)
@@ -1095,34 +1105,34 @@ contract SmallTreeTest is Test {
         // 1st (1, 4)
         LiqNode storage root = liqTree.nodes[liqTree.root];
 
-        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 16)];
-        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 16)];
-        LiqNode storage LR = liqTree.nodes[LKey.wrap((4 << 24) | 20)];
-        LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 16)];
-        LiqNode storage LLR = liqTree.nodes[LKey.wrap((2 << 24) | 18)];
-        LiqNode storage LRL = liqTree.nodes[LKey.wrap((2 << 24) | 20)];
-        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 17)];
-        LiqNode storage LRLL = liqTree.nodes[LKey.wrap((1 << 24) | 20)];
+        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
+        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
+        LiqNode storage LR = liqTree.nodes[LKey.wrap((4 << 24) | 4)];
+        LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
+        LiqNode storage LLR = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
+        LiqNode storage LRL = liqTree.nodes[LKey.wrap((2 << 24) | 4)];
+        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
+        LiqNode storage LRLL = liqTree.nodes[LKey.wrap((1 << 24) | 4)];
 
         // Pre-populate nodes w/o fee calculation
-        liqTree.addWideRangeMLiq(432);
-        liqTree.addMLiq(LiqRange(0, 7), 98237498262);      // L
-        liqTree.addMLiq(LiqRange(0, 3), 932141354);        // LL
-        liqTree.addMLiq(LiqRange(4, 7), 151463465);        // LR
-        liqTree.addMLiq(LiqRange(0, 1), 45754683688356);   // LLL
-        liqTree.addMLiq(LiqRange(2, 3), 245346257245745);  // LLR
-        liqTree.addMLiq(LiqRange(4, 5), 243457472);        // LRL
-        liqTree.addMLiq(LiqRange(1, 1), 2462);             // LLLR
-        liqTree.addMLiq(LiqRange(4, 4), 45656756785);      // LRLL
+        liqTree.addWideRangeMLiq(432, fees);
+        liqTree.addMLiq(range(0, 7), 98237498262, fees);      // L
+        liqTree.addMLiq(range(0, 3), 932141354, fees);        // LL
+        liqTree.addMLiq(range(4, 7), 151463465, fees);        // LR
+        liqTree.addMLiq(range(0, 1), 45754683688356, fees);   // LLL
+        liqTree.addMLiq(range(2, 3), 245346257245745, fees);  // LLR
+        liqTree.addMLiq(range(4, 5), 243457472, fees);        // LRL
+        liqTree.addMLiq(range(1, 1), 2462, fees);             // LLLR
+        liqTree.addMLiq(range(4, 4), 45656756785, fees);      // LRLL
 
-        liqTree.addTLiq(LiqRange(0, 7), 5645645, 4357e18, 345345345e6, ONE_HUNDRED_PERCENT_UTILIZATION);        // L
-        liqTree.addTLiq(LiqRange(0, 3), 3456835, 293874927834e18, 2345346e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LL
-        liqTree.addTLiq(LiqRange(4, 7), 51463465, 23452e18, 12341235e6, ONE_HUNDRED_PERCENT_UTILIZATION);       // LR
-        liqTree.addTLiq(LiqRange(0, 1), 23453467234, 134235e18, 34534634e6, ONE_HUNDRED_PERCENT_UTILIZATION);   // LLL
-        liqTree.addTLiq(LiqRange(2, 3), 456756745, 1233463e18, 2341356e6, ONE_HUNDRED_PERCENT_UTILIZATION);     // LLR
-        liqTree.addTLiq(LiqRange(4, 5), 3457472, 45e18, 1324213563456457e6, ONE_HUNDRED_PERCENT_UTILIZATION);   // LRL
-        liqTree.addTLiq(LiqRange(1, 1), 262, 4567e18, 1235146e6, ONE_HUNDRED_PERCENT_UTILIZATION);              // LLLR
-        liqTree.addTLiq(LiqRange(4, 4), 4564573, 4564564e18, 6345135e6, ONE_HUNDRED_PERCENT_UTILIZATION);       // LRLL
+        liqTree.addTLiq(range(0, 7), 5645645, fees, 4357e18, 345345345e6);        // L
+        liqTree.addTLiq(range(0, 3), 3456835, fees, 293874927834e18, 2345346e6);  // LL
+        liqTree.addTLiq(range(4, 7), 51463465, fees, 23452e18, 12341235e6);       // LR
+        liqTree.addTLiq(range(0, 1), 23453467234, fees, 134235e18, 34534634e6);   // LLL
+        liqTree.addTLiq(range(2, 3), 456756745, fees, 1233463e18, 2341356e6);     // LLR
+        liqTree.addTLiq(range(4, 5), 3457472, fees, 45e18, 1324213563456457e6);   // LRL
+        liqTree.addTLiq(range(1, 1), 262, fees, 4567e18, 1235146e6);              // LLLR
+        liqTree.addTLiq(range(4, 4), 4564573, fees, 4564564e18, 6345135e6);       // LRLL
 
         // Verify initial state
         // mLiq
@@ -1133,7 +1143,7 @@ contract SmallTreeTest is Test {
         assertEq(LLL.mLiq, 45754683688356);
         assertEq(LLR.mLiq, 245346257245745);
         assertEq(LRL.mLiq, 243457472);
-        assertEq(LLLR.mLiq, 2462);
+        assertEq(LLLR.mLiq, 2462, "LLLR mLiq");
         assertEq(LRLL.mLiq, 45656756785);
 
         // tLiq
@@ -1155,7 +1165,7 @@ contract SmallTreeTest is Test {
         assertEq(LLL.subtreeMLiq, 91509367379174);    // 45754683688356*2 + 2462*1 = 91509367379174
         assertEq(LLR.subtreeMLiq, 490692514491490);   // 245346257245745*2 = 490692514491490
         assertEq(LRL.subtreeMLiq, 46143671729);       // 243457472*2 + 45656756785*1 = 46143671729
-        assertEq(LLLR.subtreeMLiq, 2462);             // 2462*1 = 2462
+        assertEq(LLLR.subtreeMLiq, 2462, "LLLR SubtreeMLiq");             // 2462*1 = 2462
         assertEq(LRLL.subtreeMLiq, 45656756785);      // 45656756785*1 = 45656756785
 
         // borrow_x
@@ -1204,11 +1214,11 @@ contract SmallTreeTest is Test {
 
         // Test fees while targeting (1, 4)
         // 1) Trigger fee update through path L->LL->LLR by updating LLR
-        liqTree.feeRateSnapshotTokenX += 997278349210980290827452342352346;
-        liqTree.feeRateSnapshotTokenY += 7978726162930599238079167453467080976862;
+        fees.X += 997278349210980290827452342352346;
+        fees.Y += 7978726162930599238079167453467080976862;
 
-        liqTree.addMLiq(LiqRange(2, 3), 564011300817682367503451461);     // LLR
-        liqTree.removeMLiq(LiqRange(2, 3), 564011300817682367503451461);  // LLR
+        liqTree.addMLiq(range(2, 3), 564011300817682367503451461, fees);     // LLR
+        liqTree.removeMLiq(range(2, 3), 564011300817682367503451461, fees);  // LLR
 
         // LLR
         //
@@ -1253,8 +1263,8 @@ contract SmallTreeTest is Test {
         assertEq(L.tokenY.subtreeCumulativeEarnedPerMLiq, 982369673901053899051127131);
 
         // 2) Trigger fee update through path L->LR->LRL->LRLL by updating LRLL
-        liqTree.addMLiq(LiqRange(4, 4), 45656756785);     // LRLL
-        liqTree.removeMLiq(LiqRange(4, 4), 45656756785);  // LRLL
+        liqTree.addMLiq(range(4, 4), 45656756785, fees);     // LRLL
+        liqTree.removeMLiq(range(4, 4), 45656756785, fees);  // LRLL
 
         // LRLL
         //   total_mLiq = 45656756785 + (243457472 + 151463465 + 98237498262 + 432) * 1 = 144289176416
@@ -1309,11 +1319,11 @@ contract SmallTreeTest is Test {
         //    For un-accumulated nodes
         //    x_rate = 129987217567345826 + 997278349210980290827452342352346 = 997278349210980420814669909698172
         //    y_rate = 234346579834678237846892 + 7978726162930599238079167453467080976862 = 7978726162930599472425747288145318823754
-        liqTree.feeRateSnapshotTokenX += 129987217567345826;
-        liqTree.feeRateSnapshotTokenY += 234346579834678237846892;
+        fees.X += 129987217567345826;
+        fees.Y += 234346579834678237846892;
 
-        liqTree.addTLiq(LiqRange(1, 3), 32, 8687384723, 56758698, ONE_HUNDRED_PERCENT_UTILIZATION);     // LLLR, LLL
-        liqTree.removeTLiq(LiqRange(1, 3), 32, 8687384723, 56758698);  // LLLR, LLL
+        liqTree.addTLiq(range(1, 3), 32, fees, 8687384723, 56758698);     // LLLR, LLL
+        liqTree.removeTLiq(range(1, 3), 32, fees, 8687384723, 56758698);  // LLLR, LLL
 
         // LLLR
         //   total_mLiq = 2462 + (45754683688356 + 932141354 + 98237498262 + 432) * 1 = 45853853330866
@@ -1406,6 +1416,8 @@ contract SmallTreeTest is Test {
     }
 
     function testLeftAndRightLegStoppingAtOrAbovePeak() public {
+        FeeSnap memory fees;
+
         //   Range: (0, 1)
         //
         //           LLL(0-1)
@@ -1416,19 +1428,19 @@ contract SmallTreeTest is Test {
         // 4th (0, 1)
         LiqNode storage root = liqTree.nodes[liqTree.root];
 
-        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 16)];
-        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 16)];
-        LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 16)];
-        LiqNode storage LLLL = liqTree.nodes[LKey.wrap((1 << 24) | 16)];
-        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 17)];
+        LiqNode storage L = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
+        LiqNode storage LL = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
+        LiqNode storage LLL = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
+        LiqNode storage LLLL = liqTree.nodes[LKey.wrap((1 << 24) | 0)];
+        LiqNode storage LLLR = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
 
-        liqTree.addMLiq(LiqRange(0, 1), 8264);  // LLL
-        liqTree.addMLiq(LiqRange(0, 0), 2582);  // LLLL
-        liqTree.addMLiq(LiqRange(1, 1), 1111);  // LLLR
+        liqTree.addMLiq(range(0, 1), 8264, fees);  // LLL
+        liqTree.addMLiq(range(0, 0), 2582, fees);  // LLLL
+        liqTree.addMLiq(range(1, 1), 1111, fees);  // LLLR
 
-        liqTree.addTLiq(LiqRange(0, 1), 726, 346e18, 132e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLL
-        liqTree.addTLiq(LiqRange(0, 0), 245, 100e18, 222e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLLL
-        liqTree.addTLiq(LiqRange(1, 1), 342, 234e18, 313e6, ONE_HUNDRED_PERCENT_UTILIZATION);  // LLLR
+        liqTree.addTLiq(range(0, 1), 726, fees, 346e18, 132e6);  // LLL
+        liqTree.addTLiq(range(0, 0), 245, fees, 100e18, 222e6);  // LLLL
+        liqTree.addTLiq(range(1, 1), 342, fees, 234e18, 313e6);  // LLLR
 
         // Verify initial tree state
         // mLiq
@@ -1487,11 +1499,11 @@ contract SmallTreeTest is Test {
         assertEq(LLLL.tokenY.subtreeBorrow, 222e6);
         assertEq(LLLR.tokenY.subtreeBorrow, 313e6);
 
-        liqTree.feeRateSnapshotTokenX += 997278349210980290827452342352346;
-        liqTree.feeRateSnapshotTokenY += 7978726162930599238079167453467080976862;
+        fees.X += 997278349210980290827452342352346;
+        fees.Y += 7978726162930599238079167453467080976862;
 
-        liqTree.addMLiq(LiqRange(0, 1), 1234567);
-        liqTree.removeMLiq(LiqRange(0, 1), 1234567);
+        liqTree.addMLiq(range(0, 1), 1234567, fees);
+        liqTree.removeMLiq(range(0, 1), 1234567, fees);
 
         // LLLR
         // (not updated)
@@ -1610,17 +1622,18 @@ contract SmallTreeTest is Test {
     }
 
     // Borrow
-    // multipliers: 1, 2, 4, 8, 16 
+    // multipliers: 1, 2, 4, 8, 16
     // denominators: 1-16
     // multiplier cannot be larger than divisor and 16 is technically reserved for the root which is tested separately
 
     // x16
 
     function testBorrowSplitAtRoot() public {
-        // root has a range of 16 
-        // 100 / 16 = 6.25 
-        liqTree.addWideRangeMLiq(100e18);
-        liqTree.addWideRangeTLiq(10e18, 100, 100, ONE_HUNDRED_PERCENT_UTILIZATION);
+        FeeSnap memory fees;
+        // root has a range of 16
+        // 100 / 16 = 6.25
+        liqTree.addWideRangeMLiq(100e18, fees);
+        liqTree.addWideRangeTLiq(10e18, fees, 100, 100);
 
         LiqNode storage root = liqTree.nodes[liqTree.root];
         assertEq(root.tokenX.borrow, 100);
@@ -1632,192 +1645,91 @@ contract SmallTreeTest is Test {
     // x1 (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
 
     function testBorrowSplitDividedByOneAndMultipliedByOne() public {
-        liqTree.addMLiq(LiqRange(1, 1), 200e18);
-        liqTree.addTLiq(LiqRange(1, 1), 19, 100, 100, ONE_HUNDRED_PERCENT_UTILIZATION);
+        FeeSnap memory fees;
+        liqTree.addMLiq(range(1, 1), 200e18, fees);
+        liqTree.addTLiq(range(1, 1), 19, fees, 100, 100);
 
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
+        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
         assertEq(multOne.tokenX.borrow, 100);
         assertEq(multOne.tokenX.subtreeBorrow, 100);
         assertEq(multOne.tokenY.borrow, 100);
-        assertEq(multOne.tokenY.subtreeBorrow, 100);    
-    } 
+        assertEq(multOne.tokenY.subtreeBorrow, 100);
+    }
 
     function testBorrowSplitDividedByTwoAndMultipliedByOne() public {
+        FeeSnap memory fees;
         // 21 / 2 = 10.5
-        liqTree.addMLiq(LiqRange(1, 2), 288);
-        liqTree.addTLiq(LiqRange(1, 2), 19, 21, 21, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addMLiq(range(1, 2), 288, fees);
+        liqTree.addTLiq(range(1, 2), 19, fees, 21, 21);
 
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 10);
-        assertEq(multOne.tokenX.subtreeBorrow, 10);
-        assertEq(multOne.tokenY.borrow, 10);
-        assertEq(multOne.tokenY.subtreeBorrow, 10);    
-    } 
-
-    function testBorrowSplitDividedByThreeAndMultipliedByOne() public {
-        // 22 / 3 = 7.33333
-        liqTree.addMLiq(LiqRange(1, 3), 288);
-        liqTree.addTLiq(LiqRange(1, 3), 19, 22, 22, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 7);
-        assertEq(multOne.tokenX.subtreeBorrow, 7);
-        assertEq(multOne.tokenY.borrow, 7);
-        assertEq(multOne.tokenY.subtreeBorrow, 7); 
-    }
-
-    function testBorrowSplitDividedByFourAndMultipliedByOne() public {
-        // 22 / 4 = 5.5
-        liqTree.addMLiq(LiqRange(1, 4), 288);
-        liqTree.addTLiq(LiqRange(1, 4), 19, 22, 22, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 5);
-        assertEq(multOne.tokenX.subtreeBorrow, 5);
-        assertEq(multOne.tokenY.borrow, 5);
-        assertEq(multOne.tokenY.subtreeBorrow, 5); 
-    }
-
-    function testBorrowSplitDividedByFiveAndMultipliedByOne() public {
-        // 22 / 5 = 4.4
-        liqTree.addMLiq(LiqRange(1, 5), 288);
-        liqTree.addTLiq(LiqRange(1, 5), 19, 22, 22, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 4);
-        assertEq(multOne.tokenX.subtreeBorrow, 4);
-        assertEq(multOne.tokenY.borrow, 4);
-        assertEq(multOne.tokenY.subtreeBorrow, 4); 
-    }
-
-    function testBorrowSplitDividedBySixAndMultipliedByOne() public {
-        // 21 / 6 = 3.5
-        liqTree.addMLiq(LiqRange(1, 6), 288);
-        liqTree.addTLiq(LiqRange(1, 6), 19, 21, 21, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 3);
-        assertEq(multOne.tokenX.subtreeBorrow, 3);
-        assertEq(multOne.tokenY.borrow, 3);
-        assertEq(multOne.tokenY.subtreeBorrow, 3); 
-    }
-
-    function testBorrowSplitDividedBySevenAndMultipliedByOne() public {
-        // 20 / 7 ~= 2.85
-        liqTree.addMLiq(LiqRange(1, 7), 288);
-        liqTree.addTLiq(LiqRange(1, 7), 19, 20, 20, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 2);
-        assertEq(multOne.tokenX.subtreeBorrow, 2);
-        assertEq(multOne.tokenY.borrow, 2);
-        assertEq(multOne.tokenY.subtreeBorrow, 2); 
-    }
-
-    function testBorrowSplitDividedByEightAndMultipliedByOne() public {
-        // 20 / 8 ~= 2.5
-        liqTree.addMLiq(LiqRange(1, 8), 288);
-        liqTree.addTLiq(LiqRange(1, 8), 19, 20, 20, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 2);
-        assertEq(multOne.tokenX.subtreeBorrow, 2);
-        assertEq(multOne.tokenY.borrow, 2);
-        assertEq(multOne.tokenY.subtreeBorrow, 2); 
-    }
-
-    function testBorrowSplitDividedByNineAndMultipliedByOne() public {
-        // 50 / 9 ~= 5.5
-        liqTree.addMLiq(LiqRange(1, 9), 288);
-        liqTree.addTLiq(LiqRange(1, 9), 19, 50, 50, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 5);
-        assertEq(multOne.tokenX.subtreeBorrow, 5);
-        assertEq(multOne.tokenY.borrow, 5);
-        assertEq(multOne.tokenY.subtreeBorrow, 5);
-    }
-
-    function testBorrowSplitDividedByTenAndMultipliedByOne() public {
-        // 111 / 10 ~= 11.1
-        liqTree.addMLiq(LiqRange(1, 10), 288);
-        liqTree.addTLiq(LiqRange(1, 10), 19, 111, 111, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 11);
-        assertEq(multOne.tokenX.subtreeBorrow, 11);
-        assertEq(multOne.tokenY.borrow, 11);
-        assertEq(multOne.tokenY.subtreeBorrow, 11);
-    }
-
-    function testBorrowSplitDividedByElevenAndMultipliedByOne() public {
-        // 112 / 11 ~= 10.18
-        liqTree.addMLiq(LiqRange(1, 11), 288);
-        liqTree.addTLiq(LiqRange(1, 11), 19, 112, 112, ONE_HUNDRED_PERCENT_UTILIZATION);
-
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
+        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
         assertEq(multOne.tokenX.borrow, 10);
         assertEq(multOne.tokenX.subtreeBorrow, 10);
         assertEq(multOne.tokenY.borrow, 10);
         assertEq(multOne.tokenY.subtreeBorrow, 10);
     }
 
-    function testBorrowSplitDividedByTwelveAndMultipliedByOne() public {
-        // 210 / 12 ~= 17.5
-        liqTree.addMLiq(LiqRange(1, 12), 288);
-        liqTree.addTLiq(LiqRange(1, 12), 19, 210, 210, ONE_HUNDRED_PERCENT_UTILIZATION);
+    function testBorrowSplitDividedByThreeAndMultipliedByOne() public {
+        FeeSnap memory fees;
+        // 22 / 3 = 7.33333
+        liqTree.addMLiq(range(1, 3), 288, fees);
+        liqTree.addTLiq(range(1, 3), 19, fees, 22, 22);
 
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 17);
-        assertEq(multOne.tokenX.subtreeBorrow, 17);
-        assertEq(multOne.tokenY.borrow, 17);
-        assertEq(multOne.tokenY.subtreeBorrow, 17);
+        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
+        assertEq(multOne.tokenX.borrow, 7);
+        assertEq(multOne.tokenX.subtreeBorrow, 7);
+        assertEq(multOne.tokenY.borrow, 7);
+        assertEq(multOne.tokenY.subtreeBorrow, 7);
     }
 
-    function testBorrowSplitDividedByThirteenAndMultipliedByOne() public {
-        // 310 / 13 ~= 23.84
-        liqTree.addMLiq(LiqRange(1, 13), 288);
-        liqTree.addTLiq(LiqRange(1, 13), 19, 310, 310, ONE_HUNDRED_PERCENT_UTILIZATION);
+    function testBorrowSplitDividedByFourAndMultipliedByOne() public {
+        FeeSnap memory fees;
+        // 22 / 4 = 5.5
+        liqTree.addMLiq(range(1, 4), 288, fees);
+        liqTree.addTLiq(range(1, 4), 19, fees, 22, 22);
 
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 23);
-        assertEq(multOne.tokenX.subtreeBorrow, 23);
-        assertEq(multOne.tokenY.borrow, 23);
-        assertEq(multOne.tokenY.subtreeBorrow, 23);
+        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
+        assertEq(multOne.tokenX.borrow, 5);
+        assertEq(multOne.tokenX.subtreeBorrow, 5);
+        assertEq(multOne.tokenY.borrow, 5);
+        assertEq(multOne.tokenY.subtreeBorrow, 5);
     }
 
-    function testBorrowSplitDividedByFourteenAndMultipliedByOne() public {
-        // 211 / 14 ~= 15.07
-        liqTree.addMLiq(LiqRange(1, 14), 288);
-        liqTree.addTLiq(LiqRange(1, 14), 19, 211, 211, ONE_HUNDRED_PERCENT_UTILIZATION);
+    function testBorrowSplitDividedByFiveAndMultipliedByOne() public {
+        FeeSnap memory fees;
+        // 22 / 5 = 4.4
+        liqTree.addMLiq(range(1, 5), 288, fees);
+        liqTree.addTLiq(range(1, 5), 19, fees, 22, 22);
 
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 15);
-        assertEq(multOne.tokenX.subtreeBorrow, 15);
-        assertEq(multOne.tokenY.borrow, 15);
-        assertEq(multOne.tokenY.subtreeBorrow, 15);
+        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
+        assertEq(multOne.tokenX.borrow, 4);
+        assertEq(multOne.tokenX.subtreeBorrow, 4);
+        assertEq(multOne.tokenY.borrow, 4);
+        assertEq(multOne.tokenY.subtreeBorrow, 4);
     }
 
-    function testBorrowSplitDividedByFifteenAndMultipliedByOne() public {
-        // 511 / 15 ~= 34.06
-        liqTree.addMLiq(LiqRange(1, 14), 288);
-        liqTree.addTLiq(LiqRange(1, 14), 19, 211, 211, ONE_HUNDRED_PERCENT_UTILIZATION);
+    function testBorrowSplitDividedBySixAndMultipliedByOne() public {
+        FeeSnap memory fees;
+        // 21 / 6 = 3.5
+        liqTree.addMLiq(range(1, 6), 288, fees);
+        liqTree.addTLiq(range(1, 6), 19, fees, 21, 21);
 
-        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 17)];
-        assertEq(multOne.tokenX.borrow, 34);
-        assertEq(multOne.tokenX.subtreeBorrow, 34);
-        assertEq(multOne.tokenY.borrow, 34);
-        assertEq(multOne.tokenY.subtreeBorrow, 34);
+        LiqNode storage multOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
+        assertEq(multOne.tokenX.borrow, 3);
+        assertEq(multOne.tokenX.subtreeBorrow, 3);
+        assertEq(multOne.tokenY.borrow, 3);
+        assertEq(multOne.tokenY.subtreeBorrow, 3);
     }
-       
+
     // x2 (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
 
     function testBorrowSplitDividedByTwoAndMultipliedByTwo() public {
+        FeeSnap memory fees;
         // 511 / 2 = 255.5
-        liqTree.addMLiq(LiqRange(2, 3), 288);
-        liqTree.addTLiq(LiqRange(2, 3), 19, 511, 511, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addMLiq(range(2, 3), 288, fees);
+        liqTree.addTLiq(range(2, 3), 19, fees, 511, 511);
 
-        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
+        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
         assertEq(multTwo.tokenX.borrow, 510);
         assertEq(multTwo.tokenX.subtreeBorrow, 510);
         assertEq(multTwo.tokenY.borrow, 510);
@@ -1825,11 +1737,12 @@ contract SmallTreeTest is Test {
     }
 
     function testBorrowSplitDividedByThreeAndMultipliedByTwo() public {
+        FeeSnap memory fees;
         // 511 / 3 = 170.33
-        liqTree.addMLiq(LiqRange(2, 4), 288);
-        liqTree.addTLiq(LiqRange(2, 4), 19, 511, 511, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addMLiq(range(2, 4), 288, fees);
+        liqTree.addTLiq(range(2, 4), 19, fees, 511, 511);
 
-        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
+        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
         assertEq(multTwo.tokenX.borrow, 340);
         assertEq(multTwo.tokenX.subtreeBorrow, 340);
         assertEq(multTwo.tokenY.borrow, 340);
@@ -1837,11 +1750,12 @@ contract SmallTreeTest is Test {
     }
 
     function testBorrowSplitDividedByFourAndMultipliedByTwo() public {
+        FeeSnap memory fees;
         // 7 / 4 = 1.75
-        liqTree.addMLiq(LiqRange(2, 5), 288);
-        liqTree.addTLiq(LiqRange(2, 5), 19, 7, 7, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addMLiq(range(2, 5), 288, fees);
+        liqTree.addTLiq(range(2, 5), 19, fees, 7, 7);
 
-        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
+        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
         assertEq(multTwo.tokenX.borrow, 2);
         assertEq(multTwo.tokenX.subtreeBorrow, 2);
         assertEq(multTwo.tokenY.borrow, 2);
@@ -1849,11 +1763,12 @@ contract SmallTreeTest is Test {
     }
 
     function testBorrowSplitDividedByFiveAndMultipliedByTwo() public {
+        FeeSnap memory fees;
         // 499/5 = 99.8
-        liqTree.addMLiq(LiqRange(2, 6), 288);
-        liqTree.addTLiq(LiqRange(2, 6), 19, 7, 7, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addMLiq(range(2, 6), 288, fees);
+        liqTree.addTLiq(range(2, 6), 19, fees, 7, 7);
 
-        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
+        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
         assertEq(multTwo.tokenX.borrow, 2);
         assertEq(multTwo.tokenX.subtreeBorrow, 2);
         assertEq(multTwo.tokenY.borrow, 2);
@@ -1861,11 +1776,12 @@ contract SmallTreeTest is Test {
     }
 
     function testBorrowSplitDividedBySixAndMultipliedByTwo() public {
+        FeeSnap memory fees;
         // 499/5 = 99.8
-        liqTree.addMLiq(LiqRange(2, 6), 288);
-        liqTree.addTLiq(LiqRange(2, 6), 19, 7, 7, ONE_HUNDRED_PERCENT_UTILIZATION);
+        liqTree.addMLiq(range(2, 6), 288, fees);
+        liqTree.addTLiq(range(2, 6), 19, fees, 7, 7);
 
-        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 18)];
+        LiqNode storage multTwo = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
         assertEq(multTwo.tokenX.borrow, 2);
         assertEq(multTwo.tokenX.subtreeBorrow, 2);
         assertEq(multTwo.tokenY.borrow, 2);
@@ -1873,123 +1789,123 @@ contract SmallTreeTest is Test {
     }
 
     function testBorrowSplitDividedBySevenAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByEightAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByNineAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByTenAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByElevenAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByTwelveAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByThirteenAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByFourteenAndMultipliedByTwo() public {
-        
+
     }
 
     function testBorrowSplitDividedByFifteenAndMultipliedByTwo() public {
-        
+
     }
 
     // x4 (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
 
     function testBorrowSplitDividedByFourAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByFiveAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedBySixAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedBySevenAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByEightAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByNineAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByTenAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByElevenAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByTwelveAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByThirteenAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByFourteenAndMultipliedByFour() public {
-        
+
     }
 
     function testBorrowSplitDividedByFifteenAndMultipliedByFour() public {
-        
+
     }
 
      // x8 (8, 9, 10, 11, 12, 13, 14, 15, 16)
 
     function testBorrowSplitDividedByEightAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByNineAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByTenAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByElevenAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByTwelveAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByThirteenAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByFourteenAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByFifteenAndMultipliedByEight() public {
-        
+
     }
 
 }
