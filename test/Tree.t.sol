@@ -4,7 +4,9 @@ pragma solidity ^0.8.18;
 import { console } from "forge-std/console.sol";
 import { PRBTest } from "@prb/test/PRBTest.sol";
 import { LiqTree, LiqTreeImpl, LiqTreeIntLib } from "src/Tree.sol";
-import { LKey, LKeyImpl } from "src/Tree.sol";
+import { LKey, LKeyImpl, LiqRange, FeeSnap } from "src/Tree.sol";
+
+// solhint-disable
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests
@@ -17,57 +19,66 @@ contract LiqTreeTest is PRBTest {
         t.init(0x13); // 19 gives 80000 as the offset.
     }
 
-    function assertWideMT(uint maker, uint taker) private {
-        (uint minM, uint maxT) = t.queryWideMTBounds();
+    function assertWideMT(uint256 maker, uint256 taker) private {
+        (uint256 minM, uint256 maxT) = t.queryWideMTBounds();
         assertEq(maker, minM, "wideMaker");
         assertEq(taker, maxT, "wideTaker");
     }
 
     function testWide() public {
+        FeeSnap memory fees;
+
         assertWideMT(0, 0);
-        t.addWideMLiq(10);
+        t.addWideRangeMLiq(10, fees);
         assertWideMT(10, 0);
-        t.addWideMLiq(10);
+        t.addWideRangeMLiq(10, fees);
         assertWideMT(20, 0);
 
-        t.addWideTLiq(10);
+        t.addWideRangeTLiq(10, fees, 0, 0);
         assertWideMT(20, 10);
 
         // Going over won't happen in practice but we should still test.
-        t.addWideTLiq(20);
+        t.addWideRangeTLiq(20, fees, 0, 0);
         assertWideMT(20, 30);
 
-        t.subWideMLiq(10);
+        t.removeWideRangeMLiq(10, fees);
         assertWideMT(10, 30);
 
-        t.subWideTLiq(30);
+        t.removeWideRangeTLiq(30, fees, 0, 0);
         assertWideMT(10, 0);
 
         // And adding mliq anywhere else won't change the wide mliq.
-        t.addMLiq(100, 200, 10);
+        t.addMLiq(LiqRange(100, 200), 10, fees);
         assertWideMT(10, 0);
 
         // Adding tliq anywhere though, will raise the max wide tliq.
-        t.addTLiq(300, 400, 10);
+        t.addTLiq(LiqRange(300, 400), 10, fees, 0, 0);
         assertWideMT(10, 10);
     }
 
-    function assertMT(uint24 low, uint24 high, uint128 minM, uint128 maxT) public {
-        (uint128 minMaker, uint128 maxTaker) = t.queryMTBounds(low, high);
+    function assertMT(
+        int24 low,
+        int24 high,
+        uint128 minM,
+        uint128 maxT
+    ) public {
+        (uint128 minMaker, uint128 maxTaker) = t.queryMTBounds(LiqRange(low, high));
 
         assertEq(minMaker, minM, "maker");
         assertEq(maxTaker, maxT, "taker");
     }
 
     function testMLiq() public {
+        FeeSnap memory fees;
+
         // Single-node tests
-        t.addMLiq(0, 0, 10);
+        t.addMLiq(LiqRange(0, 0), 10, fees);
         assertMT(0, 0, 10, 0);
         assertWideMT(0, 0);
         assertMT(0, 1, 0, 0);
         assertMT(0, 100, 0, 0);
 
-        t.addMLiq(0, 1, 10);
+        t.addMLiq(LiqRange(0, 1), 10, fees);
         // Now we have 0:20, 1:10
         assertMT(0, 0, 20, 0);
         assertMT(1, 1, 10, 0);
@@ -76,7 +87,7 @@ contract LiqTreeTest is PRBTest {
         assertMT(1, 2, 0, 0);
         assertWideMT(0, 0);
 
-        t.addMLiq(0, 7, 10);
+        t.addMLiq(LiqRange(0, 7), 10, fees);
         // 0:30, 1: 20, 2-7: 10
         assertMT(0, 0, 30, 0);
         assertMT(1, 1, 20, 0);
@@ -84,50 +95,56 @@ contract LiqTreeTest is PRBTest {
         assertMT(3, 5, 10, 0);
         assertMT(20, 30, 0, 0);
 
-        t.addMLiq(0, 1, -10);
+        t.removeMLiq(LiqRange(0, 1), 10, fees);
         // 0:20, 1-7: 10
         assertMT(0, 0, 20, 0);
         assertMT(1, 3, 10, 0);
         assertMT(0, 7, 10, 0);
 
-        t.addMLiq(0, 7, -3);
+        t.removeMLiq(LiqRange(0, 7), 3, fees);
         // 0:17, 1-7: 7
         assertMT(0, 0, 17, 0);
-        assertMT(0,7, 7, 0);
+        assertMT(0, 7, 7, 0);
         assertMT(0, 8, 0, 0);
 
         // Multi-node tests
-        t.addMLiq(500, 800, 100);
+        t.addMLiq(LiqRange(500, 800), 100, fees);
         assertWideMT(0, 0);
         assertMT(500, 800, 100, 0);
         assertMT(600, 700, 100, 0);
         assertMT(400, 900, 0, 0);
 
-        t.addMLiq(0, 500, 200);
+        t.addMLiq(LiqRange(0, 500), 200, fees);
         assertMT(0, 800, 100, 0);
         assertMT(400, 700, 100, 0);
 
-        t.addMLiq(400, 600, 300);
+        t.addMLiq(LiqRange(400, 600), 300, fees);
         assertMT(0, 800, 100, 0);
         assertMT(400, 600, 400, 0);
         assertMT(400, 500, 500, 0);
         assertMT(500, 600, 400, 0);
 
         // Undo the last one
-        t.addMLiq(400, 600, -300);
+        t.removeMLiq(LiqRange(400, 600), 300, fees);
         assertMT(0, 800, 100, 0);
         assertMT(400, 600, 100, 0);
         assertMT(400, 500, 200, 0);
         assertMT(500, 600, 100, 0);
     }
 
-    function testAddMLiqGas(uint24 low, uint8 highOff) public {
-        vm.assume(low < t.offset - highOff);
-        t.addMLiq(low, low + highOff, 10);
+    function testAddMLiqGas(int24 low, uint8 _highOff) public {
+        FeeSnap memory fees;
+        int24 highOff = int24(uint24(_highOff));
+        // Within range.
+        vm.assume(-int24(t.width / 2) <= low);
+        vm.assume(low < int24(t.width / 2 - _highOff));
+
+        t.addMLiq(LiqRange(low, low + highOff), 10, fees);
     }
 
     function testTLiq() public {
-        t.addTLiq(6, 6, 10);
+        FeeSnap memory fees;
+        t.addTLiq(LiqRange(6, 6), 10, fees, 0, 0);
         assertMT(6, 6, 0, 10);
         assertWideMT(0, 10);
         assertMT(6, 7, 0, 10);
@@ -135,7 +152,7 @@ contract LiqTreeTest is PRBTest {
         assertMT(7, 10, 0, 0);
 
         // Test consecutive nodes
-        t.addTLiq(7, 7, 5);
+        t.addTLiq(LiqRange(7, 7), 5, fees, 0, 0);
         assertMT(6, 7, 0, 10);
         assertMT(7, 7, 0, 5);
         assertMT(6, 6, 0, 10);
@@ -144,7 +161,7 @@ contract LiqTreeTest is PRBTest {
         assertWideMT(0, 10);
 
         // Test larger ranges
-        t.addTLiq(5, 100, 50);
+        t.addTLiq(LiqRange(5, 100), 50, fees, 0, 0);
         assertWideMT(0, 60);
         assertMT(0, 4, 0, 0);
         assertMT(0, 5, 0, 50);
@@ -152,7 +169,6 @@ contract LiqTreeTest is PRBTest {
         assertMT(101, 500, 0, 0);
         assertMT(5, 100, 0, 60);
     }
-
 }
 
 contract LiqTreeIntTest is PRBTest {
@@ -170,7 +186,12 @@ contract LiqTreeIntTest is PRBTest {
         assertEq(0x04, uint24(0x65432C).lsb());
     }
 
-    function assertLCA(uint24 a, uint24 b, uint24 common, uint24 commonRange) public {
+    function assertLCA(
+        uint24 a,
+        uint24 b,
+        uint24 common,
+        uint24 commonRange
+    ) public {
         (LKey peak, LKey peakRange) = LiqTreeIntLib.lowestCommonAncestor(a, b);
         (uint24 range, uint24 base) = peak.explode();
         assertEq(base, common);
@@ -193,7 +214,7 @@ contract LiqTreeIntTest is PRBTest {
         vm.assume(low <= fauxMaxKeyBase);
         LKey l = low.lowKey();
         assertTrue(l.isRight());
-        (,uint24 base) = l.explode();
+        (, uint24 base) = l.explode();
         assertEq(base, low);
     }
 
@@ -209,7 +230,6 @@ contract LiqTreeIntTest is PRBTest {
 
     // function testRangeBounds()
     // TODO
-
 }
 
 contract LKeyTest is PRBTest {
@@ -225,8 +245,12 @@ contract LKeyTest is PRBTest {
         assertEq(range, eRange);
     }
 
-    function subtestAdjacency(LKey up, LKey left, LKey right) public {
-        (uint24 prange,) = up.explode();
+    function subtestAdjacency(
+        LKey up,
+        LKey left,
+        LKey right
+    ) public {
+        (uint24 prange, ) = up.explode();
         (, uint24 lbase) = left.explode();
         (uint24 rrange, uint24 rbase) = right.explode();
 
@@ -237,7 +261,7 @@ contract LKeyTest is PRBTest {
         if (lAdjRange == prange) {
             {
                 // The other should be at a higher level
-                (uint24 rAdjRange,) = rAdj.explode();
+                (uint24 rAdjRange, ) = rAdj.explode();
                 assertTrue(rAdjRange > prange);
                 assertTrue((rrange + rbase) == lAdjBase);
             }

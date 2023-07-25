@@ -21,3 +21,10 @@ yarn-error.log*
 !/broadcast
 /broadcast/*
 /broadcast/*/31337/
+
+# python
+**.idea**
+**__pycache__**
+
+# pycharm
+.editorconfig
