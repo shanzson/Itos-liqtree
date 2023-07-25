@@ -5,6 +5,7 @@ import { console } from "forge-std/console.sol";
 import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode, FeeSnap } from "src/Tree.sol";
+
 // solhint-disable
 
 /**
@@ -58,7 +59,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(0, 3), 400, fees, 43e18, 12e6);
         liqTree.removeTLiq(range(0, 3), 20, fees, 20e18, 10e6);
 
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
         assertEq(zeroThree.tokenX.borrow, 23e18);
         assertEq(zeroThree.tokenY.borrow, 2e6);
 
@@ -71,7 +72,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(3, 3), 20, fees, 22e18, 29e6);
         liqTree.removeTLiq(range(3, 3), 20, fees, 20e18, 20e6);
 
-        LiqNode storage threeThree = liqTree.nodes[LKey.wrap(1 << 24 | 3)];
+        LiqNode storage threeThree = liqTree.nodes[LKey.wrap((1 << 24) | 3)];
         assertEq(threeThree.tokenX.borrow, 2e18);
         assertEq(threeThree.tokenY.borrow, 9e6);
 
@@ -87,13 +88,13 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(1, 7), 20, fees, 12e18, 19e6);
         liqTree.removeTLiq(range(1, 7), 20, fees, 10e18, 10e6);
 
-        LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
-        LiqNode storage twoThree = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
-        LiqNode storage fourSeven = liqTree.nodes[LKey.wrap(4 << 24 | 4)];
+        LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
+        LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
+        LiqNode storage fourSeven = liqTree.nodes[LKey.wrap((4 << 24) | 4)];
 
         // 1-1
         assertEq(oneOne.tokenX.borrow, 285714285714285714); // 2e18/7*1 = 285714285714285714.285714285714285714285714285714285714285714
-        assertEq(oneOne.tokenY.borrow, 1285714);  // 9e6/7*1 = 1285714.2857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142
+        assertEq(oneOne.tokenY.borrow, 1285714); // 9e6/7*1 = 1285714.2857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142
 
         // 2-3
         assertEq(twoThree.tokenX.borrow, 571428571428571428); // 2e18/7*2 = 571428571428571428.571428571428571428571428571428571428571428
@@ -119,17 +120,16 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(1, 2), 20, fees, 74e18, 21e6);
         liqTree.removeTLiq(range(1, 2), 20, fees, 2e18, 2e6);
 
-        LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
-        LiqNode storage twoTwo = liqTree.nodes[LKey.wrap(1 << 24 | 2)];
+        LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
+        LiqNode storage twoTwo = liqTree.nodes[LKey.wrap((1 << 24) | 2)];
 
         // 1-1
         assertEq(oneOne.tokenX.borrow, 36000000000000000000); // 72e18/2*1 = 36000000000000000000
-        assertEq(oneOne.tokenY.borrow, 9500000);  // 19e6/2*1 = 9500000
+        assertEq(oneOne.tokenY.borrow, 9500000); // 19e6/2*1 = 9500000
 
         // 2-2
         assertEq(twoTwo.tokenX.borrow, 36000000000000000000);
         assertEq(twoTwo.tokenY.borrow, 9500000);
-
     }
 
     function testBorrowSplitAcrossSeveralNodesWalkingRightLeg() public {
@@ -141,21 +141,21 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(8, 14), 20, fees, 474e18, 220e6);
         liqTree.removeTLiq(range(8, 14), 20, fees, 2e18, 1e6);
 
-        LiqNode storage eightEleven = liqTree.nodes[LKey.wrap(4 << 24 | 8)];
-        LiqNode storage twelveThirteen = liqTree.nodes[LKey.wrap(2 << 24 | 12)];
-        LiqNode storage fourteenFourteen = liqTree.nodes[LKey.wrap(1 << 24 | 14)];
+        LiqNode storage eightEleven = liqTree.nodes[LKey.wrap((4 << 24) | 8)];
+        LiqNode storage twelveThirteen = liqTree.nodes[LKey.wrap((2 << 24) | 12)];
+        LiqNode storage fourteenFourteen = liqTree.nodes[LKey.wrap((1 << 24) | 14)];
 
         // 8-11
         // x: floor(472e18/7) = 67428571428571428571 * 4 = 269714285714285714284
         // y: floor(219e6/7) = 31285714 * 4 = 125142856
         assertEq(eightEleven.tokenX.borrow, 269714285714285714284); // 472e18/7*4 = 269714285714285714285.714285714285714285714285714285714285714 (1 wei lost)
-        assertEq(eightEleven.tokenY.borrow, 125142856);  // 219e6/7*4 = 125142857.142857142857142857142857142857142857142857142857142 (1 wei lost)
+        assertEq(eightEleven.tokenY.borrow, 125142856); // 219e6/7*4 = 125142857.142857142857142857142857142857142857142857142857142 (1 wei lost)
 
         // 12-13
         // x: floor(472e18/7) * 2 = 134857142857142857142
         // y: floor(219e6/7) * 2 = 62571428
         assertEq(twelveThirteen.tokenX.borrow, 134857142857142857142); // 472e18/7*2 = 134857142857142857142.857142857142857142857142857142857142857
-        assertEq(twelveThirteen.tokenY.borrow, 62571428);  // 219e6/7*2 = 62571428.5714285714285714285714285714285714285714285714285714
+        assertEq(twelveThirteen.tokenY.borrow, 62571428); // 219e6/7*2 = 62571428.5714285714285714285714285714285714285714285714285714
 
         // 14-14
         // x: floor(472e18/7) * 1 = 67428571428571428571
@@ -173,7 +173,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(8, 15), 20, fees, 1473e18, 5220e6);
         liqTree.removeTLiq(range(8, 15), 20, fees, 1e18, 1e6);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
 
         // 8-15
         // x: floor(1472e18/8) * 8 = 1472e18
@@ -209,14 +209,14 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(0, 3), 400, fees, 43e18, 12e6);
         liqTree.removeTLiq(range(0, 3), 20, fees, 20e18, 10e6);
 
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
         assertEq(zeroThree.tokenX.subtreeBorrow, 23e18);
         assertEq(zeroThree.tokenY.subtreeBorrow, 2e6);
 
         // nodes above should include this amount
 
         // 0-7
-        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 0)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
         assertEq(zeroSeven.tokenX.subtreeBorrow, 23e18);
         assertEq(zeroSeven.tokenY.subtreeBorrow, 2e6);
 
@@ -235,24 +235,24 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(3, 3), 20, fees, 22e18, 29e6);
         liqTree.removeTLiq(range(3, 3), 20, fees, 20e18, 20e6);
 
-        LiqNode storage threeThree = liqTree.nodes[LKey.wrap(1 << 24 | 3)];
+        LiqNode storage threeThree = liqTree.nodes[LKey.wrap((1 << 24) | 3)];
         assertEq(threeThree.tokenX.subtreeBorrow, 2e18);
         assertEq(threeThree.tokenY.subtreeBorrow, 9e6);
 
         // nodes above should include this amount
 
         // 2-3
-        LiqNode storage twoThree = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
+        LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
         assertEq(twoThree.tokenX.subtreeBorrow, 2e18);
         assertEq(twoThree.tokenY.subtreeBorrow, 9e6);
 
         // 0-3
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
         assertEq(zeroThree.tokenX.subtreeBorrow, 2e18);
         assertEq(zeroThree.tokenY.subtreeBorrow, 9e6);
 
         // 0-7
-        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 0)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
         assertEq(zeroSeven.tokenX.subtreeBorrow, 2e18);
         assertEq(zeroSeven.tokenY.subtreeBorrow, 9e6);
 
@@ -273,13 +273,13 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(1, 7), 20, fees, 12e18, 19e6);
         liqTree.removeTLiq(range(1, 7), 20, fees, 10e18, 10e6);
 
-        LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
-        LiqNode storage twoThree = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
-        LiqNode storage fourSeven = liqTree.nodes[LKey.wrap(4 << 24 | 4)];
+        LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
+        LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
+        LiqNode storage fourSeven = liqTree.nodes[LKey.wrap((4 << 24) | 4)];
 
         // 1-1
         assertEq(oneOne.tokenX.subtreeBorrow, 285714285714285714); // 2e18/7*1 = 285714285714285714.285714285714285714285714285714285714285714
-        assertEq(oneOne.tokenY.subtreeBorrow, 1285714);  // 9e6/7*1 = 1285714.2857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142
+        assertEq(oneOne.tokenY.subtreeBorrow, 1285714); // 9e6/7*1 = 1285714.2857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142857142
 
         // 2-3
         assertEq(twoThree.tokenX.subtreeBorrow, 571428571428571428); // 2e18/7*2 = 571428571428571428.571428571428571428571428571428571428571428
@@ -296,17 +296,17 @@ contract TreeFeeParamTest is Test {
         // nodes above should include this amount
 
         // 0-1 (from 1-1)
-        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 0)];
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
         assertEq(zeroOne.tokenX.subtreeBorrow, 285714285714285714);
         assertEq(zeroOne.tokenY.subtreeBorrow, 1285714);
 
         // 0-3 (from 1-1 and 2-3)
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
         assertEq(zeroThree.tokenX.subtreeBorrow, 857142857142857142); // 285714285714285714 + 571428571428571428 = 857142857142857142
         assertEq(zeroThree.tokenY.subtreeBorrow, 3857142); // 1285714 + 2571428 = 3857142
 
         // 0-7 (from 1-1, 2-3, and 4-7)
-        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 0)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
         assertEq(zeroSeven.tokenX.subtreeBorrow, 1999999999999999998); // 857142857142857142 + 1142857142857142856 = 1999999999999999998
         assertEq(zeroSeven.tokenY.subtreeBorrow, 8999998); // 3857142 + 5142856 = 8999998
 
@@ -327,12 +327,12 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(1, 2), 20, fees, 74e18, 21e6);
         liqTree.removeTLiq(range(1, 2), 20, fees, 2e18, 2e6);
 
-        LiqNode storage oneOne = liqTree.nodes[LKey.wrap(1 << 24 | 1)];
-        LiqNode storage twoTwo = liqTree.nodes[LKey.wrap(1 << 24 | 2)];
+        LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
+        LiqNode storage twoTwo = liqTree.nodes[LKey.wrap((1 << 24) | 2)];
 
         // 1-1
         assertEq(oneOne.tokenX.subtreeBorrow, 36000000000000000000); // 72e18/2*1 = 36000000000000000000
-        assertEq(oneOne.tokenY.subtreeBorrow, 9500000);  // 19e6/2*1 = 9500000
+        assertEq(oneOne.tokenY.subtreeBorrow, 9500000); // 19e6/2*1 = 9500000
 
         // 2-2
         assertEq(twoTwo.tokenX.subtreeBorrow, 36000000000000000000);
@@ -341,22 +341,22 @@ contract TreeFeeParamTest is Test {
         // nodes above should include this amount
 
         // 0-1 (from 1-1)
-        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 0)];
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
         assertEq(zeroOne.tokenX.subtreeBorrow, 36e18);
         assertEq(zeroOne.tokenY.subtreeBorrow, 9.5e6);
 
         // 2-3 (from 2-2)
-        LiqNode storage twoThree = liqTree.nodes[LKey.wrap(2 << 24 | 2)];
+        LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
         assertEq(twoThree.tokenX.subtreeBorrow, 36e18);
         assertEq(twoThree.tokenY.subtreeBorrow, 9.5e6);
 
         // 0-3 (from 1-1 and 2-2)
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
         assertEq(zeroThree.tokenX.subtreeBorrow, 72e18);
         assertEq(zeroThree.tokenY.subtreeBorrow, 19e6);
 
         // 0-7 (from 1-1 and 2-2)
-        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 0)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
         assertEq(zeroSeven.tokenX.subtreeBorrow, 72e18);
         assertEq(zeroSeven.tokenY.subtreeBorrow, 19e6);
 
@@ -366,7 +366,6 @@ contract TreeFeeParamTest is Test {
         assertEq(zeroFifteen.tokenY.subtreeBorrow, 19e6);
 
         // all other nodes should have 0
-
     }
 
     function testSubtreeBorrowSplitAcrossSeveralNodesWalkingRightLeg() public {
@@ -378,21 +377,21 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(8, 14), 20, fees, 474e18, 220e6);
         liqTree.removeTLiq(range(8, 14), 20, fees, 2e18, 1e6);
 
-        LiqNode storage eightEleven = liqTree.nodes[LKey.wrap(4 << 24 | 8)];
-        LiqNode storage twelveThirteen = liqTree.nodes[LKey.wrap(2 << 24 | 12)];
-        LiqNode storage fourteenFourteen = liqTree.nodes[LKey.wrap(1 << 24 | 14)];
+        LiqNode storage eightEleven = liqTree.nodes[LKey.wrap((4 << 24) | 8)];
+        LiqNode storage twelveThirteen = liqTree.nodes[LKey.wrap((2 << 24) | 12)];
+        LiqNode storage fourteenFourteen = liqTree.nodes[LKey.wrap((1 << 24) | 14)];
 
         // 8-11
         // x: floor(472e18/7) = 67428571428571428571 * 4 = 269714285714285714284
         // y: floor(219e6/7) = 31285714 * 4 = 125142856
         assertEq(eightEleven.tokenX.subtreeBorrow, 269714285714285714284); // 472e18/7*4 = 269714285714285714285.714285714285714285714285714285714285714 (1 wei lost)
-        assertEq(eightEleven.tokenY.subtreeBorrow, 125142856);  // 219e6/7*4 = 125142857.142857142857142857142857142857142857142857142857142 (1 wei lost)
+        assertEq(eightEleven.tokenY.subtreeBorrow, 125142856); // 219e6/7*4 = 125142857.142857142857142857142857142857142857142857142857142 (1 wei lost)
 
         // 12-13
         // x: floor(472e18/7) * 2 = 134857142857142857142
         // y: floor(219e6/7) * 2 = 62571428
         assertEq(twelveThirteen.tokenX.subtreeBorrow, 134857142857142857142); // 472e18/7*2 = 134857142857142857142.857142857142857142857142857142857142857
-        assertEq(twelveThirteen.tokenY.subtreeBorrow, 62571428);  // 219e6/7*2 = 62571428.5714285714285714285714285714285714285714285714285714
+        assertEq(twelveThirteen.tokenY.subtreeBorrow, 62571428); // 219e6/7*2 = 62571428.5714285714285714285714285714285714285714285714285714
 
         // 14-14
         // x: floor(472e18/7) * 1 = 67428571428571428571
@@ -403,17 +402,17 @@ contract TreeFeeParamTest is Test {
         // nodes above should include this amount
 
         // 14-15 (from 14-14)
-        LiqNode storage fourteenFifteen = liqTree.nodes[LKey.wrap(2 << 24 | 14)];
+        LiqNode storage fourteenFifteen = liqTree.nodes[LKey.wrap((2 << 24) | 14)];
         assertEq(fourteenFifteen.tokenX.subtreeBorrow, 67428571428571428571);
         assertEq(fourteenFifteen.tokenY.subtreeBorrow, 31285714);
 
         // 12-15 (from 12-13 and 14-14)
-        LiqNode storage tweleveFifteen = liqTree.nodes[LKey.wrap(4 << 24 | 12)];
+        LiqNode storage tweleveFifteen = liqTree.nodes[LKey.wrap((4 << 24) | 12)];
         assertEq(tweleveFifteen.tokenX.subtreeBorrow, 202285714285714285713); // 67428571428571428571 + 134857142857142857142 = 202285714285714285713
         assertEq(tweleveFifteen.tokenY.subtreeBorrow, 93857142); // 31285714 + 62571428 = 93857142
 
         // 8-15 (from 8-11, 12-13, and 14-14)
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.subtreeBorrow, 471999999999999999997); // 202285714285714285713 + 269714285714285714284 = 471999999999999999997
         assertEq(eightFifteen.tokenY.subtreeBorrow, 218999998); // 93857142 + 125142856 = 218999998
 
@@ -434,7 +433,7 @@ contract TreeFeeParamTest is Test {
         liqTree.addTLiq(range(8, 15), 20, fees, 1473e18, 5220e6);
         liqTree.removeTLiq(range(8, 15), 20, fees, 1e18, 1e6);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
 
         // 8-15
         // x: floor(1472e18/8) * 8 = 1472e18
@@ -456,7 +455,7 @@ contract TreeFeeParamTest is Test {
 
     // note: different from subtreeMLiq on the node
     function _calculateSubtreeMLiqForNode(LKey key) internal returns (uint256 subtreeMLiq) {
-        (uint24 width,) = key.explode();
+        (uint24 width, ) = key.explode();
 
         LiqNode storage node = liqTree.nodes[key];
         uint256 subtreeMLiqForNode = node.mLiq * width;
@@ -473,7 +472,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addMLiq(range(0, 3), 500, fees);
 
-        LKey key = LKey.wrap(4 << 24 | 0); // 0-3
+        LKey key = LKey.wrap((4 << 24) | 0); // 0-3
         assertEq(_calculateSubtreeMLiqForNode(key), 2000); // 500*4
     }
 
@@ -481,7 +480,7 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         liqTree.addMLiq(range(3, 3), 100, fees);
 
-        LKey key = LKey.wrap(1 << 24 | 3); // 3-3
+        LKey key = LKey.wrap((1 << 24) | 3); // 3-3
         assertEq(_calculateSubtreeMLiqForNode(key), 100);
     }
 
@@ -492,15 +491,14 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addMLiq(range(1, 7), 200, fees);
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 1)), 200); // 1-1
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 2)), 400); // 2-3
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 4)), 800); // 4-7
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((1 << 24) | 1)), 200); // 1-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((2 << 24) | 2)), 400); // 2-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((4 << 24) | 4)), 800); // 4-7
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 0)), 200); // 0-1
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 0)), 600); // 0-3
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 0)), 1400); // 0-7
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((2 << 24) | 0)), 200); // 0-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((4 << 24) | 0)), 600); // 0-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((8 << 24) | 0)), 1400); // 0-7
         assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 1400); // 0-15
-
     }
 
     function testSubtreeMLiqForMLiqSplitAcrossSeveralNodesWalkingBothLegsBelowPeak() public {
@@ -509,13 +507,13 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         liqTree.addMLiq(range(1, 2), 70, fees);
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 1)), 70); // 1-1
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 2)), 70); // 2-2
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((1 << 24) | 1)), 70); // 1-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((1 << 24) | 2)), 70); // 2-2
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 0)), 70); // 0-1
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 2)), 70); // 2-3
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 0)), 140); // 0-3
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 0)), 140); // 0-7
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((2 << 24) | 0)), 70); // 0-1
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((2 << 24) | 2)), 70); // 2-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((4 << 24) | 0)), 140); // 0-3
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((8 << 24) | 0)), 140); // 0-7
         assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 140); // 0-15
     }
 
@@ -525,13 +523,13 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         liqTree.addMLiq(range(8, 14), 9, fees);
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 8)), 36); // 8-11
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 12)), 18); // 12-13
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(1 << 24 | 14)), 9); // 14-14
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((4 << 24) | 8)), 36); // 8-11
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((2 << 24) | 12)), 18); // 12-13
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((1 << 24) | 14)), 9); // 14-14
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(2 << 24 | 14)), 9); // 14-15
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(4 << 24 | 12)), 27); // 12-15
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 8)), 63); // 8-15
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((2 << 24) | 14)), 9); // 14-15
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((4 << 24) | 12)), 27); // 12-15
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((8 << 24) | 8)), 63); // 8-15
         assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 63); // 0-15
     }
 
@@ -541,7 +539,7 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         liqTree.addMLiq(range(8, 15), 100, fees);
 
-        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap(8 << 24 | 8)), 800); // 8-15
+        assertEq(_calculateSubtreeMLiqForNode(LKey.wrap((8 << 24) | 8)), 800); // 8-15
         assertEq(_calculateSubtreeMLiqForNode(liqTree.root), 800); // 0-15
     }
 
@@ -565,8 +563,8 @@ contract TreeFeeParamTest is Test {
 
         for (int24 j = 1; j < 16; j *= 2) {
             mLiq = 1024 * uint24(j);
-            for (int24 i = 0; i < 16;) {
-                liqTree.addMLiq(range(i, i+j-1), mLiq, fees);
+            for (int24 i = 0; i < 16; ) {
+                liqTree.addMLiq(range(i, i + j - 1), mLiq, fees);
                 i += j;
                 mLiq += 1;
             }
@@ -577,48 +575,48 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         _allocateAuxillaryArrays(fees);
 
-        assertEq(liqTree.nodes[LKey.wrap(16 << 24 | 0)].mLiq, 16384);
+        assertEq(liqTree.nodes[LKey.wrap((16 << 24) | 0)].mLiq, 16384);
 
-        assertEq(liqTree.nodes[LKey.wrap(8 << 24 | 0)].mLiq, 8192);
-        assertEq(liqTree.nodes[LKey.wrap(8 << 24 | 8)].mLiq, 8193);
+        assertEq(liqTree.nodes[LKey.wrap((8 << 24) | 0)].mLiq, 8192);
+        assertEq(liqTree.nodes[LKey.wrap((8 << 24) | 8)].mLiq, 8193);
 
-        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 0)].mLiq, 4096);
-        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 4)].mLiq, 4097);
-        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 8)].mLiq, 4098);
-        assertEq(liqTree.nodes[LKey.wrap(4 << 24 | 12)].mLiq, 4099);
+        assertEq(liqTree.nodes[LKey.wrap((4 << 24) | 0)].mLiq, 4096);
+        assertEq(liqTree.nodes[LKey.wrap((4 << 24) | 4)].mLiq, 4097);
+        assertEq(liqTree.nodes[LKey.wrap((4 << 24) | 8)].mLiq, 4098);
+        assertEq(liqTree.nodes[LKey.wrap((4 << 24) | 12)].mLiq, 4099);
 
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 0)].mLiq, 2048);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 2)].mLiq, 2049);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 4)].mLiq, 2050);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 6)].mLiq, 2051);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 8)].mLiq, 2052);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 10)].mLiq, 2053);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 12)].mLiq, 2054);
-        assertEq(liqTree.nodes[LKey.wrap(2 << 24 | 14)].mLiq, 2055);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 0)].mLiq, 2048);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 2)].mLiq, 2049);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 4)].mLiq, 2050);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 6)].mLiq, 2051);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 8)].mLiq, 2052);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 10)].mLiq, 2053);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 12)].mLiq, 2054);
+        assertEq(liqTree.nodes[LKey.wrap((2 << 24) | 14)].mLiq, 2055);
 
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 0)].mLiq, 1024);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 1)].mLiq, 1025);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 2)].mLiq, 1026);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 3)].mLiq, 1027);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 4)].mLiq, 1028);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 5)].mLiq, 1029);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 6)].mLiq, 1030);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 7)].mLiq, 1031);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 8)].mLiq, 1032);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 9)].mLiq, 1033);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 10)].mLiq, 1034);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 11)].mLiq, 1035);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 12)].mLiq, 1036);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 13)].mLiq, 1037);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 14)].mLiq, 1038);
-        assertEq(liqTree.nodes[LKey.wrap(1 << 24 | 15)].mLiq, 1039);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 0)].mLiq, 1024);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 1)].mLiq, 1025);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 2)].mLiq, 1026);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 3)].mLiq, 1027);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 4)].mLiq, 1028);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 5)].mLiq, 1029);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 6)].mLiq, 1030);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 7)].mLiq, 1031);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 8)].mLiq, 1032);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 9)].mLiq, 1033);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 10)].mLiq, 1034);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 11)].mLiq, 1035);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 12)].mLiq, 1036);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 13)].mLiq, 1037);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 14)].mLiq, 1038);
+        assertEq(liqTree.nodes[LKey.wrap((1 << 24) | 15)].mLiq, 1039);
     }
 
     function testAuxAtNodeOfRangeOne() public {
         FeeSnap memory fees;
         _allocateAuxillaryArrays(fees);
 
-        LiqNode storage zeroZero = liqTree.nodes[LKey.wrap(1 << 24 | 0)];
+        LiqNode storage zeroZero = liqTree.nodes[LKey.wrap((1 << 24) | 0)];
 
         liqTree.addTLiq(range(0, 0), 100, fees, 1, 1);
 
@@ -640,7 +638,7 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         _allocateAuxillaryArrays(fees);
 
-        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 0)];
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
 
         // using 2 so splitting the borrow results in 2 instead of 0 (x/2*2)
         liqTree.addTLiq(range(0, 1), 100, fees, 2, 2);
@@ -664,7 +662,7 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         _allocateAuxillaryArrays(fees);
 
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
 
         // using 2 so splitting the borrow results in 2 instead of 0 (x/2*2)
         liqTree.addTLiq(range(0, 3), 100, fees, 4, 4);
@@ -688,7 +686,7 @@ contract TreeFeeParamTest is Test {
         FeeSnap memory fees;
         _allocateAuxillaryArrays(fees);
 
-        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 0)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
 
         liqTree.addTLiq(range(0, 7), 100, fees, 8, 8);
 
@@ -737,9 +735,10 @@ contract TreeFeeParamTest is Test {
 
     // N.range
 
-    function testNodeRangeOfOneInFeeCalculation() public { // TODO: revert on allocation of tLiq when there is not enough mLiq
+    function testNodeRangeOfOneInFeeCalculation() public {
+        // TODO: revert on allocation of tLiq when there is not enough mLiq
         FeeSnap memory fees;
-        LiqNode storage zeroZero = liqTree.nodes[LKey.wrap(1 << 24 | 0)];
+        LiqNode storage zeroZero = liqTree.nodes[LKey.wrap((1 << 24) | 0)];
 
         liqTree.addWideRangeMLiq(1, fees); // A[] = 1
         liqTree.addMLiq(range(0, 0), 5, fees);
@@ -751,7 +750,7 @@ contract TreeFeeParamTest is Test {
 
         // totalMLiq = 5 + 1*1 = 6
         // borrows = 18
-        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 3);  // 15 * 1 / 5
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 3); // 15 * 1 / 5
         assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
         assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 3);
         assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
@@ -759,7 +758,7 @@ contract TreeFeeParamTest is Test {
 
     function testNodeRangeOfTwoInFeeCalculation() public {
         FeeSnap memory fees;
-        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap(2 << 24 | 0)];
+        LiqNode storage zeroOne = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
 
         liqTree.addWideRangeMLiq(1, fees); // A[] = 1
         liqTree.addMLiq(range(0, 1), 4, fees);
@@ -779,7 +778,7 @@ contract TreeFeeParamTest is Test {
 
     function testNodeRangeOfFourInFeeCalculation() public {
         FeeSnap memory fees;
-        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap(4 << 24 | 0)];
+        LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
 
         liqTree.addWideRangeMLiq(1, fees); // A[] = 1
         liqTree.addMLiq(range(0, 3), 24, fees);
@@ -798,7 +797,7 @@ contract TreeFeeParamTest is Test {
 
     function testNodeRangeOfEightInFeeCalculation() public {
         FeeSnap memory fees;
-        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap(8 << 24 | 0)];
+        LiqNode storage zeroSeven = liqTree.nodes[LKey.wrap((8 << 24) | 0)];
 
         liqTree.addWideRangeMLiq(1, fees); // A[] = 1
         liqTree.addMLiq(range(0, 7), 47, fees);
@@ -842,7 +841,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addMLiq(range(15, 15), 100, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
     }
@@ -857,7 +856,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addMLiq(range(15, 15), 100, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
     }
@@ -869,7 +868,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addMLiq(range(0, 0), 100, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -881,7 +880,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addWideRangeMLiq(100, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -893,7 +892,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.removeMLiq(range(15, 15), 20, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
     }
@@ -910,7 +909,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeMLiq(range(15, 15), 20, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
     }
@@ -922,7 +921,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.removeMLiq(range(0, 0), 100, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -934,7 +933,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.removeWideRangeMLiq(100, fees);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -946,7 +945,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.addTLiq(range(15, 15), 10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
     }
@@ -963,7 +962,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.addTLiq(range(15, 15), 10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
     }
@@ -975,7 +974,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.addTLiq(range(0, 0), 10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -987,7 +986,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.addWideRangeTLiq(10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -1000,7 +999,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.removeTLiq(range(15, 15), 10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 1);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 1);
     }
@@ -1018,7 +1017,7 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeTLiq(range(15, 15), 10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 8726349723049235689237);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 827369027349823649072634587236582366);
     }
@@ -1031,7 +1030,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.removeTLiq(range(0, 0), 10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }
@@ -1044,7 +1043,7 @@ contract TreeFeeParamTest is Test {
         fees.Y += 1;
         liqTree.removeWideRangeTLiq(10, fees, 1, 1);
 
-        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap(8 << 24 | 8)];
+        LiqNode storage eightFifteen = liqTree.nodes[LKey.wrap((8 << 24) | 8)];
         assertEq(eightFifteen.tokenX.feeRateSnapshot, 0);
         assertEq(eightFifteen.tokenY.feeRateSnapshot, 0);
     }

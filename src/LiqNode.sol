@@ -18,7 +18,6 @@ struct LiqNode {
     uint128 subtreeMaxT;
     // Note! Not updated by the liq functions below.
     uint128 subtreeMLiq;
-
     LiqNodeTokenData tokenX;
     LiqNodeTokenData tokenY;
 }
@@ -44,18 +43,25 @@ library LiqNodeImpl {
         self.subtreeMaxT -= liq;
     }
 
-    function borrow(LiqNode storage self, uint256 amountX, uint256 amountY) external {
+    function borrow(
+        LiqNode storage self,
+        uint256 amountX,
+        uint256 amountY
+    ) external {
         self.tokenX.borrow += amountX;
         self.tokenY.borrow += amountY;
         self.tokenX.subtreeBorrow += amountX;
         self.tokenY.subtreeBorrow += amountY;
     }
 
-    function repay(LiqNode storage self, uint256 amountX, uint256 amountY) external {
+    function repay(
+        LiqNode storage self,
+        uint256 amountX,
+        uint256 amountY
+    ) external {
         self.tokenX.borrow -= amountX;
         self.tokenY.borrow -= amountY;
         self.tokenX.subtreeBorrow -= amountX;
         self.tokenY.subtreeBorrow -= amountY;
     }
-
 }

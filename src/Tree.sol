@@ -91,17 +91,13 @@ struct FeeSnap {
 struct State {
     FeeSnap rateSnap;
     FeeSnap accumulatedFees;
-
     uint256[MAX_TREE_DEPTH] auxMLiqs;
     uint8 auxIdx;
-
     // The liquidity change our operation is introducting.
     uint128 liqDiff;
-
     // The borrow changes.
     uint256 xDiff;
     uint256 yDiff;
-
     // Used for tracking liquidity bounds in removeMLiq and addTLiq.
     uint128 mLiqTracker;
     uint128 tLiqTracker;
@@ -156,12 +152,15 @@ library LiqTreeImpl {
         LiqRange memory range,
         uint128 liq,
         FeeSnap memory rates
-    ) public returns (
-        uint256 accumulatedFeeRateX,
-        uint256 accumulatedFeeRateY,
-        uint128 minMaker,
-        uint128 maxTaker
-    ) {
+    )
+        public
+        returns (
+            uint256 accumulatedFeeRateX,
+            uint256 accumulatedFeeRateY,
+            uint128 minMaker,
+            uint128 maxTaker
+        )
+    {
         State memory state;
         state.liqDiff = liq;
         state.rateSnap = rates;
@@ -183,10 +182,7 @@ library LiqTreeImpl {
         FeeSnap memory rates,
         uint256 borrowedX,
         uint256 borrowedY
-    ) public returns (
-        uint128 minMaker,
-        uint128 maxTaker
-    ) {
+    ) public returns (uint128 minMaker, uint128 maxTaker) {
         State memory state;
         state.liqDiff = liq;
         state.rateSnap = rates;
@@ -221,8 +217,11 @@ library LiqTreeImpl {
         _traverse(self, range, removeTLiqVisit, removeTLiqPropogate, state);
     }
 
-    function addWideRangeMLiq(LiqTree storage self, uint128 liq, FeeSnap memory rates)
-        external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function addWideRangeMLiq(
+        LiqTree storage self,
+        uint128 liq,
+        FeeSnap memory rates
+    ) external returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleFee(rootNode, rates, 0);
@@ -233,13 +232,19 @@ library LiqTreeImpl {
         rootNode.subtreeMLiq += self.width * liq;
     }
 
-    function removeWideRangeMLiq(LiqTree storage self, uint128 liq, FeeSnap memory rates)
-    external returns (
-        uint256 accumulatedFeeRateX,
-        uint256 accumulatedFeeRateY,
-        uint128 minMaker,
-        uint128 maxTaker
-    ) {
+    function removeWideRangeMLiq(
+        LiqTree storage self,
+        uint128 liq,
+        FeeSnap memory rates
+    )
+        external
+        returns (
+            uint256 accumulatedFeeRateX,
+            uint256 accumulatedFeeRateY,
+            uint128 minMaker,
+            uint128 maxTaker
+        )
+    {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleFee(rootNode, rates, 0);
@@ -296,8 +301,11 @@ library LiqTreeImpl {
      ** Range Queries **
      *******************/
 
-    function queryEarnRates(LiqTree storage self, LiqRange memory range, FeeSnap memory rates)
-    public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+    function queryEarnRates(
+        LiqTree storage self,
+        LiqRange memory range,
+        FeeSnap memory rates
+    ) public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
         State memory state;
         state.rateSnap = rates;
 
@@ -308,13 +316,19 @@ library LiqTreeImpl {
     }
 
     function queryWideEarnRates(LiqTree storage self, FeeSnap memory rates)
-    public view returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY) {
+        public
+        view
+        returns (uint256 accumulatedFeeRateX, uint256 accumulatedFeeRateY)
+    {
         LiqNode storage rootNode = self.nodes[self.root];
         (accumulatedFeeRateX, accumulatedFeeRateY) = _viewSubtreeFee(rootNode, rates, 0);
     }
 
     function queryMTBounds(LiqTree storage self, LiqRange memory range)
-    public view returns (uint128 minMaker, uint128 maxTaker) {
+        public
+        view
+        returns (uint128 minMaker, uint128 maxTaker)
+    {
         State memory state;
         state.mLiqTracker = type(uint128).max;
         state.tLiqTracker = 0;
@@ -555,8 +569,8 @@ library LiqTreeImpl {
     function _traverse(
         LiqTree storage self,
         LiqRange memory range,
-        function (LKey, LiqNode storage, State memory) internal visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
+        function(LKey, LiqNode storage, State memory) internal visit,
+        function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
         State memory state
     ) internal {
         // console2.log("getKeys");
@@ -616,8 +630,8 @@ library LiqTreeImpl {
         LiqTree storage self,
         LKey current,
         LKey stopRange,
-        function (LKey, LiqNode storage, State memory) internal visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
+        function(LKey, LiqNode storage, State memory) internal visit,
+        function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
         State memory state
     ) internal returns (LKey last) {
         LiqNode storage node = self.nodes[current];
@@ -658,8 +672,8 @@ library LiqTreeImpl {
         LiqTree storage self,
         LKey current,
         LKey stopRange,
-        function (LKey, LiqNode storage, State memory) internal visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
+        function(LKey, LiqNode storage, State memory) internal visit,
+        function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
         State memory state
     ) internal returns (LKey last) {
         LiqNode storage node = self.nodes[current];
@@ -693,8 +707,8 @@ library LiqTreeImpl {
     function _traverseView(
         LiqTree storage self,
         LiqRange memory range,
-        function (LKey, LiqNode storage, State memory) internal view visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
+        function(LKey, LiqNode storage, State memory) internal view visit,
+        function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
         State memory state
     ) internal view {
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
@@ -742,8 +756,8 @@ library LiqTreeImpl {
         LiqTree storage self,
         LKey current,
         LKey stopRange,
-        function (LKey, LiqNode storage, State memory) internal view visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
+        function(LKey, LiqNode storage, State memory) internal view visit,
+        function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
         State memory state
     ) internal view returns (LKey last) {
         LiqNode storage node = self.nodes[current];
@@ -784,8 +798,8 @@ library LiqTreeImpl {
         LiqTree storage self,
         LKey current,
         LKey stopRange,
-        function (LKey, LiqNode storage, State memory) internal view visit,
-        function (LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
+        function(LKey, LiqNode storage, State memory) internal view visit,
+        function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal view propogate,
         State memory state
     ) internal view returns (LKey last) {
         LiqNode storage node = self.nodes[current];
@@ -831,15 +845,15 @@ library LiqTreeImpl {
 
         if (totalMLiq > 0) {
             // console2.log("muldiv", node.tokenX.borrow, rateDiffX, totalMLiq);
-            node.tokenX.cumulativeEarnedPerMLiq += Math.shortMulDiv(
-                node.tokenX.borrow, rateDiffX, totalMLiq) >> 64;
-            node.tokenX.subtreeCumulativeEarnedPerMLiq += Math.shortMulDiv(
-                node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >> 64;
+            node.tokenX.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq) >> 64;
+            node.tokenX.subtreeCumulativeEarnedPerMLiq +=
+                Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >>
+                64;
 
-            node.tokenY.cumulativeEarnedPerMLiq += Math.shortMulDiv(
-                node.tokenY.borrow, rateDiffY, totalMLiq) >> 64;
-            node.tokenY.subtreeCumulativeEarnedPerMLiq += Math.shortMulDiv(
-                node.tokenY.subtreeBorrow, rateDiffY, totalMLiq) >> 64;
+            node.tokenY.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenY.borrow, rateDiffY, totalMLiq) >> 64;
+            node.tokenY.subtreeCumulativeEarnedPerMLiq +=
+                Math.shortMulDiv(node.tokenY.subtreeBorrow, rateDiffY, totalMLiq) >>
+                64;
         }
     }
 
@@ -866,16 +880,17 @@ library LiqTreeImpl {
         uint256 rateDiffY = snap.Y - node.tokenY.feeRateSnapshot;
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
         if (totalMLiq > 0) {
-            subtreeEarnedX = Math.shortMulDiv(
-                node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >> 64;
-            subtreeEarnedY = Math.shortMulDiv(
-                node.tokenY.subtreeBorrow, rateDiffY, totalMLiq) >> 64;
+            subtreeEarnedX = Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >> 64;
+            subtreeEarnedY = Math.shortMulDiv(node.tokenY.subtreeBorrow, rateDiffY, totalMLiq) >> 64;
         }
     }
 
     /// Precompute the auxilliary liquidities for a starting LKey (low or high leg).
-    function computeAuxArray(LiqTree storage self, LKey start, uint256[MAX_TREE_DEPTH] memory auxMLiqs)
-    internal view {
+    function computeAuxArray(
+        LiqTree storage self,
+        LKey start,
+        uint256[MAX_TREE_DEPTH] memory auxMLiqs
+    ) internal view {
         // Fill the array with the mLiq from its parent.
         uint8 idx = 0;
         self.root.log();
@@ -889,7 +904,6 @@ library LiqTreeImpl {
         }
         // We reuse this array between the two legs so ensure the root has an aux MLiq of 0.
         auxMLiqs[idx] = 0;
-
 
         // Iterate backwards collecting the previous MLiq into the partial suffix sums.
         uint256 suffixSum = 0;
@@ -910,7 +924,16 @@ library LiqTreeImpl {
         LiqTree storage self,
         int24 rangeLow, // inclusive
         int24 rangeHigh // inclusive
-    ) public view returns (LKey low, LKey high, LKey peak, LKey stopRange) {
+    )
+        public
+        view
+        returns (
+            LKey low,
+            LKey high,
+            LKey peak,
+            LKey stopRange
+        )
+    {
         // The offset specifies the whole range the indices can span centered around 0.
         // We can make everything positive by shifting half the range.
         rangeLow += int24(self.width / 2);
@@ -918,10 +941,8 @@ library LiqTreeImpl {
 
         require(rangeLow >= 0, "NL");
 
-        if (rangeLow > rangeHigh)
-            revert RangeBoundsInverted(rangeLow, rangeHigh);
-        if (rangeHigh >= int24(self.width))
-            revert RangeHighOutOfBounds(rangeHigh, self.width);
+        if (rangeLow > rangeHigh) revert RangeBoundsInverted(rangeLow, rangeHigh);
+        if (rangeHigh >= int24(self.width)) revert RangeHighOutOfBounds(rangeHigh, self.width);
         // No one should be able to specifc the whole range. We rely on not having peak be equal to root
         // when we traverse the tree because stoprange can sometimes be one above the peak.
         if (rangeLow == 0 && (rangeHigh == int24(self.width - 1)))
@@ -937,7 +958,16 @@ library LiqTreeImpl {
         LiqTree storage self,
         uint24 rangeLow,
         uint24 rangeHigh
-    ) public view returns (LKey low, LKey high, LKey peak, LKey limitRange) {
+    )
+        public
+        view
+        returns (
+            LKey low,
+            LKey high,
+            LKey peak,
+            LKey limitRange
+        )
+    {
         LKey peakRange;
         (peak, peakRange) = LiqTreeIntLib.lowestCommonAncestor(rangeLow, rangeHigh);
         console2.log("peak");
@@ -949,8 +979,7 @@ library LiqTreeImpl {
         // There is a special case where low is 0 which means it has no left nodes on its path to root
         // and has no LSB. We make sure to test that a lowKey(0) == 0;
         // Here we need to put that 0 back in the context of the tree and make it the root node.
-        if (LKey.unwrap(low) == 0)
-            low = self.root;
+        if (LKey.unwrap(low) == 0) low = self.root;
 
         low.log();
         high.log();
@@ -1200,5 +1229,4 @@ library LKeyImpl {
         (uint24 range, uint24 base) = explode(key);
         console2.log(_msg, range, base);
     }
-
 }

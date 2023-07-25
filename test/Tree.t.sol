@@ -5,6 +5,7 @@ import { console } from "forge-std/console.sol";
 import { PRBTest } from "@prb/test/PRBTest.sol";
 import { LiqTree, LiqTreeImpl, LiqTreeIntLib } from "src/Tree.sol";
 import { LKey, LKeyImpl, LiqRange, FeeSnap } from "src/Tree.sol";
+
 // solhint-disable
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
@@ -18,8 +19,8 @@ contract LiqTreeTest is PRBTest {
         t.init(0x13); // 19 gives 80000 as the offset.
     }
 
-    function assertWideMT(uint maker, uint taker) private {
-        (uint minM, uint maxT) = t.queryWideMTBounds();
+    function assertWideMT(uint256 maker, uint256 taker) private {
+        (uint256 minM, uint256 maxT) = t.queryWideMTBounds();
         assertEq(maker, minM, "wideMaker");
         assertEq(taker, maxT, "wideTaker");
     }
@@ -55,7 +56,12 @@ contract LiqTreeTest is PRBTest {
         assertWideMT(10, 10);
     }
 
-    function assertMT(int24 low, int24 high, uint128 minM, uint128 maxT) public {
+    function assertMT(
+        int24 low,
+        int24 high,
+        uint128 minM,
+        uint128 maxT
+    ) public {
         (uint128 minMaker, uint128 maxTaker) = t.queryMTBounds(LiqRange(low, high));
 
         assertEq(minMaker, minM, "maker");
@@ -98,7 +104,7 @@ contract LiqTreeTest is PRBTest {
         t.removeMLiq(LiqRange(0, 7), 3, fees);
         // 0:17, 1-7: 7
         assertMT(0, 0, 17, 0);
-        assertMT(0,7, 7, 0);
+        assertMT(0, 7, 7, 0);
         assertMT(0, 8, 0, 0);
 
         // Multi-node tests
@@ -163,7 +169,6 @@ contract LiqTreeTest is PRBTest {
         assertMT(101, 500, 0, 0);
         assertMT(5, 100, 0, 60);
     }
-
 }
 
 contract LiqTreeIntTest is PRBTest {
@@ -181,7 +186,12 @@ contract LiqTreeIntTest is PRBTest {
         assertEq(0x04, uint24(0x65432C).lsb());
     }
 
-    function assertLCA(uint24 a, uint24 b, uint24 common, uint24 commonRange) public {
+    function assertLCA(
+        uint24 a,
+        uint24 b,
+        uint24 common,
+        uint24 commonRange
+    ) public {
         (LKey peak, LKey peakRange) = LiqTreeIntLib.lowestCommonAncestor(a, b);
         (uint24 range, uint24 base) = peak.explode();
         assertEq(base, common);
@@ -204,7 +214,7 @@ contract LiqTreeIntTest is PRBTest {
         vm.assume(low <= fauxMaxKeyBase);
         LKey l = low.lowKey();
         assertTrue(l.isRight());
-        (,uint24 base) = l.explode();
+        (, uint24 base) = l.explode();
         assertEq(base, low);
     }
 
@@ -220,7 +230,6 @@ contract LiqTreeIntTest is PRBTest {
 
     // function testRangeBounds()
     // TODO
-
 }
 
 contract LKeyTest is PRBTest {
@@ -236,8 +245,12 @@ contract LKeyTest is PRBTest {
         assertEq(range, eRange);
     }
 
-    function subtestAdjacency(LKey up, LKey left, LKey right) public {
-        (uint24 prange,) = up.explode();
+    function subtestAdjacency(
+        LKey up,
+        LKey left,
+        LKey right
+    ) public {
+        (uint24 prange, ) = up.explode();
         (, uint24 lbase) = left.explode();
         (uint24 rrange, uint24 rbase) = right.explode();
 
@@ -248,7 +261,7 @@ contract LKeyTest is PRBTest {
         if (lAdjRange == prange) {
             {
                 // The other should be at a higher level
-                (uint24 rAdjRange,) = rAdj.explode();
+                (uint24 rAdjRange, ) = rAdj.explode();
                 assertTrue(rAdjRange > prange);
                 assertTrue((rrange + rbase) == lAdjBase);
             }

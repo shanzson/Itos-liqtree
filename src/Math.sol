@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
+
 // solhint-disable
 
 library Math {
@@ -121,8 +122,7 @@ library Math {
             num = m0 * m1;
         }
 
-        if (num == 0)
-            return 0;
+        if (num == 0) return 0;
 
         unchecked {
             if (num / m0 == m1) {
