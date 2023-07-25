@@ -1789,30 +1789,6 @@ contract SmallTreeTest is Test {
         assertEq(multTwo.tokenY.subtreeBorrow, 2);
     }
 
-    // x8 (8, 9, 10, 11, 12, 13, 14, 15, 16)
-
-    function testBorrowSplitDividedByEightAndMultipliedByEight() public {}
-
-    function testBorrowSplitDividedByNineAndMultipliedByEight() public {}
-
-    function testBorrowSplitDividedByTenAndMultipliedByEight() public {}
-
-    function testBorrowSplitDividedByEightAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByNineAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByTenAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByElevenAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByTwelveAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByThirteenAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByFourteenAndMultipliedByTwo() public {}
-
-    function testBorrowSplitDividedByFifteenAndMultipliedByTwo() public {}
-
     // x4 (4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
 
     function testBorrowSplitDividedByFourAndMultipliedByFour() public {}
