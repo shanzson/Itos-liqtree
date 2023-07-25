@@ -5,7 +5,7 @@ import { console } from "forge-std/console.sol";
 import { PRBTest } from "@prb/test/PRBTest.sol";
 import { LiqTree, LiqTreeImpl, LiqTreeIntLib } from "src/Tree.sol";
 import { LKey, LKeyImpl, LiqRange, FeeSnap } from "src/Tree.sol";
-
+// solhint-disable
 
 /// @dev See the "Writing Tests" section in the Foundry Book if this is your first time with Forge.
 /// https://book.getfoundry.sh/forge/writing-tests

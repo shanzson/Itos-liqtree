@@ -6,6 +6,8 @@ import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode, FeeSnap } from "src/Tree.sol";
 
+// solhint-disable
+
 /**
  * In practice, the LiqTree will have many nodes. So many, that testing at that scale is intractable.
  * Thus the reason for this file. A smaller scale LiqTree, where we can more easily populate the values densely.
@@ -1791,15 +1793,15 @@ contract SmallTreeTest is Test {
      // x8 (8, 9, 10, 11, 12, 13, 14, 15, 16)
 
     function testBorrowSplitDividedByEightAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByNineAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByTenAndMultipliedByEight() public {
-        
+
     }
 
     function testBorrowSplitDividedByEightAndMultipliedByTwo() public {

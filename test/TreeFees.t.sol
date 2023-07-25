@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode, FeeSnap } from "src/Tree.sol";
-
+// solhint-disable
 
 /**
  * NOTE: There are 4 ways to breakdown a query, that effect how the tree will be traversed.

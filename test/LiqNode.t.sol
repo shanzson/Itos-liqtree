@@ -67,5 +67,4 @@ contract LiqNodeTest is Test {
         vm.expectRevert(stdError.arithmeticError);
         node.repay(100, 200);
     }
-
 }

@@ -5,6 +5,7 @@ import { console } from "forge-std/console.sol";
 import { Test } from "forge-std/Test.sol";
 
 import { LiqTree, LiqTreeImpl, LiqRange, LKey, LKeyImpl, LiqNode, FeeSnap } from "src/Tree.sol";
+// solhint-disable
 
 /**
  * Fees are calculated in the liquidity tree using the following formulas:
