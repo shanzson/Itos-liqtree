@@ -98,7 +98,6 @@ struct State {
     // Used for tracking liquidity bounds in removeMLiq and addTLiq.
     uint128 mLiqTracker;
     uint128 tLiqTracker;
-
     // tracker backup. The Trackers are leg specific, so we have to save those results.
     // When switching to the other side.
     uint128 mLiqBackup;
