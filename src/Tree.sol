@@ -2,8 +2,7 @@
 pragma solidity ^0.8.17;
 // solhint-disable
 
-import { console2 } from "forge-std/console2.sol";
-
+// import { console2 } from "forge-std/console2.sol";
 import { LiqNode, LiqNodeImpl } from "./LiqNode.sol";
 import { Math } from "./Math.sol";
 
@@ -52,8 +51,6 @@ import { Math } from "./Math.sol";
 /// Querying is not just using the break down.
 /// Traversals are always done so I would have prioritize cheapening those.
 /// But the change should not be insanely difficult.
-
-import { console } from "forge-std/console.sol";
 
 type LKey is uint48;
 // Even if we use 1 as the tick spacing, we still won't have over 2^21 ticks, so 22 bits.
@@ -352,12 +349,9 @@ library LiqTreeImpl {
         LiqNode storage node,
         State memory state
     ) internal {
-        // console2.log("Visiting mLiq add");
-        // key.log();
         (uint24 rangeWidth, ) = key.explode();
 
         uint256 aboveMLiq = state.auxMLiqs[state.auxIdx] * rangeWidth;
-        // console2.log("aboveMLiq", aboveMLiq, rangeWidth);
         _handleFee(node, state.rateSnap, aboveMLiq);
 
         // Update the subtreeMLiq after collecting fees.
@@ -420,7 +414,6 @@ library LiqTreeImpl {
         State memory state
     ) internal {
         (uint24 rangeWidth, ) = up.explode();
-        // up.log();
         // Move up in the aux array since we're moving up a level.
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
         _handleFee(parent, state.rateSnap, aboveMLiq);
@@ -573,33 +566,22 @@ library LiqTreeImpl {
         function(LiqNode storage, LiqNode storage, LKey, LiqNode storage, State memory) internal propogate,
         State memory state
     ) internal {
-        // console2.log("getKeys");
         (LKey low, LKey high, , LKey stopRange) = getKeys(self, range.low, range.high);
-        // console2.log("keys");
-        // low.log();
-        // high.log();
-        // stopRange.log();
 
         LKey current;
         LiqNode storage node;
 
-        // console2.log("isLow");
         if (low.isLess(stopRange)) {
-            // console2.log("computeArray");
             computeAuxArray(self, low, state.auxMLiqs);
             // Reset height index.
             state.auxIdx = 0;
-            // console2.log("traverseLeft");
             current = _traverseLeft(self, low, stopRange, visit, propogate, state);
         }
 
-        // console2.log("isHigh");
         if (high.isLess(stopRange)) {
-            // console2.log("copmute high");
             computeAuxArray(self, high, state.auxMLiqs);
             // Reset height index.
             state.auxIdx = 0;
-            // console2.log("traverse right");
             current = _traverseRight(self, high, stopRange, visit, propogate, state);
         }
         // We could return the node to save this lookup hash, but the compiler doesn't know
@@ -610,7 +592,6 @@ library LiqTreeImpl {
         // Both legs are handled. Touch up everything above where we left off.
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
-        // console2.log("peak");
         // Peak propogate.
         LKey up;
         LiqNode storage sib;
@@ -841,10 +822,8 @@ library LiqTreeImpl {
         node.tokenY.feeRateSnapshot = fees.Y;
 
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
-        // console2.log("totalMLiq", totalMLiq, node.subtreeMLiq, aboveMLiq);
 
         if (totalMLiq > 0) {
-            // console2.log("muldiv", node.tokenX.borrow, rateDiffX, totalMLiq);
             node.tokenX.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq) >> 64;
             node.tokenX.subtreeCumulativeEarnedPerMLiq +=
                 Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >>
@@ -893,12 +872,9 @@ library LiqTreeImpl {
     ) internal view {
         // Fill the array with the mLiq from its parent.
         uint8 idx = 0;
-        self.root.log();
-        start.log();
         (uint24 range, uint24 base) = start.explode();
         while (!start.isEq(self.root)) {
             (start, ) = start.genericUp();
-            start.log();
             (range, base) = start.explode();
             auxMLiqs[idx++] = self.nodes[start].mLiq;
         }
@@ -910,7 +886,6 @@ library LiqTreeImpl {
         while (idx > 0) {
             suffixSum += auxMLiqs[--idx];
             auxMLiqs[idx] = suffixSum;
-            console2.log("Aux", idx, suffixSum);
         }
     }
 
@@ -970,9 +945,6 @@ library LiqTreeImpl {
     {
         LKey peakRange;
         (peak, peakRange) = LiqTreeIntLib.lowestCommonAncestor(rangeLow, rangeHigh);
-        console2.log("peak");
-        peak.log();
-        peakRange.log();
 
         low = LiqTreeIntLib.lowKey(rangeLow);
         high = LiqTreeIntLib.highKey(rangeHigh);
@@ -980,9 +952,6 @@ library LiqTreeImpl {
         // and has no LSB. We make sure to test that a lowKey(0) == 0;
         // Here we need to put that 0 back in the context of the tree and make it the root node.
         if (LKey.unwrap(low) == 0) low = self.root;
-
-        low.log();
-        high.log();
 
         bool lowBelow = low.isLess(peakRange);
         bool highBelow = high.isLess(peakRange);
@@ -1220,13 +1189,13 @@ library LKeyImpl {
         }
     }
 
-    function log(LKey key) internal view {
-        (uint24 range, uint24 base) = explode(key);
-        console2.log("key", range, base);
-    }
+    // function log(LKey key) internal view {
+    //     (uint24 range, uint24 base) = explode(key);
+    //     console2.log("key", range, base);
+    // }
 
-    function log(LKey key, string memory _msg) internal view {
-        (uint24 range, uint24 base) = explode(key);
-        console2.log(_msg, range, base);
-    }
+    // function log(LKey key, string memory _msg) internal view {
+    //     (uint24 range, uint24 base) = explode(key);
+    //     console2.log(_msg, range, base);
+    // }
 }
