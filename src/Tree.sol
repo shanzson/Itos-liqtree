@@ -738,9 +738,13 @@ library LiqTreeImpl {
         node = self.nodes[current];
 
         // Both legs are handled. Touch up everything above where we left off.
+        // For visits using liquidity tracking, at this point they'll need to merge their results.
+        // We do it for them to avoid using more stack pointers.
+        state.mLiqTracker = min(state.mLiqTracker, state.mLiqBackup);
+        state.tLiqTracker = max(state.tLiqTracker, state.tLiqBackup);
+
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
-
         // Peak propogate.
         LKey up;
         LiqNode storage sib;
