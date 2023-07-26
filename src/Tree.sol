@@ -99,6 +99,11 @@ struct State {
     uint128 mLiqTracker;
     uint128 tLiqTracker;
 
+    // tracker backup. The Trackers are leg specific, so we have to save those results.
+    // When switching to the other side.
+    uint128 mLiqBackup;
+    uint128 tLiqBackup;
+
     // We waste a little space because xDiff and accumulatedFees are never used
     // together but IMO it's fine.
 }
@@ -162,7 +167,9 @@ library LiqTreeImpl {
         state.liqDiff = liq;
         state.rateSnap = rates;
         state.mLiqTracker = type(uint128).max;
+        state.mLiqBackup = type(uint128).max;
         state.tLiqTracker = 0;
+        state.tLiqBackup = 0;
 
         _traverse(self, range, removeMLiqVisit, removeMLiqPropogate, state);
 
@@ -184,7 +191,9 @@ library LiqTreeImpl {
         state.liqDiff = liq;
         state.rateSnap = rates;
         state.mLiqTracker = type(uint128).max;
+        state.mLiqBackup = type(uint128).max;
         state.tLiqTracker = 0;
+        state.tLiqBackup = 0;
         // TODO: Test replacing this with the actual per node borrow calculation.
         uint256 width = uint24(range.high - range.low + 1);
         state.xDiff = borrowedX / width;
@@ -328,7 +337,9 @@ library LiqTreeImpl {
     {
         State memory state;
         state.mLiqTracker = type(uint128).max;
+        state.mLiqBackup = type(uint128).max;
         state.tLiqTracker = 0;
+        state.tLiqBackup = 0;
         _traverseView(self, range, queryMTVisit, queryMTPropogate, state);
         minMaker = state.mLiqTracker;
         maxTaker = state.tLiqTracker;
@@ -579,6 +590,10 @@ library LiqTreeImpl {
         }
 
         if (high.isLess(stopRange)) {
+            // Now we're on the other leg so we swap the liq trackers.
+            (state.mLiqTracker, state.mLiqBackup) = (state.mLiqBackup, state.mLiqTracker);
+            (state.tLiqTracker, state.tLiqBackup) = (state.tLiqBackup, state.tLiqTracker);
+
             computeAuxArray(self, high, state.auxMLiqs);
             // Reset height index.
             state.auxIdx = 0;
@@ -590,6 +605,11 @@ library LiqTreeImpl {
         node = self.nodes[current];
 
         // Both legs are handled. Touch up everything above where we left off.
+        // For visits using liquidity tracking, at this point they'll need to merge their results.
+        // We do it for them to avoid using more stack pointers.
+        state.mLiqTracker = min(state.mLiqTracker, state.mLiqBackup);
+        state.tLiqTracker = max(state.tLiqTracker, state.tLiqBackup);
+
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
         // Peak propogate.
@@ -704,6 +724,10 @@ library LiqTreeImpl {
             current = _traverseLeftView(self, low, stopRange, visit, propogate, state);
         }
         if (high.isLess(stopRange)) {
+            // Now we're on the other leg so we swap the liq trackers.
+            (state.mLiqTracker, state.mLiqBackup) = (state.mLiqBackup, state.mLiqTracker);
+            (state.tLiqTracker, state.tLiqBackup) = (state.tLiqBackup, state.tLiqTracker);
+
             computeAuxArray(self, low, state.auxMLiqs);
             // Reset height index.
             state.auxIdx = 0;
