@@ -165,6 +165,52 @@ contract LiqTreeTest is PRBTest {
         assertGap(101, 500, 0);
         assertGap(5, 100, -60);
     }
+
+    // Test that the tree correctly reports the smallest gap anywhere.
+    function testGaps() public {
+        // We have 4 sections.
+        // 1. One high mLiq area.
+        // 2. One medium mLiq area.
+        // 3. One low mLiq area.
+        // 4. The ambient liquidity everywhere.
+        FeeSnap memory fees;
+        // 4.
+        t.addWideRangeMLiq(100 gwei, fees);
+        // 1.
+        t.addMLiq(LiqRange(-100, -5), 10 ether, fees);
+        assertWideGap(100 gwei);
+        assertGap(-500, 0, 100 gwei);
+        // 2.
+        t.addMLiq(LiqRange(100, 500), 1 ether, fees);
+        assertWideGap(100 gwei);
+        // 3.
+        t.addMLiq(LiqRange(1000, 5000), 10 gwei, fees);
+
+        // We add tLiq to each section to make the gaps smaller
+        // 1.
+        t.addTLiq(LiqRange(-50, -50), 10 ether + 10 gwei, fees, 0, 0);
+        assertWideGap(90 gwei);
+        assertGap(-500, -51, 100 gwei);
+        assertGap(-500, -50, 90 gwei);
+        // 2.
+        t.addTLiq(LiqRange(150, 200), 1 ether + 20 gwei, fees, 0, 0);
+        assertWideGap(80 gwei);
+        assertGap(0, 100, 100 gwei);
+        assertGap(0, 150, 80 gwei);
+        // 3.
+        t.addTLiq(LiqRange(1500, 2000), 40 gwei, fees, 0, 0);
+        assertWideGap(70 gwei);
+        assertGap(0, 1000, 80 gwei);
+        assertGap(1600, 6000, 70 gwei);
+        // 1.
+        t.addTLiq(LiqRange(-51, -45), 30 gwei, fees, 0, 0);
+        assertWideGap(60 gwei);
+        assertGap(-5000, -5, 60 gwei);
+        // 4.
+        t.addTLiq(LiqRange(-500, -400), 50 gwei, fees, 0, 0);
+        assertWideGap(50 gwei);
+        assertGap(-5000, -5, 50 gwei);
+    }
 }
 
 contract LiqTreeIntTest is PRBTest {
