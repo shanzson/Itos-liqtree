@@ -14,33 +14,17 @@ struct LiqNodeTokenData {
 struct LiqNode {
     uint128 mLiq;
     uint128 tLiq;
-    uint128 subtreeMinM;
-    uint128 subtreeMaxT;
-    // Note! Not updated by the liq functions below.
+
     uint128 subtreeMLiq;
+    int256 subtreeMinGap;
+
     LiqNodeTokenData tokenX;
     LiqNodeTokenData tokenY;
 }
 
 library LiqNodeImpl {
-    function addMLiq(LiqNode storage self, uint128 liq) external {
-        self.mLiq += liq;
-        self.subtreeMinM += liq;
-    }
-
-    function removeMLiq(LiqNode storage self, uint128 liq) external {
-        self.mLiq -= liq;
-        self.subtreeMinM -= liq;
-    }
-
-    function addTLiq(LiqNode storage self, uint128 liq) external {
-        self.tLiq += liq;
-        self.subtreeMaxT += liq;
-    }
-
-    function removeTLiq(LiqNode storage self, uint128 liq) external {
-        self.tLiq -= liq;
-        self.subtreeMaxT -= liq;
+    function gap(LiqNode storage self) internal view returns (int256) {
+        return int256(uint256(self.mLiq)) - int256(uint256(self.tLiq));
     }
 
     function borrow(

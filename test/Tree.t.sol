@@ -19,53 +19,49 @@ contract LiqTreeTest is PRBTest {
         t.init(0x13); // 19 gives 80000 as the offset.
     }
 
-    function assertWideMT(uint256 maker, uint256 taker) private {
-        (uint256 minM, uint256 maxT) = t.queryWideMTBounds();
-        assertEq(maker, minM, "wideMaker");
-        assertEq(taker, maxT, "wideTaker");
+    function assertWideGap(int256 gap) private {
+        int256 actualGap = t.queryWideLiqGap();
+        assertEq(actualGap, gap);
     }
 
     function testWide() public {
         FeeSnap memory fees;
 
-        assertWideMT(0, 0);
+        assertWideGap(0);
         t.addWideRangeMLiq(10, fees);
-        assertWideMT(10, 0);
+        assertWideGap(10);
         t.addWideRangeMLiq(10, fees);
-        assertWideMT(20, 0);
+        assertWideGap(20);
 
         t.addWideRangeTLiq(10, fees, 0, 0);
-        assertWideMT(20, 10);
+        assertWideGap(10);
 
         // Going over won't happen in practice but we should still test.
         t.addWideRangeTLiq(20, fees, 0, 0);
-        assertWideMT(20, 30);
+        assertWideGap(-10);
 
         t.removeWideRangeMLiq(10, fees);
-        assertWideMT(10, 30);
+        assertWideGap(-20);
 
         t.removeWideRangeTLiq(30, fees, 0, 0);
-        assertWideMT(10, 0);
+        assertWideGap(10);
 
-        // And adding mliq anywhere else won't change the wide mliq.
+        // And adding mliq anywhere else won't change the wide min gap.
         t.addMLiq(LiqRange(100, 200), 10, fees);
-        assertWideMT(10, 0);
+        assertWideGap(10);
 
-        // Adding tliq anywhere though, will raise the max wide tliq.
+        // Adding tliq though, will lower the min gap.
         t.addTLiq(LiqRange(300, 400), 10, fees, 0, 0);
-        assertWideMT(10, 10);
+        assertWideGap(0);
     }
 
-    function assertMT(
+    function assertGap(
         int24 low,
         int24 high,
-        uint128 minM,
-        uint128 maxT
+        int256 gap
     ) public {
-        (uint128 minMaker, uint128 maxTaker) = t.queryMTBounds(LiqRange(low, high));
-
-        assertEq(minMaker, minM, "maker");
-        assertEq(maxTaker, maxT, "taker");
+        int256 actualGap = t.queryLiqGap(LiqRange(low, high));
+        assertEq(actualGap, gap);
     }
 
     function testMLiq() public {
@@ -73,63 +69,63 @@ contract LiqTreeTest is PRBTest {
 
         // Single-node tests
         t.addMLiq(LiqRange(0, 0), 10, fees);
-        assertMT(0, 0, 10, 0);
-        assertWideMT(0, 0);
-        assertMT(0, 1, 0, 0);
-        assertMT(0, 100, 0, 0);
+        assertGap(0, 0, 10);
+        assertWideGap(0);
+        assertGap(0, 1, 0);
+        assertGap(0, 100, 0);
 
         t.addMLiq(LiqRange(0, 1), 10, fees);
         // Now we have 0:20, 1:10
-        assertMT(0, 0, 20, 0);
-        assertMT(1, 1, 10, 0);
-        assertMT(0, 1, 10, 0);
-        assertMT(0, 100, 0, 0);
-        assertMT(1, 2, 0, 0);
-        assertWideMT(0, 0);
+        assertGap(0, 0, 20);
+        assertGap(1, 1, 10);
+        assertGap(0, 1, 10);
+        assertGap(0, 100, 0);
+        assertGap(1, 2, 0);
+        assertWideGap(0);
 
         t.addMLiq(LiqRange(0, 7), 10, fees);
         // 0:30, 1: 20, 2-7: 10
-        assertMT(0, 0, 30, 0);
-        assertMT(1, 1, 20, 0);
-        assertMT(1, 2, 10, 0);
-        assertMT(3, 5, 10, 0);
-        assertMT(20, 30, 0, 0);
+        assertGap(0, 0, 30);
+        assertGap(1, 1, 20);
+        assertGap(1, 2, 10);
+        assertGap(3, 5, 10);
+        assertGap(20, 30, 0);
 
         t.removeMLiq(LiqRange(0, 1), 10, fees);
         // 0:20, 1-7: 10
-        assertMT(0, 0, 20, 0);
-        assertMT(1, 3, 10, 0);
-        assertMT(0, 7, 10, 0);
+        assertGap(0, 0, 20);
+        assertGap(1, 3, 10);
+        assertGap(0, 7, 10);
 
         t.removeMLiq(LiqRange(0, 7), 3, fees);
         // 0:17, 1-7: 7
-        assertMT(0, 0, 17, 0);
-        assertMT(0, 7, 7, 0);
-        assertMT(0, 8, 0, 0);
+        assertGap(0, 0, 17);
+        assertGap(0, 7, 7);
+        assertGap(0, 8, 0);
 
         // Multi-node tests
         t.addMLiq(LiqRange(500, 800), 100, fees);
-        assertWideMT(0, 0);
-        assertMT(500, 800, 100, 0);
-        assertMT(600, 700, 100, 0);
-        assertMT(400, 900, 0, 0);
+        assertWideGap(0);
+        assertGap(500, 800, 100);
+        assertGap(600, 700, 100);
+        assertGap(400, 900, 0);
 
         t.addMLiq(LiqRange(0, 500), 200, fees);
-        assertMT(0, 800, 100, 0);
-        assertMT(400, 700, 100, 0);
+        assertGap(0, 800, 100);
+        assertGap(400, 700, 100);
 
         t.addMLiq(LiqRange(400, 600), 300, fees);
-        assertMT(0, 800, 100, 0);
-        assertMT(400, 600, 400, 0);
-        assertMT(400, 500, 500, 0);
-        assertMT(500, 600, 400, 0);
+        assertGap(0, 800, 100);
+        assertGap(400, 600, 400);
+        assertGap(400, 500, 500);
+        assertGap(500, 600, 400);
 
         // Undo the last one
         t.removeMLiq(LiqRange(400, 600), 300, fees);
-        assertMT(0, 800, 100, 0);
-        assertMT(400, 600, 100, 0);
-        assertMT(400, 500, 200, 0);
-        assertMT(500, 600, 100, 0);
+        assertGap(0, 800, 100);
+        assertGap(400, 600, 100);
+        assertGap(400, 500, 200);
+        assertGap(500, 600, 100);
     }
 
     function testAddMLiqGas(int24 low, uint8 _highOff) public {
@@ -145,29 +141,29 @@ contract LiqTreeTest is PRBTest {
     function testTLiq() public {
         FeeSnap memory fees;
         t.addTLiq(LiqRange(6, 6), 10, fees, 0, 0);
-        assertMT(6, 6, 0, 10);
-        assertWideMT(0, 10);
-        assertMT(6, 7, 0, 10);
-        assertMT(0, 100, 0, 10);
-        assertMT(7, 10, 0, 0);
+        assertGap(6, 6, -10);
+        assertWideGap(-10);
+        assertGap(6, 7, -10);
+        assertGap(0, 100, -10);
+        assertGap(7, 10, 0);
 
         // Test consecutive nodes
         t.addTLiq(LiqRange(7, 7), 5, fees, 0, 0);
-        assertMT(6, 7, 0, 10);
-        assertMT(7, 7, 0, 5);
-        assertMT(6, 6, 0, 10);
-        assertMT(0, 100, 0, 10);
-        assertMT(50, 100, 0, 0);
-        assertWideMT(0, 10);
+        assertGap(6, 7, -10);
+        assertGap(7, 7, -5);
+        assertGap(6, 6, -10);
+        assertGap(0, 100, -10);
+        assertGap(50, 100, 0);
+        assertWideGap(-10);
 
         // Test larger ranges
         t.addTLiq(LiqRange(5, 100), 50, fees, 0, 0);
-        assertWideMT(0, 60);
-        assertMT(0, 4, 0, 0);
-        assertMT(0, 5, 0, 50);
-        assertMT(100, 500, 0, 50);
-        assertMT(101, 500, 0, 0);
-        assertMT(5, 100, 0, 60);
+        assertWideGap(-60);
+        assertGap(0, 4, 0);
+        assertGap(0, 5, -50);
+        assertGap(100, 500, -50);
+        assertGap(101, 500, 0);
+        assertGap(5, 100, -60);
     }
 }
 
