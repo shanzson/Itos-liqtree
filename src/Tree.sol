@@ -327,11 +327,7 @@ library LiqTreeImpl {
         (accumulatedFeeRateX, accumulatedFeeRateY) = _viewSubtreeFee(rootNode, rates, 0);
     }
 
-    function queryLiqGap(LiqTree storage self, LiqRange memory range)
-        public
-        view
-        returns (int256 liqGap)
-    {
+    function queryLiqGap(LiqTree storage self, LiqRange memory range) public view returns (int256 liqGap) {
         State memory state;
         state.gapTracker = type(int256).max;
         state.gapBackup = type(int256).max;
@@ -382,7 +378,6 @@ library LiqTreeImpl {
 
         parent.subtreeMLiq = a.subtreeMLiq + b.subtreeMLiq + parent.mLiq * rangeWidth;
         parent.subtreeMinGap = min(a.subtreeMinGap, b.subtreeMinGap) + parent.gap();
-
 
         state.accumulatedFees.X += parent.tokenX.cumulativeEarnedPerMLiq;
         state.accumulatedFees.Y += parent.tokenY.cumulativeEarnedPerMLiq;

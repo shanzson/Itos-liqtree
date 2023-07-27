@@ -14,10 +14,10 @@ struct LiqNodeTokenData {
 struct LiqNode {
     uint128 mLiq;
     uint128 tLiq;
-
+    // Subtree values that need to always be updated.
     uint128 subtreeMLiq;
     int256 subtreeMinGap;
-
+    // Taker specific borrow values
     LiqNodeTokenData tokenX;
     LiqNodeTokenData tokenY;
 }
