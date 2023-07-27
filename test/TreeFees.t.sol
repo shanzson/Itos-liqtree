@@ -57,7 +57,7 @@ contract TreeFeesTest is Test {
         liqTree.addTLiq(range(3, 3), 30, fees, 44e18, 101e18);
         fees.X += 23947923;
         fees.Y += 13542645834;
-        (accumulatedFeeRateX, accumulatedFeeRateY, , ) = liqTree.removeMLiq(range(3, 3), 20, fees);
+        (accumulatedFeeRateX, accumulatedFeeRateY, ) = liqTree.removeMLiq(range(3, 3), 20, fees);
 
         // totalMLiq = 130*1 + 400*1 = 530
         // x:  44e18 * 23947923 / (130*1 + 400*1) / 2**64 = 107776.713

@@ -10,42 +10,6 @@ contract LiqNodeTest is Test {
 
     LiqNode public node;
 
-    function testAddMLiq() public {
-        node.addMLiq(483);
-        assertEq(node.mLiq, 483);
-        assertEq(node.subtreeMinM, 483);
-    }
-
-    function testRemoveMLiq() public {
-        node.addMLiq(483);
-        node.removeMLiq(480);
-        assertEq(node.mLiq, 3);
-        assertEq(node.subtreeMinM, 3);
-    }
-
-    function testRevertRemoveMLiqExceedingMLiqAdded() public {
-        vm.expectRevert(stdError.arithmeticError);
-        node.removeMLiq(100);
-    }
-
-    function testAddTLiq() public {
-        node.addTLiq(928);
-        assertEq(node.tLiq, 928);
-        assertEq(node.subtreeMaxT, 928);
-    }
-
-    function testRemoveTLiq() public {
-        node.addTLiq(928);
-        node.removeTLiq(1);
-        assertEq(node.tLiq, 927);
-        assertEq(node.subtreeMaxT, 927);
-    }
-
-    function testRevertRemoveTLiqExceedingTLiqAdded() public {
-        vm.expectRevert(stdError.arithmeticError);
-        node.removeTLiq(100);
-    }
-
     function testBorrow() public {
         node.borrow(220, 550);
         assertEq(node.tokenX.borrow, 220);
@@ -66,5 +30,13 @@ contract LiqNodeTest is Test {
     function testRevertRepayingMoreThanborrow() public {
         vm.expectRevert(stdError.arithmeticError);
         node.repay(100, 200);
+    }
+
+    function testGap() public {
+        node.mLiq = 100;
+        node.tLiq = 50;
+        assertEq(node.gap(), 50);
+        node.tLiq = 150;
+        assertEq(node.gap(), -50);
     }
 }

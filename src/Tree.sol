@@ -96,12 +96,10 @@ struct State {
     uint256 xDiff;
     uint256 yDiff;
     // Used for tracking liquidity bounds in removeMLiq and addTLiq.
-    uint128 mLiqTracker;
-    uint128 tLiqTracker;
+    int256 gapTracker;
     // tracker backup. The Trackers are leg specific, so we have to save those results.
     // When switching to the other side.
-    uint128 mLiqBackup;
-    uint128 tLiqBackup;
+    int256 gapBackup;
 
     // We waste a little space because xDiff and accumulatedFees are never used
     // together but IMO it's fine.
@@ -158,24 +156,22 @@ library LiqTreeImpl {
         returns (
             uint256 accumulatedFeeRateX,
             uint256 accumulatedFeeRateY,
-            uint128 minMaker,
-            uint128 maxTaker
+            int256 liqGap
         )
     {
         State memory state;
         state.liqDiff = liq;
         state.rateSnap = rates;
-        state.mLiqTracker = type(uint128).max;
-        state.mLiqBackup = type(uint128).max;
-        state.tLiqTracker = 0;
-        state.tLiqBackup = 0;
+
+        state.gapTracker = type(int256).max;
+        state.gapBackup = type(int256).max;
 
         _traverse(self, range, removeMLiqVisit, removeMLiqPropogate, state);
 
         accumulatedFeeRateX = state.accumulatedFees.X;
         accumulatedFeeRateY = state.accumulatedFees.Y;
-        minMaker = state.mLiqTracker;
-        maxTaker = state.tLiqTracker;
+
+        liqGap = state.gapTracker;
     }
 
     function addTLiq(
@@ -185,22 +181,22 @@ library LiqTreeImpl {
         FeeSnap memory rates,
         uint256 borrowedX,
         uint256 borrowedY
-    ) public returns (uint128 minMaker, uint128 maxTaker) {
+    ) public returns (int256 liqGap) {
         State memory state;
         state.liqDiff = liq;
         state.rateSnap = rates;
-        state.mLiqTracker = type(uint128).max;
-        state.mLiqBackup = type(uint128).max;
-        state.tLiqTracker = 0;
-        state.tLiqBackup = 0;
+
+        state.gapTracker = type(int256).max;
+        state.gapBackup = type(int256).max;
+
         // TODO: Test replacing this with the actual per node borrow calculation.
         uint256 width = uint24(range.high - range.low + 1);
         state.xDiff = borrowedX / width;
         state.yDiff = borrowedY / width;
 
         _traverse(self, range, addTLiqVisit, addTLiqPropogate, state);
-        minMaker = state.mLiqTracker;
-        maxTaker = state.tLiqTracker;
+
+        liqGap = state.gapTracker;
     }
 
     function removeTLiq(
@@ -233,8 +229,9 @@ library LiqTreeImpl {
         accumulatedFeeRateX = rootNode.tokenX.subtreeCumulativeEarnedPerMLiq;
         accumulatedFeeRateY = rootNode.tokenY.subtreeCumulativeEarnedPerMLiq;
 
-        rootNode.addMLiq(liq);
+        rootNode.mLiq += liq;
         rootNode.subtreeMLiq += self.width * liq;
+        rootNode.subtreeMinGap += int256(uint256(liq));
     }
 
     function removeWideRangeMLiq(
@@ -246,8 +243,7 @@ library LiqTreeImpl {
         returns (
             uint256 accumulatedFeeRateX,
             uint256 accumulatedFeeRateY,
-            uint128 minMaker,
-            uint128 maxTaker
+            int256 liqGap
         )
     {
         LiqNode storage rootNode = self.nodes[self.root];
@@ -256,11 +252,11 @@ library LiqTreeImpl {
         accumulatedFeeRateX = rootNode.tokenX.subtreeCumulativeEarnedPerMLiq;
         accumulatedFeeRateY = rootNode.tokenY.subtreeCumulativeEarnedPerMLiq;
 
-        rootNode.removeMLiq(liq);
+        rootNode.mLiq -= liq;
         rootNode.subtreeMLiq -= self.width * liq;
 
-        minMaker = rootNode.subtreeMinM;
-        maxTaker = rootNode.subtreeMaxT;
+        liqGap = rootNode.subtreeMinGap - int256(uint256(liq));
+        rootNode.subtreeMinGap = liqGap;
     }
 
     function addWideRangeTLiq(
@@ -269,19 +265,19 @@ library LiqTreeImpl {
         FeeSnap memory rates,
         uint256 amountX,
         uint256 amountY
-    ) external returns (uint128 minMaker, uint128 maxTaker) {
+    ) external returns (int256 liqGap) {
         LiqNode storage rootNode = self.nodes[self.root];
 
         _handleFee(rootNode, rates, 0);
 
-        rootNode.addTLiq(liq);
+        rootNode.tLiq += liq;
         rootNode.tokenX.borrow += amountX;
         rootNode.tokenX.subtreeBorrow += amountX;
         rootNode.tokenY.borrow += amountY;
         rootNode.tokenY.subtreeBorrow += amountY;
 
-        minMaker = rootNode.subtreeMinM;
-        maxTaker = rootNode.subtreeMaxT;
+        liqGap = rootNode.subtreeMinGap - int256(uint256(liq));
+        rootNode.subtreeMinGap = liqGap;
     }
 
     function removeWideRangeTLiq(
@@ -295,11 +291,13 @@ library LiqTreeImpl {
 
         _handleFee(rootNode, rates, 0);
 
-        rootNode.removeTLiq(liq);
+        rootNode.tLiq -= liq;
         rootNode.tokenX.borrow -= amountX;
         rootNode.tokenX.subtreeBorrow -= amountX;
         rootNode.tokenY.borrow -= amountY;
         rootNode.tokenY.subtreeBorrow -= amountY;
+
+        rootNode.subtreeMinGap += int256(uint256(liq));
     }
 
     /*******************
@@ -329,25 +327,17 @@ library LiqTreeImpl {
         (accumulatedFeeRateX, accumulatedFeeRateY) = _viewSubtreeFee(rootNode, rates, 0);
     }
 
-    function queryMTBounds(LiqTree storage self, LiqRange memory range)
-        public
-        view
-        returns (uint128 minMaker, uint128 maxTaker)
-    {
+    function queryLiqGap(LiqTree storage self, LiqRange memory range) public view returns (int256 liqGap) {
         State memory state;
-        state.mLiqTracker = type(uint128).max;
-        state.mLiqBackup = type(uint128).max;
-        state.tLiqTracker = 0;
-        state.tLiqBackup = 0;
-        _traverseView(self, range, queryMTVisit, queryMTPropogate, state);
-        minMaker = state.mLiqTracker;
-        maxTaker = state.tLiqTracker;
+        state.gapTracker = type(int256).max;
+        state.gapBackup = type(int256).max;
+        _traverseView(self, range, queryLiqGapVisit, queryLiqGapPropogate, state);
+        liqGap = state.gapTracker;
     }
 
-    function queryWideMTBounds(LiqTree storage self) public view returns (uint128 minMaker, uint128 maxTaker) {
+    function queryWideLiqGap(LiqTree storage self) public view returns (int256 liqGap) {
         LiqNode storage rootNode = self.nodes[self.root];
-        minMaker = rootNode.subtreeMinM;
-        maxTaker = rootNode.subtreeMaxT;
+        liqGap = rootNode.subtreeMinGap;
     }
 
     /*********************************
@@ -365,8 +355,9 @@ library LiqTreeImpl {
         _handleFee(node, state.rateSnap, aboveMLiq);
 
         // Update the subtreeMLiq after collecting fees.
-        node.addMLiq(state.liqDiff);
+        node.mLiq += state.liqDiff;
         node.subtreeMLiq += state.liqDiff * rangeWidth;
+        node.subtreeMinGap += int256(uint256(state.liqDiff));
 
         state.accumulatedFees.X += node.tokenX.subtreeCumulativeEarnedPerMLiq;
         state.accumulatedFees.Y += node.tokenY.subtreeCumulativeEarnedPerMLiq;
@@ -385,8 +376,8 @@ library LiqTreeImpl {
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
         _handleFee(parent, state.rateSnap, aboveMLiq);
 
-        parent.subtreeMinM = min(a.subtreeMinM, b.subtreeMinM) + parent.mLiq;
         parent.subtreeMLiq = a.subtreeMLiq + b.subtreeMLiq + parent.mLiq * rangeWidth;
+        parent.subtreeMinGap = min(a.subtreeMinGap, b.subtreeMinGap) + parent.gap();
 
         state.accumulatedFees.X += parent.tokenX.cumulativeEarnedPerMLiq;
         state.accumulatedFees.Y += parent.tokenY.cumulativeEarnedPerMLiq;
@@ -403,14 +394,12 @@ library LiqTreeImpl {
         _handleFee(node, state.rateSnap, aboveMLiq);
 
         // Update the subtreeMLiq after fees have been collected
-        node.removeMLiq(state.liqDiff);
+        node.mLiq -= state.liqDiff;
         node.subtreeMLiq -= state.liqDiff * rangeWidth;
+        node.subtreeMinGap -= int256(uint256(state.liqDiff));
 
-        // Track the new liq values.
-        state.mLiqTracker = min(state.mLiqTracker, node.subtreeMinM);
-        // Technically, the tLiq doesn't change so we could store it somewhere but where???
-        // So we recompute it.
-        state.tLiqTracker = max(state.tLiqTracker, node.subtreeMaxT);
+        // Track gap
+        state.gapTracker = min(state.gapTracker, node.subtreeMinGap);
 
         state.accumulatedFees.X += node.tokenX.subtreeCumulativeEarnedPerMLiq;
         state.accumulatedFees.Y += node.tokenY.subtreeCumulativeEarnedPerMLiq;
@@ -428,11 +417,10 @@ library LiqTreeImpl {
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
         _handleFee(parent, state.rateSnap, aboveMLiq);
 
-        parent.subtreeMinM = min(a.subtreeMinM, b.subtreeMinM) + parent.mLiq;
         parent.subtreeMLiq = a.subtreeMLiq + b.subtreeMLiq + parent.mLiq * rangeWidth;
+        parent.subtreeMinGap = min(a.subtreeMinGap, b.subtreeMinGap) + parent.gap();
 
-        state.mLiqTracker += parent.mLiq;
-        state.tLiqTracker += parent.tLiq;
+        state.gapTracker += parent.gap();
 
         state.accumulatedFees.X += parent.tokenX.cumulativeEarnedPerMLiq;
         state.accumulatedFees.Y += parent.tokenY.cumulativeEarnedPerMLiq;
@@ -449,14 +437,15 @@ library LiqTreeImpl {
         uint256 aboveMLiq = state.auxMLiqs[state.auxIdx] * rangeWidth;
         _handleFee(node, state.rateSnap, aboveMLiq);
 
-        node.addTLiq(state.liqDiff);
+        node.tLiq += state.liqDiff;
         node.tokenX.borrow += state.xDiff * rangeWidth;
         node.tokenX.subtreeBorrow += state.xDiff * rangeWidth;
         node.tokenY.borrow += state.yDiff * rangeWidth;
         node.tokenY.subtreeBorrow += state.yDiff * rangeWidth;
 
-        state.mLiqTracker = min(state.mLiqTracker, node.subtreeMinM);
-        state.tLiqTracker = max(state.tLiqTracker, node.subtreeMaxT);
+        int256 gap = node.subtreeMinGap - int256(uint256(state.liqDiff));
+        state.gapTracker = min(state.gapTracker, gap);
+        node.subtreeMinGap = gap;
     }
 
     function addTLiqPropogate(
@@ -472,12 +461,11 @@ library LiqTreeImpl {
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
         _handleFee(parent, state.rateSnap, aboveMLiq);
 
-        state.mLiqTracker += parent.mLiq;
-        state.tLiqTracker += parent.tLiq;
+        state.gapTracker += parent.gap();
 
-        parent.subtreeMaxT = max(a.subtreeMaxT, b.subtreeMaxT) + parent.tLiq;
         parent.tokenX.subtreeBorrow = a.tokenX.subtreeBorrow + b.tokenX.subtreeBorrow + parent.tokenX.borrow;
         parent.tokenY.subtreeBorrow = a.tokenY.subtreeBorrow + b.tokenY.subtreeBorrow + parent.tokenY.borrow;
+        parent.subtreeMinGap = min(a.subtreeMinGap, b.subtreeMinGap) + parent.gap();
     }
 
     function removeTLiqVisit(
@@ -491,11 +479,12 @@ library LiqTreeImpl {
         uint256 aboveMLiq = state.auxMLiqs[state.auxIdx] * rangeWidth;
         _handleFee(node, state.rateSnap, aboveMLiq);
 
-        node.removeTLiq(state.liqDiff);
+        node.tLiq -= state.liqDiff;
         node.tokenX.borrow -= state.xDiff * rangeWidth;
         node.tokenX.subtreeBorrow -= state.xDiff * rangeWidth;
         node.tokenY.borrow -= state.yDiff * rangeWidth;
         node.tokenY.subtreeBorrow -= state.yDiff * rangeWidth;
+        node.subtreeMinGap += int256(uint256(state.liqDiff));
     }
 
     function removeTLiqPropogate(
@@ -511,7 +500,7 @@ library LiqTreeImpl {
         uint256 aboveMLiq = state.auxMLiqs[++state.auxIdx] * rangeWidth;
         _handleFee(parent, state.rateSnap, aboveMLiq);
 
-        parent.subtreeMaxT = max(a.subtreeMaxT, b.subtreeMaxT) + parent.tLiq;
+        parent.subtreeMinGap = min(a.subtreeMinGap, b.subtreeMinGap) + parent.gap();
         parent.tokenX.subtreeBorrow = a.tokenX.subtreeBorrow + b.tokenX.subtreeBorrow + parent.tokenX.borrow;
         parent.tokenY.subtreeBorrow = a.tokenY.subtreeBorrow + b.tokenY.subtreeBorrow + parent.tokenY.borrow;
     }
@@ -545,24 +534,22 @@ library LiqTreeImpl {
     }
 
     // @dev Not really used outside of testing
-    function queryMTVisit(
+    function queryLiqGapVisit(
         LKey,
         LiqNode storage node,
         State memory state
     ) internal view {
-        state.mLiqTracker = min(state.mLiqTracker, node.subtreeMinM);
-        state.tLiqTracker = max(state.tLiqTracker, node.subtreeMaxT);
+        state.gapTracker = min(state.gapTracker, node.subtreeMinGap);
     }
 
-    function queryMTPropogate(
+    function queryLiqGapPropogate(
         LiqNode storage,
         LiqNode storage,
         LKey,
         LiqNode storage parent,
         State memory state
     ) internal view {
-        state.mLiqTracker += parent.mLiq;
-        state.tLiqTracker += parent.tLiq;
+        state.gapTracker += parent.gap();
     }
 
     /***********/
@@ -589,9 +576,8 @@ library LiqTreeImpl {
         }
 
         if (high.isLess(stopRange)) {
-            // Now we're on the other leg so we swap the liq trackers.
-            (state.mLiqTracker, state.mLiqBackup) = (state.mLiqBackup, state.mLiqTracker);
-            (state.tLiqTracker, state.tLiqBackup) = (state.tLiqBackup, state.tLiqTracker);
+            // Now we're on the other leg so we swap the tracker.
+            (state.gapTracker, state.gapBackup) = (state.gapBackup, state.gapTracker);
 
             computeAuxArray(self, high, state.auxMLiqs);
             // Reset height index.
@@ -606,8 +592,7 @@ library LiqTreeImpl {
         // Both legs are handled. Touch up everything above where we left off.
         // For visits using liquidity tracking, at this point they'll need to merge their results.
         // We do it for them to avoid using more stack pointers.
-        state.mLiqTracker = min(state.mLiqTracker, state.mLiqBackup);
-        state.tLiqTracker = max(state.tLiqTracker, state.tLiqBackup);
+        state.gapTracker = min(state.gapTracker, state.gapBackup);
 
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
@@ -724,8 +709,7 @@ library LiqTreeImpl {
         }
         if (high.isLess(stopRange)) {
             // Now we're on the other leg so we swap the liq trackers.
-            (state.mLiqTracker, state.mLiqBackup) = (state.mLiqBackup, state.mLiqTracker);
-            (state.tLiqTracker, state.tLiqBackup) = (state.tLiqBackup, state.tLiqTracker);
+            (state.gapTracker, state.gapBackup) = (state.gapBackup, state.gapTracker);
 
             computeAuxArray(self, low, state.auxMLiqs);
             // Reset height index.
@@ -740,8 +724,7 @@ library LiqTreeImpl {
         // Both legs are handled. Touch up everything above where we left off.
         // For visits using liquidity tracking, at this point they'll need to merge their results.
         // We do it for them to avoid using more stack pointers.
-        state.mLiqTracker = min(state.mLiqTracker, state.mLiqBackup);
-        state.tLiqTracker = max(state.tLiqTracker, state.tLiqBackup);
+        state.gapTracker = min(state.gapTracker, state.gapBackup);
 
         // We are guaranteed to have visited the left or the right side, so our node and
         // current are already prefilled and current has already been propogated to.
@@ -1015,10 +998,15 @@ library LiqTreeImpl {
         return (a <= b) ? a : b;
     }
 
-    /// Convenience function for maximum of uint128s
-    function max(uint128 a, uint128 b) private pure returns (uint128) {
-        return (a >= b) ? a : b;
+    /// Convenience function for minimum of int256s
+    function min(int256 a, int256 b) private pure returns (int256) {
+        return (a <= b) ? a : b;
     }
+
+    // /// Convenience function for maximum of uint128s
+    // function max(uint128 a, uint128 b) private pure returns (uint128) {
+    //     return (a >= b) ? a : b;
+    // }
 }
 
 library LiqTreeIntLib {
