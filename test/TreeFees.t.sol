@@ -62,13 +62,13 @@ contract TreeFeesTest is Test {
         // totalMLiq = 130*1 + 400*1 = 530
         // x:  44e18 * 23947923 / (130*1 + 400*1) / 2**64 = 107776.713
         // y:  101e18 * 13542645834 / (130*1 + 400*1) / 2**64 = 139903732.969517
-        assertEq(threeThree.tokenX.cumulativeEarnedPerMLiq, 107776);
-        assertEq(threeThree.tokenX.subtreeCumulativeEarnedPerMLiq, 107776);
-        assertEq(threeThree.tokenY.cumulativeEarnedPerMLiq, 139903732);
-        assertEq(threeThree.tokenY.subtreeCumulativeEarnedPerMLiq, 139903732);
+        assertEq(threeThree.tokenX.cumulativeEarnedPerMLiq >> 64, 107776);
+        assertEq(threeThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 107776);
+        assertEq(threeThree.tokenY.cumulativeEarnedPerMLiq >> 64, 139903732);
+        assertEq(threeThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 139903732);
 
-        assertEq(accumulatedFeeRateX, 107776);
-        assertEq(accumulatedFeeRateY, 139903732);
+        assertEq(accumulatedFeeRateX >> 64, 107776);
+        assertEq(accumulatedFeeRateY >> 64, 139903732);
     }
 
     function testEarnIsEquallySplitAmongChildrenAndGrandChildrenWhenMLiqIsEqualForEachNodeAtEachLevel() public {
@@ -125,28 +125,28 @@ contract TreeFeesTest is Test {
         // y: 2400e6 * 445692368876987602531346364605670 / 1900000000000000000120 / 2**64 = 30.51919797452468088
 
         LiqNode storage zeroZero = liqTree.nodes[LKey.wrap((1 << 24) | 0)];
-        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 1113844);
-        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 1113844);
-        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 30);
-        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 30);
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq >> 64, 30);
+        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 30);
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
-        assertEq(oneOne.tokenX.cumulativeEarnedPerMLiq, 1113844);
-        assertEq(oneOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1113844);
-        assertEq(oneOne.tokenY.cumulativeEarnedPerMLiq, 30);
-        assertEq(oneOne.tokenY.subtreeCumulativeEarnedPerMLiq, 30);
+        assertEq(oneOne.tokenX.cumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(oneOne.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(oneOne.tokenY.cumulativeEarnedPerMLiq >> 64, 30);
+        assertEq(oneOne.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 30);
 
         LiqNode storage twoTwo = liqTree.nodes[LKey.wrap((1 << 24) | 2)];
-        assertEq(twoTwo.tokenX.cumulativeEarnedPerMLiq, 1113844);
-        assertEq(twoTwo.tokenX.subtreeCumulativeEarnedPerMLiq, 1113844);
-        assertEq(twoTwo.tokenY.cumulativeEarnedPerMLiq, 30);
-        assertEq(twoTwo.tokenY.subtreeCumulativeEarnedPerMLiq, 30);
+        assertEq(twoTwo.tokenX.cumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(twoTwo.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(twoTwo.tokenY.cumulativeEarnedPerMLiq >> 64, 30);
+        assertEq(twoTwo.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 30);
 
         LiqNode storage threeThree = liqTree.nodes[LKey.wrap((1 << 24) | 3)];
-        assertEq(threeThree.tokenX.cumulativeEarnedPerMLiq, 1113844);
-        assertEq(threeThree.tokenX.subtreeCumulativeEarnedPerMLiq, 1113844);
-        assertEq(threeThree.tokenY.cumulativeEarnedPerMLiq, 30);
-        assertEq(threeThree.tokenY.subtreeCumulativeEarnedPerMLiq, 30);
+        assertEq(threeThree.tokenX.cumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(threeThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1113844);
+        assertEq(threeThree.tokenY.cumulativeEarnedPerMLiq >> 64, 30);
+        assertEq(threeThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 30);
 
         // 0-1, 2-3
         // A[] = 1900e18
@@ -157,16 +157,16 @@ contract TreeFeesTest is Test {
         // sy: (3*2400e6) * 445692368876987602531346364605670 / 3800000000000000000220 / 2**64 = 45.778
 
         LiqNode storage zeroOne = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
-        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq, 556922); // 556922
-        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1670767); // 556922 + 1113844 = 1670766 (notice this would have lost 1 wei)
-        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq, 15);
-        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq, 45);
+        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq >> 64, 556922); // 556922
+        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1670767); // 556922 + 1113844 = 1670766 (notice this would have lost 1 wei)
+        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq >> 64, 15);
+        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 45);
 
         LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
-        assertEq(twoThree.tokenX.cumulativeEarnedPerMLiq, 556922);
-        assertEq(twoThree.tokenX.subtreeCumulativeEarnedPerMLiq, 1670767);
-        assertEq(twoThree.tokenY.cumulativeEarnedPerMLiq, 15);
-        assertEq(twoThree.tokenY.subtreeCumulativeEarnedPerMLiq, 45);
+        assertEq(twoThree.tokenX.cumulativeEarnedPerMLiq >> 64, 556922);
+        assertEq(twoThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1670767);
+        assertEq(twoThree.tokenY.cumulativeEarnedPerMLiq >> 64, 15);
+        assertEq(twoThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 45);
 
         // 0-3
         // A[] = 0
@@ -177,10 +177,10 @@ contract TreeFeesTest is Test {
         // sy: (2400e6*7) * 445692368876987602531346364605670 / 7600000000000000000480 / 2**64 = 53.4085
 
         LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
-        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 278461);
-        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq, 1949228);
-        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq, 7);
-        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq, 53);
+        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq >> 64, 278461);
+        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1949228);
+        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq >> 64, 7);
+        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 53);
     }
 
     function testSubtreeEarnIsLargelyConsummedByChildWithLargerMLiq() public {
@@ -221,10 +221,10 @@ contract TreeFeesTest is Test {
         // y: 2400e6 * 445692368876987602531346364605670 / 4004000 / 2**64 = 14482136900998225.1980
 
         LiqNode storage zeroZero = liqTree.nodes[LKey.wrap((1 << 24) | 0)];
-        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 528547686034272911864);
-        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 528547686034272911864);
-        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 14482136900998225);
-        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 14482136900998225);
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq >> 64, 528547686034272911864);
+        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 528547686034272911864);
+        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq >> 64, 14482136900998225);
+        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 14482136900998225);
 
         // 1-1
         // A[] = 4000
@@ -233,10 +233,10 @@ contract TreeFeesTest is Test {
         // y: 2400e6 * 445692368876987602531346364605670 / 4020 / 2**64 = 14424496555123605396.257
 
         LiqNode storage oneOne = liqTree.nodes[LKey.wrap((1 << 24) | 1)];
-        assertEq(oneOne.tokenX.cumulativeEarnedPerMLiq, 526444013652046950026014);
-        assertEq(oneOne.tokenX.subtreeCumulativeEarnedPerMLiq, 526444013652046950026014);
-        assertEq(oneOne.tokenY.cumulativeEarnedPerMLiq, 14424496555123605396);
-        assertEq(oneOne.tokenY.subtreeCumulativeEarnedPerMLiq, 14424496555123605396);
+        assertEq(oneOne.tokenX.cumulativeEarnedPerMLiq >> 64, 526444013652046950026014);
+        assertEq(oneOne.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 526444013652046950026014);
+        assertEq(oneOne.tokenY.cumulativeEarnedPerMLiq >> 64, 14424496555123605396);
+        assertEq(oneOne.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 14424496555123605396);
 
         // 0-1
         // A[] = 0
@@ -247,10 +247,10 @@ contract TreeFeesTest is Test {
         // sy: 3*2400e6 * 445692368876987602531346364605670 / 4008020 / 2**64 = 43402834430664188.5716297
 
         LiqNode storage zeroOne = liqTree.nodes[LKey.wrap((2 << 24) | 0)];
-        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq, 528017558515483640077);
-        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq, 1584052675546450920233);
-        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq, 14467611476888062);
-        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq, 43402834430664188);
+        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq >> 64, 528017558515483640077);
+        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1584052675546450920233);
+        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq >> 64, 14467611476888062);
+        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 43402834430664188);
     }
 
     function testEarnIsLargelyConsummedByChildWithLargerSubtreeMLiq() public {
@@ -290,10 +290,10 @@ contract TreeFeesTest is Test {
         // y: 2400e6 * 445692368876987602531346364605670 / 4000004000 / 2**64 = 14496604541294.6821285
 
         LiqNode storage threeThree = liqTree.nodes[LKey.wrap((1 << 24) | 3)];
-        assertEq(threeThree.tokenX.cumulativeEarnedPerMLiq, 529075704644602540);
-        assertEq(threeThree.tokenX.subtreeCumulativeEarnedPerMLiq, 529075704644602540);
-        assertEq(threeThree.tokenY.cumulativeEarnedPerMLiq, 14496604541294);
-        assertEq(threeThree.tokenY.subtreeCumulativeEarnedPerMLiq, 14496604541294);
+        assertEq(threeThree.tokenX.cumulativeEarnedPerMLiq >> 64, 529075704644602540);
+        assertEq(threeThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 529075704644602540);
+        assertEq(threeThree.tokenY.cumulativeEarnedPerMLiq >> 64, 14496604541294);
+        assertEq(threeThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 14496604541294);
 
         // 2-3
         // A[] = 4000
@@ -304,10 +304,10 @@ contract TreeFeesTest is Test {
         // sy: 2400e6 * 445692368876987602531346364605670 / 4000008000 / 2**64 = 14496590044719.13398
 
         LiqNode storage twoThree = liqTree.nodes[LKey.wrap((2 << 24) | 2)];
-        assertEq(twoThree.tokenX.cumulativeEarnedPerMLiq, 0);
-        assertEq(twoThree.tokenX.subtreeCumulativeEarnedPerMLiq, 529075175569956044);
-        assertEq(twoThree.tokenY.cumulativeEarnedPerMLiq, 0);
-        assertEq(twoThree.tokenY.subtreeCumulativeEarnedPerMLiq, 14496590044719);
+        assertEq(twoThree.tokenX.cumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(twoThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 529075175569956044);
+        assertEq(twoThree.tokenY.cumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(twoThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 14496590044719);
 
         // 0-3
         // A[] = 0
@@ -318,10 +318,10 @@ contract TreeFeesTest is Test {
         // sy: 2*2400e6 * 445692368876987602531346364605670 / 4000016000 / 2**64 = 28993122103310.03360
 
         LiqNode storage zeroThree = liqTree.nodes[LKey.wrap((4 << 24) | 0)];
-        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 529074117423837489);
-        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq, 1058148234847674978);
-        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq, 14496561051655);
-        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq, 28993122103310);
+        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq >> 64, 529074117423837489);
+        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1058148234847674978);
+        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq >> 64, 14496561051655);
+        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 28993122103310);
     }
 
     function testEarnWhereTotalMLiqIsMostlyFromAuxArray() public {
@@ -370,10 +370,10 @@ contract TreeFeesTest is Test {
         //  y: 16732e6 * 445692368876987602531346364605670 / 14001112002 / 2**64 = 28873591100892.7358765
 
         LiqNode storage fourFive = liqTree.nodes[LKey.wrap((2 << 24) | 4)];
-        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq, 1995430679306434663);
-        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq, 1995430679306434663);
-        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq, 28873591100892);
-        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq, 28873591100892);
+        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq >> 64, 1995430679306434663);
+        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1995430679306434663);
+        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq >> 64, 28873591100892);
+        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 28873591100892);
     }
 
     function testEarnWhereTotalMLiqIsOnlyFromAuxArray() public {
@@ -413,10 +413,10 @@ contract TreeFeesTest is Test {
         // calculate fees
 
         LiqNode storage fourFive = liqTree.nodes[LKey.wrap((2 << 24) | 4)];
-        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq, 0);
-        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq, 0);
-        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq, 0);
-        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq, 0);
+        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 0);
     }
 
     function testEarnWhereTotalMLiqIsMostlyFromSubtreeMLiq() public {
@@ -452,10 +452,10 @@ contract TreeFeesTest is Test {
         // y: 16732e6 * 445692368876987602531346364605670 / 7000000001 / 2**64 = 57751768977971.1297454
 
         LiqNode storage fiveFive = liqTree.nodes[LKey.wrap((1 << 24) | 5)];
-        assertEq(fiveFive.tokenX.cumulativeEarnedPerMLiq, 3991178347029308150);
-        assertEq(fiveFive.tokenX.subtreeCumulativeEarnedPerMLiq, 3991178347029308150);
-        assertEq(fiveFive.tokenY.cumulativeEarnedPerMLiq, 57751768977971);
-        assertEq(fiveFive.tokenY.subtreeCumulativeEarnedPerMLiq, 57751768977971);
+        assertEq(fiveFive.tokenX.cumulativeEarnedPerMLiq >> 64, 3991178347029308150);
+        assertEq(fiveFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3991178347029308150);
+        assertEq(fiveFive.tokenY.cumulativeEarnedPerMLiq >> 64, 57751768977971);
+        assertEq(fiveFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 57751768977971);
 
         // 4-5
         // A[] = 0
@@ -466,10 +466,10 @@ contract TreeFeesTest is Test {
         // sy: (16732e6 + 26732e6) * 445692368876987602531346364605670 / 7000000002 / 2**64 = 150019297543625.878527450
 
         LiqNode storage fourFive = liqTree.nodes[LKey.wrap((2 << 24) | 4)];
-        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq, 535986617028004816);
-        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq, 4527164963487144631);
-        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq, 92267528573905);
-        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq, 150019297543625);
+        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq >> 64, 535986617028004816);
+        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 4527164963487144631);
+        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq >> 64, 92267528573905);
+        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 150019297543625);
     }
 
     function testEarnWhereTotalMLiqIsOnlyFromSubtreeMLiq() public {
@@ -503,17 +503,17 @@ contract TreeFeesTest is Test {
         // y: 16732e6 * 445692368876987602531346364605670 / 7000000000 / 2**64 = 57751768986221.3824565
 
         LiqNode storage fiveFive = liqTree.nodes[LKey.wrap((1 << 24) | 5)];
-        assertEq(fiveFive.tokenX.cumulativeEarnedPerMLiq, 3991178347599476485);
-        assertEq(fiveFive.tokenX.subtreeCumulativeEarnedPerMLiq, 3991178347599476485);
-        assertEq(fiveFive.tokenY.cumulativeEarnedPerMLiq, 57751768986221);
-        assertEq(fiveFive.tokenY.subtreeCumulativeEarnedPerMLiq, 57751768986221);
+        assertEq(fiveFive.tokenX.cumulativeEarnedPerMLiq >> 64, 3991178347599476485);
+        assertEq(fiveFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3991178347599476485);
+        assertEq(fiveFive.tokenY.cumulativeEarnedPerMLiq >> 64, 57751768986221);
+        assertEq(fiveFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 57751768986221);
 
         // 4-5
         LiqNode storage fourFive = liqTree.nodes[LKey.wrap((2 << 24) | 4)];
-        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq, 0);
-        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq, 3991178347599476485);
-        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq, 0);
-        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq, 57751768986221);
+        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3991178347599476485);
+        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq >> 64, 0);
+        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 57751768986221);
     }
 
     function testEarnWhereTotalMLiqIsFromBothAuxArrayAndSubtreeMLiq() public {
@@ -557,10 +557,10 @@ contract TreeFeesTest is Test {
         // sy: (2*16732e6) * 445692368876987602531346364605670 / 21000000200 / 2**64 = 38501178957469.693471
 
         LiqNode storage fourFive = liqTree.nodes[LKey.wrap((2 << 24) | 4)];
-        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq, 1330392769862751496);
-        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq, 2660785539725502992);
-        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq, 19250589478734);
-        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq, 38501178957469);
+        assertEq(fourFive.tokenX.cumulativeEarnedPerMLiq >> 64, 1330392769862751496);
+        assertEq(fourFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 2660785539725502992);
+        assertEq(fourFive.tokenY.cumulativeEarnedPerMLiq >> 64, 19250589478734);
+        assertEq(fourFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 38501178957469);
 
         // 5-5
         // A[] = 7000000000 + 100 = 7000000100
@@ -569,10 +569,10 @@ contract TreeFeesTest is Test {
         //  y: 16732e6 * 445692368876987602531346364605670 / 14000000100 / 2**64 = 28875884286854.374
 
         LiqNode storage fiveFive = liqTree.nodes[LKey.wrap((1 << 24) | 5)];
-        assertEq(fiveFive.tokenX.cumulativeEarnedPerMLiq, 1995589159545529960);
-        assertEq(fiveFive.tokenX.subtreeCumulativeEarnedPerMLiq, 1995589159545529960);
-        assertEq(fiveFive.tokenY.cumulativeEarnedPerMLiq, 28875884286854);
-        assertEq(fiveFive.tokenY.subtreeCumulativeEarnedPerMLiq, 28875884286854);
+        assertEq(fiveFive.tokenX.cumulativeEarnedPerMLiq >> 64, 1995589159545529960);
+        assertEq(fiveFive.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 1995589159545529960);
+        assertEq(fiveFive.tokenY.cumulativeEarnedPerMLiq >> 64, 28875884286854);
+        assertEq(fiveFive.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 28875884286854);
 
         // 4-7
         // A[] = 0
@@ -583,10 +583,10 @@ contract TreeFeesTest is Test {
         //  sy: 3*16732e6 * 445692368876987602531346364605670 / 35000000200 / 2**64 = 34651061193726.76550
 
         LiqNode storage fourSeven = liqTree.nodes[LKey.wrap((4 << 24) | 4)];
-        assertEq(fourSeven.tokenX.cumulativeEarnedPerMLiq, 798235664958548640);
-        assertEq(fourSeven.tokenX.subtreeCumulativeEarnedPerMLiq, 2394706994875645920);
-        assertEq(fourSeven.tokenY.cumulativeEarnedPerMLiq, 11550353731242);
-        assertEq(fourSeven.tokenY.subtreeCumulativeEarnedPerMLiq, 34651061193726);
+        assertEq(fourSeven.tokenX.cumulativeEarnedPerMLiq >> 64, 798235664958548640);
+        assertEq(fourSeven.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 2394706994875645920);
+        assertEq(fourSeven.tokenY.cumulativeEarnedPerMLiq >> 64, 11550353731242);
+        assertEq(fourSeven.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 34651061193726);
     }
 
     // -- Not sure about these

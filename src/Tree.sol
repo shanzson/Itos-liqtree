@@ -834,15 +834,19 @@ library LiqTreeImpl {
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
 
         if (totalMLiq > 0) {
-            node.tokenX.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq) >> 64;
-            node.tokenX.subtreeCumulativeEarnedPerMLiq +=
-                Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >>
-                64;
+            node.tokenX.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq);
+            node.tokenX.subtreeCumulativeEarnedPerMLiq += Math.shortMulDiv(
+                node.tokenX.subtreeBorrow,
+                rateDiffX,
+                totalMLiq
+            );
 
-            node.tokenY.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenY.borrow, rateDiffY, totalMLiq) >> 64;
-            node.tokenY.subtreeCumulativeEarnedPerMLiq +=
-                Math.shortMulDiv(node.tokenY.subtreeBorrow, rateDiffY, totalMLiq) >>
-                64;
+            node.tokenY.cumulativeEarnedPerMLiq += Math.shortMulDiv(node.tokenY.borrow, rateDiffY, totalMLiq);
+            node.tokenY.subtreeCumulativeEarnedPerMLiq += Math.shortMulDiv(
+                node.tokenY.subtreeBorrow,
+                rateDiffY,
+                totalMLiq
+            );
         }
     }
 
@@ -855,8 +859,8 @@ library LiqTreeImpl {
         uint256 rateDiffY = snap.Y - node.tokenY.feeRateSnapshot;
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
         if (totalMLiq > 0) {
-            earnedX = Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq) >> 64;
-            earnedY = Math.shortMulDiv(node.tokenY.borrow, rateDiffY, totalMLiq) >> 64;
+            earnedX = Math.shortMulDiv(node.tokenX.borrow, rateDiffX, totalMLiq);
+            earnedY = Math.shortMulDiv(node.tokenY.borrow, rateDiffY, totalMLiq);
         }
     }
 
@@ -869,8 +873,8 @@ library LiqTreeImpl {
         uint256 rateDiffY = snap.Y - node.tokenY.feeRateSnapshot;
         uint256 totalMLiq = node.subtreeMLiq + aboveMLiq; // At most 24 + 132 = 156 bits
         if (totalMLiq > 0) {
-            subtreeEarnedX = Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq) >> 64;
-            subtreeEarnedY = Math.shortMulDiv(node.tokenY.subtreeBorrow, rateDiffY, totalMLiq) >> 64;
+            subtreeEarnedX = Math.shortMulDiv(node.tokenX.subtreeBorrow, rateDiffX, totalMLiq);
+            subtreeEarnedY = Math.shortMulDiv(node.tokenY.subtreeBorrow, rateDiffY, totalMLiq);
         }
     }
 

@@ -628,10 +628,10 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeTLiq(range(0, 0), 100, fees, 1, 1);
 
-        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testAuxAtNodeOfRangeTwo() public {
@@ -652,10 +652,10 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeTLiq(range(0, 1), 100, fees, 1, 1);
 
-        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testAuxAtNodeOfRangeFour() public {
@@ -676,10 +676,10 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeTLiq(range(0, 3), 100, fees, 1, 1);
 
-        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testAuxAtNodeOfRangeEight() public {
@@ -699,10 +699,10 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeTLiq(range(0, 7), 100, fees, 1, 1);
 
-        assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSeven.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSeven.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSeven.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSeven.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSeven.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSeven.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     // something strange about the console output in the fee handle method?
@@ -727,10 +727,10 @@ contract TreeFeeParamTest is Test {
 
         liqTree.removeWideRangeTLiq(100, fees, 16, 16);
 
-        assertEq(zeroFifteen.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroFifteen.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroFifteen.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroFifteen.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroFifteen.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroFifteen.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroFifteen.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroFifteen.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     // N.range
@@ -750,10 +750,10 @@ contract TreeFeeParamTest is Test {
 
         // totalMLiq = 5 + 1*1 = 6
         // borrows = 18
-        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq, 3); // 15 * 1 / 5
-        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroZero.tokenX.cumulativeEarnedPerMLiq >> 64, 3); // 15 * 1 / 5
+        assertEq(zeroZero.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroZero.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroZero.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testNodeRangeOfTwoInFeeCalculation() public {
@@ -770,10 +770,10 @@ contract TreeFeeParamTest is Test {
 
         // totalMLiq = 4*2 + 2*1 = 10
         // borrow = 31/2*2 = 20 (decimal truncation)
-        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroOne.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroOne.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroOne.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroOne.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testNodeRangeOfFourInFeeCalculation() public {
@@ -789,10 +789,10 @@ contract TreeFeeParamTest is Test {
         liqTree.removeTLiq(range(0, 3), 1, fees, 300, 300);
 
         // totalMLiq = 24*4 + 4*1 = 100
-        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroThree.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroThree.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroThree.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroThree.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testNodeRangeOfEightInFeeCalculation() public {
@@ -808,10 +808,10 @@ contract TreeFeeParamTest is Test {
         liqTree.removeTLiq(range(0, 7), 1, fees, 1, 1);
 
         // totalMLiq = 47*8 + 8*1 = 384
-        assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSeven.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSeven.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSeven.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSeven.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSeven.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSeven.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSeven.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     function testNodeRangeOfSixteenInFeeCalculation() public {
@@ -826,10 +826,10 @@ contract TreeFeeParamTest is Test {
         liqTree.removeWideRangeTLiq(1, fees, 1, 1);
 
         // totalMLiq = 3*16 + 16*0 = 48
-        assertEq(zeroSixteen.tokenX.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSixteen.tokenX.subtreeCumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSixteen.tokenY.cumulativeEarnedPerMLiq, 3);
-        assertEq(zeroSixteen.tokenY.subtreeCumulativeEarnedPerMLiq, 3);
+        assertEq(zeroSixteen.tokenX.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSixteen.tokenX.subtreeCumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSixteen.tokenY.cumulativeEarnedPerMLiq >> 64, 3);
+        assertEq(zeroSixteen.tokenY.subtreeCumulativeEarnedPerMLiq >> 64, 3);
     }
 
     // r
